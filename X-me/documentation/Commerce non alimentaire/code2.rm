@@ -1,0 +1,1238 @@
+import { ChatOpenAI } from '@langchain/openai';
+import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
+import type { Embeddings } from '@langchain/core/embeddings';
+import { ChatPromptTemplate, MessagesPlaceholder, PromptTemplate } from '@langchain/core/prompts';
+import { RunnableLambda, RunnableMap, RunnableSequence } from '@langchain/core/runnables';
+import { BaseMessage, AIMessage, HumanMessage } from '@langchain/core/messages';
+import { StringOutputParser } from '@langchain/core/output_parsers';
+import LineListOutputParser from '../lib/outputParsers/listLineOutputParser';
+import LineOutputParser from '../lib/outputParsers/lineOutputParser';
+import { Document } from 'langchain/document';
+import { searchSearxng } from '../lib/searxng';
+import path from 'path';
+import fs from 'fs';
+import { EventEmitter } from 'events';
+import { StreamEvent } from '@langchain/core/tracers/log_stream';
+import { IterableReadableStream } from '@langchain/core/utils/stream';
+import handleImageSearch from '../chains/imageSearchAgent';
+import handleExpertSearch from '../chains/expertSearchAgent';
+import { RAGDocumentChain } from '../chains/rag_document_upload';
+import { webSearchRetrieverPrompt, webSearchResponsePrompt } from '../prompts/webSearch';
+import pLimit from 'p-limit';
+
+/* ========================================================
+   INTERFACES & TYPES
+======================================================== */
+
+export interface MetaSearchAgentType {
+  searchAndAnswer: (
+    message: string,
+    history: BaseMessage[],
+    llm: BaseChatModel,
+    embeddings: Embeddings,
+    optimizationMode: 'speed' | 'balanced' | 'quality',
+    fileIds: string[],
+  ) => Promise<EventEmitter>;
+}
+
+interface Config {
+  activeEngines: string[];
+  deepResearch?: {
+    enabled: boolean;
+    breadth: number; // nombre de requêtes SERP générées à chaque niveau
+    depth: number;   // profondeur de la recherche récursive
+  };
+  queryGeneratorPrompt?: string;
+  responsePrompt?: string;
+  rerank: boolean;
+  rerankThreshold: number;
+  searchWeb: boolean;
+  summarizer: boolean;
+  searchDatabase: boolean;
+  provider?: string;
+  model?: string;
+  customOpenAIBaseURL?: string;
+  customOpenAIKey?: string;
+}
+
+type BasicChainInput = {
+  chat_history: BaseMessage[];
+  query: string;
+};
+
+interface SearchResponse {
+  text: string;
+  sources: Array<{
+    title: string;
+    content: string;
+    url?: string;
+    source?: string;
+  }>;
+  illustrationImage?: string;
+}
+
+interface DocumentMetadata {
+  title?: string;
+  source?: string;
+  fileId?: string;
+  url?: string;
+}
+
+interface SearchResult {
+  pageContent: string;
+  metadata: {
+    score?: number;
+    title?: string;
+    [key: string]: any;
+  };
+}
+
+/**
+ * Pour la deep research, nous recueillons des learnings et les URLs visitées.
+ */
+interface DeepResearchResult {
+  learnings: string[];
+  visitedUrls: string[];
+}
+
+/* ========================================================
+   CLASS MetaSearchAgent
+======================================================== */
+
+export class MetaSearchAgent implements MetaSearchAgentType {
+  private config: Config;
+  private strParser = new StringOutputParser();
+  // Mise en cache des contenus des fichiers pour limiter les accès disque
+  private fileCache = new Map<string, { content: any; embeddingsData: any }>();
+  private conversationHistory: BaseMessage[] = [];
+
+  constructor(config: Config) {
+    this.config = config;
+  }
+
+  private updateMemory(message: BaseMessage) {
+    this.conversationHistory.push(message);
+  }
+
+  public getMemory(): BaseMessage[] {
+    return this.conversationHistory;
+  }
+
+  /* -------------------------
+     Chaîne de récupération web (existant)
+  -------------------------- */
+
+  private async createSearchRetrieverChain(llm: BaseChatModel) {
+    // Température fixée à 0 pour la déterminisme
+    (llm as unknown as ChatOpenAI).temperature = 0;
+    return RunnableSequence.from([
+      PromptTemplate.fromTemplate(webSearchRetrieverPrompt),
+      llm,
+      this.strParser,
+      RunnableLambda.from(async (input: string) => {
+        const linksOutputParser = new LineListOutputParser({ key: 'links' });
+        const questionOutputParser = new LineOutputParser({ key: 'question' });
+        const links = await linksOutputParser.parse(input);
+        let question = this.config.summarizer
+          ? await questionOutputParser.parse(input)
+          : input;
+        if (question === 'not_needed') {
+          return { query: '', docs: [] };
+        }
+        let documents: Document[] = [];
+        if (this.config.searchWeb) {
+          console.log('🔍 Démarrage de la recherche web...');
+          const res = await searchSearxng(question, { language: 'fr', engines: this.config.activeEngines });
+          documents = res.results.map(result =>
+            new Document({
+              pageContent: result.content,
+              metadata: {
+                title: result.title,
+                url: result.url,
+                type: 'web',
+                source: 'web',
+                displayDomain: new URL(result.url).hostname.replace('www.', ''),
+                favicon: `https://s2.googleusercontent.com/s2/favicons?domain_url=${result.url}`,
+                linkText: 'Voir la page',
+                ...(result.img_src && { img_src: result.img_src }),
+              },
+            }),
+          );
+          console.log('🌐 Sources web trouvées:', documents.length);
+        }
+        return { query: question, docs: documents };
+      }),
+    ]);
+  }
+
+  /* -------------------------
+     Chargement des documents uploadés
+  -------------------------- */
+
+  private async loadUploadedDocuments(fileIds: string[]): Promise<Document[]> {
+    console.log('📂 Chargement des documents:', fileIds);
+    const docsArrays = await Promise.all(
+      fileIds.map(async (fileId) => {
+        try {
+          if (this.fileCache.has(fileId)) {
+            return this.processFileContent(fileId, this.fileCache.get(fileId)!);
+          }
+          const filePath = path.join(process.cwd(), 'uploads', fileId);
+          const contentPath = `${filePath}-extracted.json`;
+          const embeddingsPath = `${filePath}-embeddings.json`;
+
+          await fs.promises.access(contentPath);
+          const contentData = await fs.promises.readFile(contentPath, 'utf8');
+          const content = JSON.parse(contentData);
+
+          let embeddingsData = null;
+          try {
+            await fs.promises.access(embeddingsPath);
+            const embeddingsContent = await fs.promises.readFile(embeddingsPath, 'utf8');
+            embeddingsData = JSON.parse(embeddingsContent);
+          } catch (err) { /* Aucun embedding pré-calculé */ }
+
+          const fileData = { content, embeddingsData };
+          this.fileCache.set(fileId, fileData);
+          return this.processFileContent(fileId, fileData);
+        } catch (error) {
+          console.error(`❌ Erreur lors du chargement du fichier ${fileId}:`, error);
+          return [];
+        }
+      })
+    );
+    return docsArrays.flat();
+  }
+
+  private processFileContent(fileId: string, fileData: { content: any; embeddingsData: any }): Document[] {
+    const { content, embeddingsData } = fileData;
+    if (!content.contents || !Array.isArray(content.contents)) {
+      throw new Error(`Structure de contenu invalide pour ${fileId}`);
+    }
+    const chunksPerPage = Math.ceil(content.contents.length / (content.pageCount || 10));
+    return content.contents.map((chunk: any, index: number) => {
+      const pageNumber = Math.floor(index / chunksPerPage) + 1;
+      return new Document({
+        pageContent: typeof chunk === 'string' ? chunk : chunk.content,
+        metadata: {
+          ...(typeof chunk === 'object' ? chunk.metadata : {}),
+          source: fileId,
+          title: content.title || 'Document sans titre',
+          pageNumber,
+          chunkIndex: index,
+          totalChunks: content.contents.length,
+          type: 'uploaded',
+          embedding: embeddingsData?.embeddings?.[index]?.vector,
+          searchText: (typeof chunk === 'string' ? chunk : chunk.content)
+            .substring(0, 100)
+            .replace(/[\n\r]+/g, ' ')
+            .trim(),
+        },
+      });
+    });
+  }
+
+  /* -------------------------
+     Chaîne de réponse finale (existant)
+  -------------------------- */
+
+  private async createAnsweringChain(
+    llm: BaseChatModel,
+    fileIds: string[],
+    embeddings: Embeddings,
+    optimizationMode: 'speed' | 'balanced' | 'quality',
+  ) {
+    return RunnableSequence.from([
+      RunnableMap.from({
+        query: (input: BasicChainInput) => input.query,
+        chat_history: (input: BasicChainInput) => input.chat_history,
+        docs: RunnableLambda.from(async (input: BasicChainInput) => {
+          console.log('Début de la recherche...');
+          let docs: Document[] = [];
+
+          // Recherche dans les documents uploadés
+          if (fileIds.length > 0) {
+            try {
+              const uploadedDocs = await this.loadUploadedDocuments(fileIds);
+              console.log('📚 Documents uploadés chargés:', uploadedDocs.length);
+              const ragChain = RAGDocumentChain.getInstance();
+              await ragChain.initializeVectorStoreFromDocuments(uploadedDocs, embeddings);
+              const searchChain = ragChain.createSearchChain(llm);
+              const relevantDocs = await searchChain.invoke({
+                query: input.query,
+                chat_history: input.chat_history,
+                type: 'specific'
+              });
+              // On affecte ici un score élevé aux documents uploadés
+              docs = uploadedDocs.map(doc => ({
+                ...doc,
+                metadata: { ...doc.metadata, score: 0.8 }
+              }));
+              console.log('📄 Documents pertinents trouvés:', docs.length);
+            } catch (error) {
+              console.error('❌ Erreur lors de la recherche dans les documents:', error);
+            }
+          }
+
+          // Recherche web si activée
+          if (this.config.searchWeb) {
+            try {
+              console.log('🌐 Démarrage de la recherche web...');
+              const webResults = await this.performWebSearch(input.query);
+              console.log(`🌐 ${webResults.length} résultats web trouvés`);
+              docs = [...docs, ...webResults];
+            } catch (error) {
+              console.error('❌ Erreur lors de la recherche web:', error);
+            }
+          }
+
+          console.log('🔍 DEBUG - Avant appel rerankDocs - Mode:', optimizationMode, 'Query:', input.query);
+          return this.rerankDocs(
+            input.query,
+            docs,
+            fileIds,
+            embeddings,
+            optimizationMode,
+            llm
+          );
+        }).withConfig({ runName: 'FinalSourceRetriever' }),
+      }),
+      RunnableMap.from({
+        query: (input) => input.query,
+        chat_history: (input) => input.chat_history,
+        date: () => new Date().toISOString(),
+        context: (input) => {
+          console.log('Préparation du contexte...');
+          return this.processDocs(input.docs);
+        },
+        docs: (input) => input.docs,
+      }),
+      ChatPromptTemplate.fromMessages([
+        ['system', webSearchResponsePrompt],
+        new MessagesPlaceholder('chat_history'),
+        ['user', '{context}\n\n{query}'],
+      ]),
+      llm,
+      this.strParser,
+    ]).withConfig({ runName: 'FinalResponseGenerator' });
+  }
+
+  private convertExpertsToDocuments(experts: any[]): Document[] {
+    return experts.map(expert =>
+      new Document({
+        pageContent: `Expert: ${expert.prenom} ${expert.nom}
+Spécialité: ${expert.specialite}
+Ville: ${expert.ville}
+Tarif: ${expert.tarif}€
+Expertises: ${expert.expertises}
+Services: ${JSON.stringify(expert.services)}
+${expert.biographie}`,
+        metadata: {
+          type: 'expert',
+          expert: true,
+          expertData: expert,
+          title: `${expert.specialite} - ${expert.ville}`,
+          url: `/expert/${expert.id_expert}`,
+          image_url: expert.image_url
+        }
+      })
+    );
+  }
+
+  private async performWebSearch(query: string): Promise<Document[]> {
+    const res = await searchSearxng(query, { language: 'fr', engines: this.config.activeEngines });
+    return res.results.map(result =>
+      new Document({
+        pageContent: result.content,
+        metadata: {
+          title: result.title,
+          url: result.url,
+          type: 'web',
+          ...(result.img_src && { img_src: result.img_src }),
+        },
+      })
+    );
+  }
+
+  private processDocs(docs: Document[]): string {
+    console.log(`🔍 Traitement de ${docs.length} documents...`);
+    if (docs.length === 0) {
+      console.log('⚠️ Aucun document à traiter');
+      return "Aucun document pertinent trouvé.";
+    }
+    const sortedDocs = docs.sort((a, b) => {
+      if (a.metadata?.type === 'sector' && b.metadata?.type !== 'sector') return -1;
+      if (a.metadata?.type !== 'sector' && b.metadata?.type === 'sector') return 1;
+      return (b.metadata?.score || 0) - (a.metadata?.score || 0);
+    });
+    const limitedDocs = sortedDocs.slice(0, 10);
+    const processedDocs = limitedDocs.map((doc, index) => {
+      const source = this.formatSource(doc);
+      const keyInfo = this.extractKeyInfo(doc.pageContent);
+      const content = this.formatContent(doc.pageContent);
+      return `=== Source ${index + 1}: ${source} ===\n${keyInfo}\n${content}\n`;
+    }).join('\n\n');
+    console.log(`✅ ${limitedDocs.length} documents traités et formatés`);
+    return processedDocs;
+  }
+
+  private formatSource(doc: Document): string {
+    const type = doc.metadata?.type || 'unknown';
+    const title = doc.metadata?.title || 'Sans titre';
+    const source = doc.metadata?.source || '';
+    const subsector = doc.metadata?.subsector || '';
+    switch (type) {
+      case 'sector':
+        return `[Document Sectoriel: ${title}${subsector ? ` - ${subsector}` : ''}]`;
+      case 'web':
+        return `[Source Web: ${title}]`;
+      default:
+        return `[${title}${source ? ` - ${source}` : ''}]`;
+    }
+  }
+
+  private extractKeyInfo(content: string): string {
+    const keyPatterns = [
+      /\d+(?:,\d+)?(?:\s*%|\s*euros?|\s*€)/g,
+      /\d{4}/g,
+      /\d+(?:,\d+)?\s*(?:millions?|milliards?)/g
+    ];
+    const keyInfo = keyPatterns
+      .map(pattern => {
+        const matches = content.match(pattern);
+        return matches ? matches.slice(0, 5) : [];
+      })
+      .flat()
+      .filter((v, i, a) => a.indexOf(v) === i)
+      .join(', ');
+    return keyInfo ? `Informations clés: ${keyInfo}` : '';
+  }
+
+  private formatContent(content: string): string {
+    const maxLength = 1500;
+    const truncated = content.length > maxLength 
+      ? content.substring(0, maxLength) + '...'
+      : content;
+    return truncated
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\s{2,}/g, ' ')
+      .trim();
+  }
+
+  private normalizeSource(source: any): any {
+    const isUploadedDoc = source.metadata?.type === 'uploaded';
+    const isExpert = source.metadata?.type === 'expert';
+    const isWeb = source.metadata?.type === 'web';
+    const sourceId = source.metadata?.source;
+    const pageNumber = source.metadata?.pageNumber || source.metadata?.page || 1;
+    let url;
+    if (isUploadedDoc && sourceId) {
+      url = `/api/uploads/${sourceId}/content?page=${pageNumber}`;
+    } else if (isExpert) {
+      url = source.metadata?.expertData?.url || source.metadata?.url;
+    } else if (isWeb) {
+      url = source.metadata?.url;
+    }
+    let title = source.metadata?.title || '';
+    if (isUploadedDoc && title) {
+      title = `${title} - Page ${pageNumber}`;
+    } else if (isExpert) {
+      title = source.metadata?.displayTitle || title;
+    }
+    const limitedContent = source.pageContent?.substring(0, 1000) || '';
+    return {
+      pageContent: limitedContent,
+      metadata: {
+        title,
+        type: source.metadata?.type || 'web',
+        url,
+        source: sourceId || (isWeb ? 'web' : undefined),
+        pageNumber,
+        displayDomain: isUploadedDoc
+          ? 'Document local'
+          : (isWeb && url ? new URL(url).hostname.replace('www.', '') : undefined),
+        searchText:
+          source.metadata?.searchText?.substring(0, 200) ||
+          limitedContent.substring(0, 200),
+        expertData: source.metadata?.expertData,
+        illustrationImage: source.metadata?.illustrationImage,
+        imageTitle: source.metadata?.imageTitle,
+        favicon: isWeb ? `https://s2.googleusercontent.com/s2/favicons?domain_url=${url}` : source.metadata?.favicon,
+        linkText: isWeb ? 'Voir la page' : 'Voir la source',
+        expertName: source.metadata?.expertName,
+        fileId: sourceId,
+        page: pageNumber,
+        isFile: isUploadedDoc,
+      }
+    };
+  }
+
+  /* -------------------------
+     Gestion des Streams (existant)
+  -------------------------- */
+
+  private async handleStream(
+    stream: IterableReadableStream<StreamEvent>,
+    emitter: EventEmitter
+  ) {
+    for await (const event of stream) {
+      if (
+        event.event === 'on_chain_end' &&
+        event.name === 'FinalSourceRetriever'
+      ) {
+        const sources = event.data.output;
+        const normalizedSources = sources?.map(this.normalizeSource) || [];
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'sources',
+            data: normalizedSources,
+            illustrationImage: normalizedSources[0]?.metadata?.illustrationImage || null,
+            imageTitle: normalizedSources[0]?.metadata?.imageTitle || null
+          })
+        );
+      }
+      if (
+        event.event === 'on_chain_stream' &&
+        event.name === 'FinalResponseGenerator'
+      ) {
+        emitter.emit(
+          'data',
+          JSON.stringify({ type: 'response', data: event.data.chunk })
+        );
+      }
+      if (
+        event.event === 'on_chain_end' &&
+        event.name === 'FinalResponseGenerator'
+      ) {
+        emitter.emit('end');
+      }
+    }
+  }
+
+  private async handleStreamWithMemory(
+    stream: IterableReadableStream<StreamEvent>,
+    emitter: EventEmitter,
+    llm: BaseChatModel,
+    originalQuery: string
+  ) {
+    let fullAssistantResponse = '';
+    let hasEmittedSuggestions = false;
+    for await (const event of stream) {
+      if (event.event === 'on_chain_stream' && event.name === 'FinalResponseGenerator') {
+        fullAssistantResponse += event.data.chunk;
+        emitter.emit(
+          'data',
+          JSON.stringify({ type: 'response', data: event.data.chunk })
+        );
+      } else if (event.event === 'on_chain_end') {
+        if (event.name === 'FinalResponseGenerator' && !hasEmittedSuggestions) {
+          try {
+            const suggestionsPrompt = `
+Based on this conversation and response, suggest 3 relevant follow-up questions:
+"${fullAssistantResponse}"
+Return only the questions, one per line.`;
+            const suggestionsResponse = await llm.invoke(suggestionsPrompt);
+            const suggestions = String(suggestionsResponse.content)
+              .split('\n')
+              .filter(s => s.trim())
+              .slice(0, 3);
+            emitter.emit(
+              'data',
+              JSON.stringify({
+                type: 'suggestions',
+                data: {
+                  suggestions,
+                  suggestedExperts: []
+                }
+              })
+            );
+            hasEmittedSuggestions = true;
+          } catch (error) {
+            console.error('❌ Erreur lors de la génération des suggestions:', error);
+          }
+          this.updateMemory(new AIMessage(fullAssistantResponse.trim()));
+          emitter.emit('end');
+        }
+        if (event.name === 'FinalSourceRetriever') {
+          const sources = event.data.output;
+          const normalizedSources = sources?.map(this.normalizeSource) || [];
+          emitter.emit(
+            'data',
+            JSON.stringify({
+              type: 'sources',
+              data: normalizedSources,
+              illustrationImage: normalizedSources[0]?.metadata?.illustrationImage || null,
+              imageTitle: normalizedSources[0]?.metadata?.imageTitle || null
+            })
+          );
+        }
+      } else {
+        emitter.emit(event.event, event.data);
+      }
+    }
+  }
+
+  /* -------------------------
+     Recherche d'experts, images, web (existant)
+  -------------------------- */
+
+  private async searchExperts(
+    query: string,
+    embeddings: Embeddings,
+    llm: BaseChatModel
+  ): Promise<SearchResult[]> {
+    try {
+      console.log('👥 Recherche d\'experts pour:', query);
+      const cleanQuery = query.replace(/[%']/g, ' ').trim();
+      const expertResults = await handleExpertSearch(
+        {
+          query: cleanQuery,
+          chat_history: [],
+          messageId: 'search_' + Date.now(),
+          chatId: 'chat_' + Date.now()
+        },
+        llm
+      );
+      return expertResults.experts.map(expert => ({
+        pageContent: `Expert: ${expert.prenom} ${expert.nom}
+Spécialité: ${expert.specialite}
+Ville: ${expert.ville}
+Tarif: ${expert.tarif}€
+Expertises: ${expert.expertises}
+Services: ${JSON.stringify(expert.services)}
+${expert.biographie}`,
+        metadata: {
+          type: 'expert',
+          expert: true,
+          expertData: expert,
+          title: `${expert.prenom} ${expert.nom} - ${expert.specialite}`,
+          url: expert.url,
+          image_url: expert.image_url,
+          score: 0.6
+        }
+      }));
+    } catch (error) {
+      console.error('❌ Erreur lors de la recherche d\'experts:', error);
+      return [];
+    }
+  }
+
+  private async handleImageSearch(query: string, llm: BaseChatModel) {
+    try {
+      const results = await handleImageSearch({ query, chat_history: [] }, llm);
+      if (!results || !Array.isArray(results)) {
+        console.warn('⚠️ Résultat de recherche d\'images invalide');
+        return [];
+      }
+      return results;
+    } catch (error) {
+      console.error('❌ Erreur lors de la recherche d\'images:', error);
+      return [];
+    }
+  }
+
+  private async searchWeb(query: string): Promise<SearchResult[]> {
+    try {
+      console.log('🌐 Recherche web pour:', query);
+      const res = await searchSearxng(query, { language: 'fr', engines: this.config.activeEngines });
+      return res.results.map(result => ({
+        pageContent: result.content,
+        metadata: {
+          title: result.title,
+          url: result.url,
+          type: 'web',
+          score: 0.4,
+          ...(result.img_src && { img_src: result.img_src }),
+        }
+      }));
+    } catch (error) {
+      console.error('❌ Erreur lors de la recherche web:', error);
+      return [];
+    }
+  }
+
+  private async parallelSearchOperations(
+    query: string,
+    llm: BaseChatModel,
+    embeddings: Embeddings,
+    optimizationMode: 'speed' | 'balanced' | 'quality'
+  ): Promise<{
+    images: any[];
+    experts: SearchResult[];
+    webResults: SearchResult[];
+  }> {
+    console.log('🔄 Démarrage des recherches parallèles');
+    const searchTasks = {
+      images: (optimizationMode === 'balanced' || optimizationMode === 'quality')
+        ? this.handleImageSearch(query, llm)
+        : Promise.resolve([]),
+      experts: this.config.searchDatabase
+        ? this.searchExperts(query, embeddings, llm)
+        : Promise.resolve([]),
+      webResults: this.config.searchWeb
+        ? this.searchWeb(query)
+        : Promise.resolve([])
+    };
+    const results = await Promise.allSettled([
+      searchTasks.images,
+      searchTasks.experts,
+      searchTasks.webResults
+    ]);
+    const images = results[0].status === 'fulfilled' ? results[0].value : [];
+    const experts = results[1].status === 'fulfilled' ? results[1].value : [];
+    const webResults = results[2].status === 'fulfilled' ? results[2].value : [];
+    console.log('✅ Recherches parallèles terminées', {
+      images: images?.length,
+      experts: experts.length,
+      webResults: webResults.length
+    });
+    return { images, experts, webResults };
+  }
+
+  private async rerankDocs(
+    query: string,
+    docs: Document[],
+    fileIds: string[],
+    embeddings: Embeddings,
+    optimizationMode: 'speed' | 'balanced' | 'quality',
+    llm: BaseChatModel
+  ) {
+    console.log('🔍 Mode d\'optimisation:', optimizationMode);
+    console.log('🔍 Query pour la recherche d\'image:', query);
+    const { images, experts, webResults } = await this.parallelSearchOperations(
+      query,
+      llm,
+      embeddings,
+      optimizationMode
+    );
+    let enrichedDocs = docs;
+    if (images && images.length > 0) {
+      console.log('🔍 Première image trouvée:', {
+        src: images[0].img_src,
+        title: images[0].title,
+        url: images[0].url
+      });
+      enrichedDocs = docs.map(doc => ({
+        ...doc,
+        metadata: {
+          ...doc.metadata,
+          illustrationImage: images[0].img_src,
+          imageTitle: images[0].title
+        }
+      }));
+    }
+    return [
+      ...enrichedDocs,
+      ...experts,
+      ...webResults
+    ].slice(0, 15);
+  }
+
+  private async parallelDocumentProcessing(
+    docs: Document[],
+    embeddings: Embeddings,
+    ragChain: RAGDocumentChain,
+    message: string
+  ): Promise<{
+    vectorStore: any;
+    relevantDocs: Document[];
+  }> {
+    console.log('📚 Démarrage traitement parallèle des documents');
+    const initPromise = !ragChain.isInitialized()
+      ? ragChain.initializeVectorStoreFromDocuments(docs, embeddings)
+      : Promise.resolve(null);
+    const [vectorStoreInit, relevantDocsSearch] = await Promise.all([
+      initPromise,
+      ragChain.searchSimilarDocuments(message, 5)
+    ]);
+    console.log('✅ Traitement parallèle des documents terminé');
+    return { vectorStore: vectorStoreInit, relevantDocs: relevantDocsSearch };
+  }
+
+  /* -------------------------
+     MÉTHODE DE DEEP RESEARCH
+  -------------------------- */
+
+  /**
+   * La méthode deepResearch génère des requêtes SERP à partir d'un prompt, exécute une recherche web
+   * pour chacune d'elles et extrait des éléments d'apprentissage (learnings) et des questions de suivi.
+   * Si la profondeur (depth) n'est pas atteinte et qu'une question de suivi est proposée, la méthode se rappelle récursivement.
+   */
+  async deepResearch(
+    llm: BaseChatModel,
+    query: string,
+    breadth: number,
+    depth: number,
+    learnings: string[] = [],
+    visitedUrls: string[] = []
+  ): Promise<DeepResearchResult> {
+    console.log(`🔍 Deep Research: Query "${query}" | Depth ${depth} | Breadth ${breadth}`);
+    
+    // Génération de requêtes SERP via l'LLM
+    const generateQueriesPrompt = 
+      `Génère jusqu'à ${breadth} requêtes de recherche distinctes pour approfondir le sujet suivant :\n"${query}"` +
+      (learnings.length ? `\nEn t'appuyant sur ces éléments déjà collectés :\n${learnings.join('\n')}` : '');
+
+    const queriesResponse = await llm.invoke(generateQueriesPrompt);
+
+    // Conversion explicite en string pour éviter une erreur de type sur .split()
+    const contentString = String(queriesResponse.content);
+
+    const serpQueries = contentString
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .slice(0, breadth);
+
+    const concurrencyLimit = 2;
+    const limit = pLimit(concurrencyLimit);
+    
+    const results = await Promise.all(
+      serpQueries.map(queryItem => limit(async () => {
+        try {
+          console.log(`🔎 Recherche SERP pour : "${queryItem}"`);
+          const searchRes = await searchSearxng(queryItem, { language: 'fr', engines: this.config.activeEngines });
+          const newUrls = searchRes.results.map(item => item.url).filter(url => !!url);
+          const combinedContents = searchRes.results.map(item => item.content).join('\n');
+          console.log(`📝 Résultats pour "${queryItem}" : ${searchRes.results.length} résultats`);
+          
+          // Extraction des learnings et questions de suivi via l'LLM
+          const processPrompt =
+            `À partir du contenu suivant obtenu pour la requête "${queryItem}", extrais jusqu'à 3 éléments d'apprentissage clés et propose jusqu'à 3 questions de suivi pour approfondir la recherche.\n\n` +
+            `Contenu:\n${combinedContents}\n\n` +
+            `Format attendu:\nLearnings:\n- ...\nQuestions:\n- ...`;
+          const processResponse = await llm.invoke(processPrompt);
+          const lines = String(processResponse.content)
+            .split('\n')
+            .map(line => line.trim());
+          const extractedLearnings: string[] = [];
+          const followUpQuestions: string[] = [];
+          let section: 'learnings' | 'questions' | null = null;
+          for (const line of lines) {
+            if (line.toLowerCase().startsWith('learnings:')) {
+              section = 'learnings';
+              continue;
+            }
+            if (line.toLowerCase().startsWith('questions:')) {
+              section = 'questions';
+              continue;
+            }
+            if (section === 'learnings' && line.startsWith('-')) {
+              extractedLearnings.push(line.substring(1).trim());
+            }
+            if (section === 'questions' && line.startsWith('-')) {
+              followUpQuestions.push(line.substring(1).trim());
+            }
+          }
+          console.log(`✅ Pour "${queryItem}", extrait ${extractedLearnings.length} learnings`);
+          
+          const updatedLearnings = [...learnings, ...extractedLearnings];
+          const updatedUrls = [...visitedUrls, ...newUrls];
+          
+          // Si la profondeur n'est pas atteinte et qu'il existe des questions de suivi, on effectue une récursion.
+          if (depth > 1 && followUpQuestions.length > 0) {
+            const nextQuery = followUpQuestions[0]; // Vous pouvez adapter pour traiter plusieurs questions
+            console.log(`🔄 Recherche récursive avec la question de suivi : "${nextQuery}"`);
+            const recursiveResult = await this.deepResearch(llm, nextQuery, Math.ceil(breadth / 2), depth - 1, updatedLearnings, updatedUrls);
+            return recursiveResult;
+          } else {
+            return { learnings: updatedLearnings, visitedUrls: updatedUrls };
+          }
+        } catch (error) {
+          console.error(`❌ Erreur pour la requête "${queryItem}" :`, error);
+          return { learnings: [], visitedUrls: [] };
+        }
+      }))
+    );
+    
+    const combinedLearnings = results.flatMap(r => r.learnings);
+    const combinedUrls = results.flatMap(r => r.visitedUrls);
+    return {
+      learnings: Array.from(new Set(combinedLearnings)),
+      visitedUrls: Array.from(new Set(combinedUrls))
+    };
+  }
+
+  /* -------------------------
+     Méthode principale searchAndAnswer intégrant la deep research
+  -------------------------- */
+
+  async searchAndAnswer(
+    message: string,
+    history: BaseMessage[],
+    llm: BaseChatModel,
+    embeddings: Embeddings,
+    optimizationMode: 'speed' | 'balanced' | 'quality',
+    fileIds: string[]
+  ): Promise<EventEmitter> {
+    const emitter = new EventEmitter();
+    try {
+      // Vérification et nettoyage de l'historique pour assurer l'alternance
+      const cleanHistory = this.ensureAlternatingMessages([...this.conversationHistory, ...history]);
+      
+      // Mise à jour de l'historique avec le message utilisateur
+      this.conversationHistory = cleanHistory;
+      this.updateMemory(new HumanMessage(message));
+
+      let contextAdditional = '';
+
+      // Si l'option deep research est activée, on l'exécute pour enrichir le contexte
+      if (this.config.deepResearch && this.config.deepResearch.enabled) {
+        console.log('🔬 Activation de la recherche approfondie...');
+        const deepResult = await this.deepResearch(
+          llm,
+          message,
+          this.config.deepResearch.breadth,
+          this.config.deepResearch.depth
+        );
+        contextAdditional = `\n\n### Résultats de la recherche approfondie:\nLearnings:\n${deepResult.learnings.join('\n')}\n\nSources:\n${deepResult.visitedUrls.join('\n')}`;
+      }
+
+      // On enrichit la requête initiale avec les learnings et URLs collectés
+      const enrichedQuery = message + contextAdditional;
+      console.log('📩 Requête enrichie pour la chaîne finale :', enrichedQuery);
+
+      // Création de la chaîne de réponse
+      const answeringChain = await this.createAnsweringChain(llm, fileIds, embeddings, optimizationMode);
+      const stream = answeringChain.streamEvents(
+        {
+          chat_history: this.conversationHistory,
+          query: enrichedQuery
+        },
+        { version: 'v1' }
+      );
+
+      await this.handleStreamWithMemory(stream, emitter, llm, message);
+    } catch (error: any) {
+      console.error('❌ Erreur dans searchAndAnswer :', error);
+      await this.handleFallback(llm, message, this.conversationHistory, emitter, fileIds, embeddings, 'balanced');
+    }
+    return emitter;
+  }
+
+  // Nouvelle méthode pour assurer l'alternance des messages
+  private ensureAlternatingMessages(messages: BaseMessage[]): BaseMessage[] {
+    const cleanedMessages: BaseMessage[] = [];
+    let lastType: 'user' | 'assistant' | null = null;
+
+    for (const message of messages) {
+      const currentType = message instanceof HumanMessage ? 'user' : 'assistant';
+      
+      // Si c'est le premier message ou si le type est différent du dernier, on l'ajoute
+      if (lastType === null || currentType !== lastType) {
+        cleanedMessages.push(message);
+        lastType = currentType;
+      }
+      // Si deux messages du même type se suivent, on garde le plus récent
+      else if (currentType === lastType) {
+        cleanedMessages[cleanedMessages.length - 1] = message;
+      }
+    }
+
+    return cleanedMessages;
+  }
+
+  /* -------------------------
+     Méthode de secours en cas d'erreur
+  -------------------------- */
+
+  private async handleFallback(
+    llm: BaseChatModel,
+    message: string,
+    history: BaseMessage[],
+    emitter: EventEmitter,
+    fileIds: string[],
+    embeddings: Embeddings,
+    mode: 'speed' | 'balanced' | 'quality'
+  ) {
+    const answeringChain = await this.createAnsweringChain(
+      llm,
+      fileIds,
+      embeddings,
+      mode
+    );
+    const stream = answeringChain.streamEvents(
+      {
+        chat_history: history,
+        query: message
+      },
+      { version: 'v1' }
+    );
+    this.handleStreamWithMemory(stream, emitter, llm, message);
+  }
+
+  /* -------------------------
+     Vérification de l'initialisation du vector store
+  -------------------------- */
+
+  private async ensureVectorStoreInitialized(documents: Document[], embeddings: Embeddings): Promise<RAGDocumentChain> {
+    const ragChain = RAGDocumentChain.getInstance();
+    try {
+      const hasDocuments = ragChain.isInitialized();
+      if (!hasDocuments) {
+        console.log('🔄 Initialisation du vector store avec les documents...');
+        await ragChain.initializeVectorStoreFromDocuments(documents, embeddings);
+      } else {
+        console.log('✅ Vector store déjà initialisé avec des documents');
+      }
+      return ragChain;
+    } catch (error) {
+      console.error('❌ Erreur lors de l'initialisation du vector store:', error);
+      throw error;
+    }
+  }
+}
+
+/* ========================================================
+   EXPORT DES HANDLERS (LEGAL, DOCUMENTS, UPLOADS)
+======================================================== */
+
+export const searchHandlers: Record<string, MetaSearchAgentType> = {
+  legal: {
+    searchAndAnswer: async (
+      message,
+      history,
+      llm,
+      embeddings,
+      optimizationMode,
+      fileIds
+    ) => {
+      const emitter = new EventEmitter();
+      try {
+        const mergedHistory: BaseMessage[] = history;
+        const chain = RAGDocumentChain.getInstance();
+        await chain.initializeVectorStoreFromDocuments(
+          fileIds.map(fileId => new Document({
+            pageContent: '',
+            metadata: { source: fileId }
+          })),
+          embeddings
+        );
+        const searchChain = chain.createSearchChain(llm);
+        const results = await searchChain.invoke({
+          query: message,
+          chat_history: mergedHistory,
+          type: 'legal'
+        });
+        const response: SearchResponse = {
+          text: results,
+          sources: []
+        };
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'response',
+            data: response.text
+          })
+        );
+        emitter.emit('end');
+      } catch (error) {
+        emitter.emit(
+          'error',
+          JSON.stringify({
+            type: 'error',
+            data: error.message
+          })
+        );
+      }
+      return emitter;
+    }
+  },
+  documents: {
+    searchAndAnswer: async (
+      message,
+      history,
+      llm,
+      embeddings,
+      optimizationMode,
+      fileIds
+    ) => {
+      const emitter = new EventEmitter();
+      try {
+        const chain = RAGDocumentChain.getInstance();
+        await chain.initializeVectorStoreFromDocuments(
+          fileIds.map(fileId => new Document({
+            pageContent: '',
+            metadata: { source: fileId }
+          })),
+          embeddings
+        );
+        const searchChain = chain.createSearchChain(llm);
+        const results = await searchChain.invoke({
+          query: message,
+          chat_history: history,
+          type: 'documents'
+        });
+        const response: SearchResponse = {
+          text: results,
+          sources: []
+        };
+        emitter.emit(
+          'data',
+          JSON.stringify({
+            type: 'response',
+            data: response.text
+          })
+        );
+        emitter.emit('end');
+      } catch (error) {
+        emitter.emit(
+          'error',
+          JSON.stringify({
+            type: 'error',
+            data: error.message
+          })
+        );
+      }
+      return emitter;
+    }
+  },
+  uploads: {
+    searchAndAnswer: async (
+      message,
+      history,
+      llm,
+      embeddings,
+      optimizationMode,
+      fileIds
+    ) => {
+      const emitter = new EventEmitter();
+      try {
+        // Analyse de la requête pour en déduire l'intention
+        const queryIntent = await llm.invoke(`
+Analysez cette requête et déterminez son intention principale :
+1. SUMMARY (demande de résumé ou synthèse globale)
+2. ANALYSIS (demande d'analyse ou d'explication)
+3. SPECIFIC (question spécifique sur le contenu)
+4. COMPARE (demande de comparaison)
+
+Requête : "${message}"
+
+Répondez uniquement avec l'intention.
+        `);
+        const intent = String(queryIntent.content).trim();
+        console.log('🎯 Intention détectée:', intent);
+
+        const docsArrays = await Promise.all(
+          fileIds.map(async (fileId) => {
+            const filePath = path.join(process.cwd(), 'uploads', fileId);
+            const contentPath = `${filePath}-extracted.json`;
+            await fs.promises.access(contentPath);
+            const contentData = await fs.promises.readFile(contentPath, 'utf8');
+            const content = JSON.parse(contentData);
+            const chunkSize = 1000;
+            const overlap = 100;
+            const chunks: string[] = [];
+            let currentChunk = '';
+            let currentSize = 0;
+            content.contents.forEach((text: string) => {
+              currentChunk += text + ' ';
+              currentSize += text.length;
+              if (currentSize >= chunkSize) {
+                chunks.push(currentChunk);
+                currentChunk = currentChunk.slice(-overlap);
+                currentSize = overlap;
+              }
+            });
+            if (currentChunk) {
+              chunks.push(currentChunk);
+            }
+            return chunks.map((chunk, index) => {
+              const pageNumber = Math.floor(index / (chunks.length / (content.pageCount || 1))) + 1;
+              return new Document({
+                pageContent: chunk,
+                metadata: {
+                  title: content.title || 'Document sans titre',
+                  source: fileId,
+                  type: 'uploaded',
+                  url: `/viewer/${fileId}?page=${pageNumber}`,
+                  pageNumber,
+                  chunkIndex: index,
+                  totalChunks: chunks.length,
+                  searchText: chunk.substring(0, 100).replace(/[\n\r]+/g, ' ').trim()
+                }
+              });
+            });
+          })
+        );
+        const flatDocs = docsArrays.flat();
+        console.log('📚 Nombre total de chunks:', flatDocs.length);
+
+        const ragChain = RAGDocumentChain.getInstance();
+        await ragChain.initializeVectorStoreFromDocuments(flatDocs, embeddings);
+        const chain = ragChain.createSearchChain(llm);
+
+        let queryPrompt = message;
+        switch (intent) {
+          case 'SUMMARY':
+            queryPrompt = 'Fais un résumé complet et structuré de ce document en te concentrant sur les points clés';
+            break;
+          case 'ANALYSIS':
+            queryPrompt = `Analyse en détail les aspects suivants du document concernant : ${message}. Fournis une analyse structurée avec des exemples du texte.`;
+            break;
+          case 'SPECIFIC':
+            queryPrompt = `En te basant sur le contenu du document, réponds précisément à cette question : ${message}`;
+            break;
+          case 'COMPARE':
+            queryPrompt = `Compare et analyse en détail les différents aspects concernant : ${message}. Structure ta réponse par points de comparaison.`;
+            break;
+        }
+
+        const stream = await chain.streamEvents(
+          {
+            query: queryPrompt,
+            chat_history: history,
+            type: intent.toLowerCase()
+          },
+          { version: 'v1' }
+        );
+        let sourcesEmitted = false;
+        for await (const event of stream) {
+          if (event.event === 'on_chain_stream') {
+            emitter.emit(
+              'data',
+              JSON.stringify({
+                type: 'response',
+                data: event.data.chunk
+              })
+            );
+          }
+          if (!sourcesEmitted && event.event === 'on_chain_start') {
+            const sources = flatDocs.slice(0, 5).map(doc => ({
+              title: doc.metadata?.title || '',
+              content: doc.metadata?.searchText || '',
+              url: doc.metadata?.url,
+              source: doc.metadata?.source,
+              type: 'uploaded',
+              pageNumber: doc.metadata?.pageNumber
+            }));
+            emitter.emit(
+              'data',
+              JSON.stringify({
+                type: 'sources',
+                data: sources
+              })
+            );
+            sourcesEmitted = true;
+          }
+          if (event.event === 'on_chain_end') {
+            emitter.emit('end');
+          }
+        }
+      } catch (error) {
+        console.error('Erreur lors de la recherche dans les documents:', error);
+        emitter.emit(
+          'error',
+          JSON.stringify({
+            type: 'error',
+            data: error.message
+          })
+        );
+      }
+      return emitter;
+    }
+  }
+};
+
+export default MetaSearchAgent;
