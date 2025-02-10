@@ -37,4 +37,4 @@ Thumbs.db
 *.tsbuildinfo
 
 # Next.js
-.next/ 
+.next/ X-me/documentation/**/*.pdf
