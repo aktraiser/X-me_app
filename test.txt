@@ -1,0 +1,1 @@
+Ceci est un document de test pour vérifier le RAG. Il contient des informations importantes sur le test du système. Le système doit être capable de retrouver ces informations lors d'une recherche.
