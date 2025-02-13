@@ -28,10 +28,10 @@ services:
       dockerfile: backend.dockerfile
     image: itzcrazykns1337/xme-backend:main
     environment:
-      - SUPABASE_URL=https://qytbxgzxsywnfhlwcyqa.supabase.co
-      - SUPABASE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dGJ4Z3p4c3l3bmZobHdjeXFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwNTc3MTAsImV4cCI6MjA0NjYzMzcxMH0.XLRq-4CFL2MWxvCLzCv5ZdaF5VSi58cocx9FOyv37jU
+      - SUPABASE_URL=
+      - SUPABASE_KEY=
       - SEARXNG_API_URL=http://searxng:8080
-      - DATABASE_URL=postgresql://postgres.ineclpmaolnshsnekjad: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@aws-0-us-east-1.pooler.supabase.com:6543/postgres
+      - DATABASE_URL=
     depends_on:
       - searxng
       - chroma
@@ -59,12 +59,12 @@ services:
         NEXT_PUBLIC_WS_URL: ws://localhost:3001
         NEXT_PUBLIC_API_URL: http://localhost:3001/api
         NEXT_PUBLIC_SUPABASE_URL: https://qytbxgzxsywnfhlwcyqa.supabase.co
-        NEXT_PUBLIC_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dGJ4Z3p4c3l3bmZobHdjeXFhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzEwNTc3MTAsImV4cCI6MjA0NjYzMzcxMH0.XLRq-4CFL2MWxvCLzCv5ZdaF5VSi58cocx9FOyv37jU
+        NEXT_PUBLIC_SUPABASE_ANON_KEY:
     environment:
       - NODE_ENV=production
-      - STRIPE_SECRET_KEY=sk_test_51QqFgrHFhbg7l1ZnpMrvO6msUXRxrXJaQrcz0Zx90eMO3OjCNxzaR1TGPvN6wYUbH2nUMfbkURGO1RD5Py6Xodky00UV9J1PUe
-      - STRIPE_WEBHOOK_SECRET=whsec_b0b30074b617ffe2d4f235e3101f55b7a870d1c17ebffdd7d1989d2ab59d646a
-      - SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5dGJ4Z3p4c3l3bmZobHdjeXFhIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTczMTA1NzcxMCwiZXhwIjoyMDQ2NjMzNzEwfQ.xIB0Kyrsdv1q7yVde9rdROW0MBnRBT769hxyxsqa9n0
+      - STRIPE_SECRET_KEY=
+      - STRIPE_WEBHOOK_SECRET=
+      - SUPABASE_SERVICE_ROLE_KEY=
     depends_on:
       - xme-backend
     ports:
