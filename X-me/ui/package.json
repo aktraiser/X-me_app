@@ -38,6 +38,8 @@
     "react-textarea-autosize": "^8.5.3",
     "rsuite": "^5.77.0",
     "sonner": "^1.7.1",
+    "stripe": "^17.6.0",
+    "swiper": "^11.2.2",
     "tailwind-merge": "^2.5.5",
     "yet-another-react-lightbox": "^3.17.2",
     "zod": "^3.22.4"

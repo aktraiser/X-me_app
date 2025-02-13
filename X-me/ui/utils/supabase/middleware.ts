@@ -33,6 +33,11 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
 
+  // Ajouter une exception pour le webhook Stripe
+  if (request.nextUrl.pathname === '/api/webhook/stripe') {
+    return NextResponse.next();
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -41,7 +46,7 @@ export async function updateSession(request: NextRequest) {
     !user &&
     !request.nextUrl.pathname.startsWith("/login") &&
     !request.nextUrl.pathname.startsWith("/auth") &&
-    !request.nextUrl.pathname.startsWith("/register") && // Add this line
+    !request.nextUrl.pathname.startsWith("/register") &&
     !request.nextUrl.pathname.startsWith("/forgot-password")
   ) {
     // no user, potentially respond by redirecting the user to the login page

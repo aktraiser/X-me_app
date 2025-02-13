@@ -58,7 +58,7 @@ export class SuggestionService {
     this.openai = new OpenAI({
       apiKey: getOpenaiApiKey(),
     });
-    // Source statique regroupant l’ensemble des questions business
+    // Source statique regroupant l'ensemble des questions business
     this.sources.push({
       type: 'static',
       priority: 1,
@@ -80,12 +80,19 @@ export class SuggestionService {
         model: "gpt-3.5-turbo",
         messages: [{
           role: "system",
-          content: `Vous êtes un expert en business. À partir de la phrase partielle de l'utilisateur, fournissez une liste d'au maximum 5 suggestions de questions business pertinentes et concises. Chaque suggestion doit être une question complète se terminant par un point d'interrogation, sans texte additionnel ni commentaire.`
+          content: `Vous êtes un expert en business et accompagnement d'entreprise. 
+          À partir du début de la phrase de l'utilisateur, fournissez une liste d'au maximum 5 suggestions de questions que l'utilisateur pourrait poser.
+          Les questions doivent être formulées à la première personne, comme si l'utilisateur les posait lui-même. Par exemple :
+          - "Comment puis-je réaliser une étude de marché ?" (et non pas "Avez-vous réalisé une étude de marché ?")
+          - "Quel statut juridique dois-je choisir ?" (et non pas "Quel statut juridique envisagez-vous ?")
+          
+          Les suggestions doivent être pertinentes, concises et directement utilisables par l'utilisateur pour obtenir des informations.
+          Chaque suggestion doit être une question complète se terminant par un point d'interrogation.`
         }, {
           role: "user",
           content: input
         }],
-        temperature: 0.5,
+        temperature: 0.7,
         max_tokens: 60
       });
 
@@ -121,7 +128,7 @@ export class SuggestionService {
     const inputLower = input.toLowerCase().trim();
     let suggestions: string[] = [];
 
-    // Filtrer les suggestions statiques et vérifier qu’elles correspondent bien à une question concise
+    // Filtrer les suggestions statiques et vérifier qu'elles correspondent bien à une question concise
     suggestions = this.sources
       .find(s => s.type === 'static')
       ?.data
@@ -146,7 +153,7 @@ export class SuggestionService {
 
     const uniqueSuggestions = [...new Set(suggestions)]
       .filter(s => s && s.length > 0)
-      .slice(0, 8);
+      .slice(0, 6);
 
     // Mise en cache pendant 5 minutes
     cache.set(cacheKey, uniqueSuggestions, 300);

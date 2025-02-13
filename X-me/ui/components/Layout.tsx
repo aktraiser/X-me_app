@@ -27,33 +27,35 @@ const Layout = ({ children }: LayoutProps) => {
 
   return (
     <div className="min-h-screen bg-dark-secondary flex overflow-hidden relative">
-      {/* Sidebar - hidden on mobile, visible from tablet up */}
-      <div className="hidden md:block">
-        <Sidebar onExpandChange={setIsExpanded} />
-      </div>
-      
+      {/* Sidebar - visible on all screens */}
+      <Sidebar onExpandChange={setIsExpanded} />
+
       {/* Main content area */}
       <div className={cn(
         "flex-1 transition-all duration-300 w-full",
-        // No padding on mobile, adjust for tablet/desktop
+        // Add bottom padding for mobile to account for bottom navigation
+        "pb-[88px] lg:pb-0",
+        // No left padding on mobile, adjust for desktop
         "pl-0",
-        // Tablet and desktop padding based on sidebar state
-        isExpanded ? "md:pl-56" : "md:pl-20"
+        // Desktop padding based on sidebar state
+        isExpanded ? "lg:pl-56" : "lg:pl-20"
       )}>
         <div className={cn(
           "fixed inset-0 transition-all duration-300",
-          // No padding on mobile, adjust for tablet/desktop
+          // Add bottom padding for mobile to account for bottom navigation
+          "pb-[88px] lg:pb-0",
+          // No left padding on mobile, adjust for desktop
           "pl-0",
-          // Tablet and desktop padding based on sidebar state
-          isExpanded ? "md:pl-56" : "md:pl-20"
+          // Desktop padding based on sidebar state
+          isExpanded ? "lg:pl-56" : "lg:pl-20"
         )}>
           <div className={cn(
-            "h-screen md:h-[calc(100vh-24px)]",
+            "h-screen lg:h-[calc(100vh-24px)]",
             "bg-dark-primary",
             // Mobile: full width, no margins
             "m-0",
-            // Tablet/Desktop: margins and rounded corners
-            "md:m-3 md:ml-0 md:rounded-xl"
+            // Desktop: margins and rounded corners
+            "lg:m-3 lg:ml-0 lg:rounded-xl"
           )}>
             <div className="h-full overflow-y-auto scrollbar-hide" id="main-scroll-container">
               <div className="w-full max-w-none mx-auto">
@@ -64,8 +66,8 @@ const Layout = ({ children }: LayoutProps) => {
         </div>
       </div>
       
-      {/* Info bubble - hidden on mobile, visible from tablet up */}
-      <div className="hidden md:block">
+      {/* Info bubble - hidden on mobile, visible from desktop up */}
+      <div className="hidden lg:block">
         <InfoBubble />
       </div>
     </div>

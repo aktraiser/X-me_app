@@ -30,68 +30,63 @@ const ExpertCard = ({ expert }: { expert: Expert }) => {
     <Link
       href={`/expert/${expert.id_expert}`}
       key={expert.id}
-      className="group relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+      className="group relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-white dark:bg-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
     >
       {/* Image Section - Top 60% */}
       <div className="absolute inset-0 h-[60%]">
         {expert.image_url ? (
-          <Image
-            src={expert.image_url}
-            alt={`${expert.prenom} ${expert.nom}`}
-            fill
-            className="object-cover"
-            onError={(e) => {
-              const target = e.target as HTMLImageElement;
-              target.onerror = null;
-              target.src = '/placeholder-image.jpg';
-            }}
-          />
+          <>
+            <Image
+              src={expert.image_url}
+              alt={`${expert.prenom} ${expert.nom}`}
+              fill
+              className="object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement;
+                target.onerror = null;
+                target.src = '/placeholder-image.jpg';
+              }}
+            />
+            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
+            <div className="absolute bottom-0 left-0 p-4 w-full">
+              <h2 className="text-2xl font-bold text-white mb-1">
+                {expert.prenom}
+              </h2>
+              <div className="flex items-center text-white/90 text-sm">
+                <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Localisé(e) à {expert.ville}
+              </div>
+            </div>
+          </>
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center">
+          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center">
             <Users className="w-20 h-20 text-gray-600" />
           </div>
         )}
       </div>
 
       {/* Content Section - Bottom 40% */}
-      <div className="absolute bottom-0 left-0 right-0 h-[45%] bg-black/90 backdrop-blur-sm p-4">
-        {/* Name and Location */}
-        <div className="space-y-1 mb-2">
-          <h2 className="text-xl font-bold text-white">
-            {expert.prenom}
-          </h2>
-          <div className="flex items-center text-white/80 text-xs">
-            <svg className="w-3 h-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Localisé(e) à {expert.ville}
-          </div>
-        </div>
-
-        {/* Price */}
-        {expert.tarif && (
-          <div className="mb-2">
-            <div className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-xs">
+      <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-dark-secondary backdrop-blur-sm p-4">
+        <div className="flex items-center justify-between mb-3">
+          {expert.tarif && (
+            <div className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm">
               {expert.tarif}€<span className="text-xs">/jour</span>
             </div>
-          </div>
-        )}
-
-        {/* Expertise Title */}
-        <h3 className="text-sm font-semibold text-white mb-1.5">
-          {expert.expertises.split(',')[0]}
-        </h3>
+          )}
+        </div>
         
-        {/* Expertise Tags */}
-        <div className="flex flex-wrap gap-1">
-          {expert.expertises.split(',').slice(1).map((expertise, index) => (
-            <span
+        {/* Expertises */}
+        <div className="space-y-1">
+          {expert.expertises.split(';').map((expertise, index) => (
+            <div
               key={index}
-              className="px-2 py-0.5 text-xs font-medium rounded-full bg-white/10 text-white backdrop-blur-sm"
+              className="text-white/90 text-sm font-medium"
             >
               {expertise.trim()}
-            </span>
+            </div>
           ))}
         </div>
       </div>
@@ -131,15 +126,26 @@ const Page = () => {
         .from('experts')
         .select('*');
 
-      // Ajout du filtre de recherche
-      if (searchQuery) {
-        query = query.or(`nom.ilike.%${searchQuery}%,prenom.ilike.%${searchQuery}%,expertises.ilike.%${searchQuery}%`);
+      // Improved search functionality
+      if (searchQuery.trim()) {
+        const searchTerms = searchQuery.trim().toLowerCase().split(/\s+/);
+        
+        query = query.or(
+          searchTerms.map(term => `or(nom.ilike.%${term}%,prenom.ilike.%${term}%,expertises.ilike.%${term}%,ville.ilike.%${term}%,pays.ilike.%${term}%)`).join(',')
+        );
       }
 
+      // Apply expertise filters
       if (selectedExpertises.length > 0) {
-        query = query.contains('expertises', selectedExpertises);
+        query = query.or(
+          selectedExpertises.map(expertise => 
+            // Recherche avec le point-virgule pour correspondre exactement au format en base
+            `expertises.ilike.%;${expertise.trim()}%,expertises.ilike.%${expertise.trim()};%`
+          ).join(',')
+        );
       }
 
+      // Apply location filters
       if (selectedPays) {
         query = query.eq('pays', selectedPays);
       }
@@ -150,7 +156,21 @@ const Page = () => {
 
       const { data, error } = await query;
           
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw error;
+      }
+      
+      // Sort results by relevance if there's a search query
+      if (searchQuery.trim()) {
+        const searchTerms = searchQuery.toLowerCase().split(/\s+/);
+        data.sort((a, b) => {
+          const aRelevance = calculateRelevance(a, searchTerms);
+          const bRelevance = calculateRelevance(b, searchTerms);
+          return bRelevance - aRelevance;
+        });
+      }
+      
       setExperts(data);
     } catch (err: any) {
       console.error('Error fetching experts:', err.message);
@@ -158,7 +178,43 @@ const Page = () => {
     } finally {
       setLoading(false);
     }
-  }, [selectedPays, selectedVille, selectedExpertises, searchQuery]);
+  }, [searchQuery, selectedPays, selectedVille, selectedExpertises]);
+
+  // Add helper function for calculating search relevance
+  const calculateRelevance = (expert: Expert, searchTerms: string[]) => {
+    let score = 0;
+    const expertises = expert.expertises.split(';').map(exp => exp.trim());
+    const expertText = `${expert.nom} ${expert.prenom} ${expertises.join(' ')} ${expert.ville} ${expert.pays}`.toLowerCase();
+    
+    searchTerms.forEach(term => {
+      // Exact matches get higher scores
+      if (expert.nom.toLowerCase() === term || expert.prenom.toLowerCase() === term) {
+        score += 10;
+      }
+      // Partial matches in name or expertise get medium scores
+      if (expert.nom.toLowerCase().includes(term) || expert.prenom.toLowerCase().includes(term)) {
+        score += 5;
+      }
+      // Check each expertise individually
+      expertises.forEach(expertise => {
+        if (expertise.toLowerCase() === term) {
+          score += 5; // Exact expertise match
+        } else if (expertise.toLowerCase().includes(term)) {
+          score += 3; // Partial expertise match
+        }
+      });
+      // Location matches get lower scores
+      if (expert.ville.toLowerCase().includes(term) || expert.pays.toLowerCase().includes(term)) {
+        score += 2;
+      }
+      // General content match
+      if (expertText.includes(term)) {
+        score += 1;
+      }
+    });
+    
+    return score;
+  };
 
   // Récupérer la liste des pays et villes uniques
   const fetchLocations = async () => {
@@ -200,10 +256,32 @@ const Page = () => {
     setSelectedVille('');
   }, [selectedPays]);
 
+  // Trigger search when filters change
   useEffect(() => {
     fetchExperts();
+  }, [searchQuery, selectedPays, selectedVille, selectedExpertises, fetchExperts]);
+
+  // Add debounce for search query
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      fetchExperts();
+    }, 300); // 300ms delay
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, fetchExperts]);
+
+  // Separate useEffect for initial load and location fetching
+  useEffect(() => {
     fetchLocations();
-  }, [fetchExperts]);
+  }, []);
+
+  // Add console logs for debugging
+  useEffect(() => {
+    console.log('Search Query:', searchQuery);
+    console.log('Selected Pays:', selectedPays);
+    console.log('Selected Ville:', selectedVille);
+    console.log('Selected Expertises:', selectedExpertises);
+  }, [searchQuery, selectedPays, selectedVille, selectedExpertises]);
 
   // Close filter dropdown when clicking outside
   useEffect(() => {

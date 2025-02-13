@@ -8,7 +8,11 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/components';
 import { toast } from 'react-hot-toast';
 
-export default function SignUpForm({ onToggleMode }: { onToggleMode: () => void }) {
+interface SignUpFormProps {
+  onToggleMode: () => void;
+}
+
+export default function SignUpForm({ onToggleMode }: SignUpFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

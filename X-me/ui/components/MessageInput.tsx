@@ -95,7 +95,7 @@ const MessageInput = ({
           setTextareaRows(Math.ceil(height / props.rowHeight));
         }}
         className="transition bg-transparent dark:placeholder:text-white/50 placeholder:text-sm text-sm dark:text-white resize-none focus:outline-none w-full px-2 max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink"
-        placeholder="Votre question"
+        placeholder="Message à X&me"
       />
       {mode === 'single' && (
         <div className="flex flex-row items-center space-x-4">
@@ -122,7 +122,7 @@ const MessageInput = ({
             />
             <button
               disabled={message.trim().length === 0 || loading}
-              className="bg-[#24A0ED] text-white text-black/50 dark:disabled:text-white/50 hover:bg-opacity-85 transition duration-100 disabled:bg-[#e0e0dc79] dark:disabled:bg-[#ececec21] rounded-full p-2"
+              className="bg-gray-700 hover:bg-gray-800 text-white text-black/50 dark:disabled:text-white/50 hover:bg-opacity-85 transition duration-100 disabled:bg-[#e0e0dc79] dark:disabled:bg-[#ececec21] rounded-full p-2"
             >
               <ArrowUp className="bg-background" size={17} />
             </button>

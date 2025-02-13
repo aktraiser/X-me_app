@@ -44,7 +44,7 @@ const Page = () => {
   return (
     <>
       <PageHeader
-        title="Bibliothèque"
+        title="Historique"
         icon={<Library className="w-6 h-6" />}
       />
       <main className="min-h-screen">
@@ -53,7 +53,7 @@ const Page = () => {
             <div className="flex items-center justify-between py-4">
               <div className="flex flex-col">
                 <p className="text-gray-500 mt-1">
-                  Retrouvez tous vos documents
+                  Retrouvez ici toutes vos discussions
                 </p>
               </div>
             </div>

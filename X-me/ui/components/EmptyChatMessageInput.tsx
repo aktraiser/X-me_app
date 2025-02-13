@@ -1,4 +1,4 @@
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Search } from 'lucide-react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 import TextareaAutosize from 'react-textarea-autosize';
 import Attach from './MessageInputActions/Attach';
@@ -30,7 +30,7 @@ const EmptyChatMessageInput = ({
   const [message, setMessage] = useState('');
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(0);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [isLoading, setIsLoading] = useState(false);
   const { ws } = useWebSocket();
 
@@ -109,9 +109,9 @@ const EmptyChatMessageInput = ({
     };
   }, [message, updateSuggestions]);
 
-  // Réinitialise l’index sélectionné à chaque changement de suggestions
+  // Réinitialise l'index sélectionné à chaque changement de suggestions
   useEffect(() => {
-    setSelectedSuggestionIndex(0);
+    setSelectedSuggestionIndex(-1);
   }, [suggestions]);
 
   // Focus global sur le champ de saisie avec la touche "/"
@@ -154,7 +154,7 @@ const EmptyChatMessageInput = ({
           } else if (e.key === 'ArrowUp') {
             e.preventDefault();
             setSelectedSuggestionIndex(prev =>
-              prev > 0 ? prev - 1 : prev
+              prev > -1 ? prev - 1 : -1
             );
           } else if (e.key === 'Enter') {
             if (e.shiftKey) return;
@@ -181,27 +181,29 @@ const EmptyChatMessageInput = ({
       }}
       className="w-full relative"
     >
-      <div className="flex flex-col bg-light-secondary dark:bg-dark-secondary px-5 pt-5 pb-2 rounded-lg w-full border border-light-200 dark:border-dark-200">
+      <div className={`flex flex-col bg-light-secondary dark:bg-dark-secondary px-5 pt-5 pb-2 w-full border border-light-200 dark:border-dark-200 ${
+        showSuggestions ? 'rounded-t-lg' : 'rounded-lg'
+      }`}>
         <TextareaAutosize
           ref={inputRef}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           minRows={2}
-          className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-sm text-black dark:text-white resize-none focus:outline-none w-full max-h-24 lg:max-h-36 xl:max-h-48"
+          className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-sm sm:text-sm text-black dark:text-white resize-none focus:outline-none w-full max-h-20 sm:max-h-24 lg:max-h-36 xl:max-h-48"
           placeholder="Message à X&me..."
         />
         {showSuggestions && (
-          <div className="absolute left-0 right-0 top-full bg-dark-secondary border border-dark-200 rounded-lg mt-1 shadow-lg z-50">
+          <div className="absolute left-0 right-0 bottom-0 translate-y-full bg-light-secondary dark:bg-dark-secondary border-x border-b border-light-200 dark:border-dark-200 rounded-b-lg shadow-lg z-50 max-h-[50vh] overflow-y-auto">
             {isLoading ? (
-              <div className="px-4 py-2 text-sm text-gray-400">
+              <div className="px-3 sm:px-4 py-2 text-xs sm:text-sm text-gray-400">
                 Chargement des suggestions...
               </div>
             ) : (
               suggestions.map((suggestion, index) => (
                 <div
                   key={suggestion}
-                  className={`flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-dark-100 ${
-                    index === selectedSuggestionIndex ? 'bg-dark-100' : ''
+                  className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 cursor-pointer transition-all duration-200 ease-in-out hover:bg-gray-700/30 ${
+                    index === selectedSuggestionIndex && document.activeElement?.tagName === 'TEXTAREA' ? 'bg-gray-700/90' : ''
                   }`}
                   onClick={() => {
                     sendMessage(suggestion);
@@ -209,15 +211,18 @@ const EmptyChatMessageInput = ({
                     setShowSuggestions(false);
                   }}
                 >
-                  <span className="text-white text-sm">{suggestion}</span>
-                  <ArrowUpRight className="text-gray-400" size={16} />
+                  <Search className="text-gray-400 hidden sm:block" size={16} />
+                  <span className="text-black dark:text-white text-xs sm:text-sm flex-grow line-clamp-2 sm:line-clamp-1">{suggestion}</span>
+                  <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+                    <ArrowUpRight className="text-gray-400" size={14} />
+                  </div>
                 </div>
               ))
             )}
           </div>
         )}
-        <div className="flex flex-row items-center justify-between mt-4">
-          <div className="flex flex-row items-center space-x-2 lg:space-x-4">
+        <div className="flex flex-row items-center justify-between mt-2 sm:mt-4">
+          <div className="flex flex-row items-center space-x-1 sm:space-x-2 lg:space-x-4">
             <Attach
               fileIds={fileIds}
               setFileIds={setFileIds}
@@ -229,9 +234,9 @@ const EmptyChatMessageInput = ({
           <div className="flex flex-row items-center space-x-1 sm:space-x-4">
             <button
               disabled={message.trim().length === 0}
-              className="bg-[#24A0ED] text-white disabled:text-black/50 dark:disabled:text-white/50 disabled:bg-[#e0e0dc] dark:disabled:bg-[#ececec21] hover:bg-opacity-85 transition duration-100 rounded-full p-2"
+              className="bg-gray-700 hover:bg-gray-800 text-white disabled:text-black/50 dark:disabled:text-white/50 disabled:bg-[#e0e0dc] dark:disabled:bg-[#ececec21] hover:bg-opacity-85 transition duration-100 rounded-full p-1.5 sm:p-2"
             >
-              <ArrowRight className="bg-background" size={17} />
+              <ArrowRight className="bg-background w-4 h-4 sm:w-[17px] sm:h-[17px]" />
             </button>
           </div>
         </div>

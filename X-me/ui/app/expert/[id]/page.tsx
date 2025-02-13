@@ -76,7 +76,7 @@ export default function ExpertPage({ params }: { params: { id: string } }) {
   const mainExpertise = expert.expertises.split(',')[0].trim();
 
   return (
-    <div className="min-h-screen bg-light-primary dark:bg-dark-primary p-8">
+    <div className="min-h-screen bg-light-primary dark:bg-gray-700 p-8">
       <div className="max-w-4xl mx-auto">
         {/* En-tête avec photo et informations principales */}
         <div className="flex flex-col md:flex-row gap-8 mb-12">

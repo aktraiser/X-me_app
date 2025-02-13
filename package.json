@@ -4,8 +4,10 @@
     "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/supabase-js": "^2.48.1",
     "@types/p-limit": "^2.1.0",
+    "@types/stripe": "^8.0.417",
     "next-themes": "^0.4.4",
     "p-limit": "^6.2.0",
-    "react-hot-toast": "^2.5.1"
+    "react-hot-toast": "^2.5.1",
+    "stripe": "^17.6.0"
   }
 }

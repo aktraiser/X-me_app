@@ -7,6 +7,7 @@ import Image from 'next/image';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, useEffect, type ReactNode } from 'react';
 import SettingsDialog from './SettingsDialog';
+import { createClient } from '@/utils/supabase/client';
 import {
   Tooltip,
   TooltipContent,
@@ -58,6 +59,29 @@ const Sidebar = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [chatHistory, setChatHistory] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        setUser(session.user);
+        // Fetch profile data
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('avatar_url')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (data && !error) {
+          setAvatarUrl(data.avatar_url);
+        }
+      }
+    };
+    getUser();
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -74,7 +98,14 @@ const Sidebar = ({
         });
         const data = await res.json();
         if (data && data.chats) {
-          setChatHistory(data.chats);
+          // Garder seulement les deux dernières discussions existantes
+          const existingChats = chatHistory.slice(-2);
+          // Ajouter les nouvelles discussions au début
+          const newChats = data.chats.filter(
+            (newChat: Chat) => !existingChats.some((chat) => chat.id === newChat.id)
+          );
+          // Combiner les nouvelles discussions avec les deux dernières existantes
+          setChatHistory([...newChats, ...existingChats].slice(-3));
         }
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -93,7 +124,7 @@ const Sidebar = ({
     return () => {
       controller.abort();
     };
-  }, [isExpanded]);
+  }, [isExpanded, chatHistory]);
 
   useEffect(() => {
     onExpandChange?.(isExpanded);
@@ -117,19 +148,19 @@ const Sidebar = ({
       icon: Search,
       href: '/discover',
       active: segments.includes('discover'),
-      label: 'Découvrir',
+      label: 'Recherche',
     },
     {
       icon: Clock,
       href: '/etude',
-      active: segments.includes('spaces'),
-      label: 'Espaces',
+      active: segments.includes('etude'),
+      label: 'Etudes',
     },
     {
       icon: Library,
       href: '/library',
       active: segments.includes('library'),
-      label: 'Bibliothèque',
+      label: 'Historique',
     },
   ];
 
@@ -158,6 +189,7 @@ const Sidebar = ({
                 isExpanded ? "px-3" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
               )}
             >
+              <Link href="/" className="w-full">
               {isExpanded ? (
                 <div className="flex items-center gap-3 w-full h-full px-4 py-3 border border-black/20 dark:border-white/20 rounded-full hover:border-[#c59d3f] transition-all">
                   <SquarePen className="w-5 h-5 shrink-0" />
@@ -177,6 +209,7 @@ const Sidebar = ({
                   </Tooltip>
                 </TooltipProvider>
               )}
+              </Link>
             </button>
           </div>
           <VerticalIconContainer>
@@ -202,7 +235,7 @@ const Sidebar = ({
                     <div className="absolute right-0 -mr-2 h-full w-1 rounded-l-lg bg-black dark:bg-white" />
                   )}
                 </Link>
-                {isExpanded && link.label === "Bibliothèque" && !loading && chatHistory && chatHistory.length > 0 && (
+                {isExpanded && link.label === "Historique" && !loading && chatHistory && chatHistory.length > 0 && (
                   <div className="relative pl-8 mt-1 space-y-0.5">
                     <div className="absolute left-6 top-0 bottom-0 w-[1px] bg-black/10 dark:bg-white/10" />
                     {chatHistory.map((chat) => (
@@ -251,6 +284,8 @@ const Sidebar = ({
               </div>
             </button>
 
+            <div className="w-full h-px bg-black/10 dark:bg-white/10" />
+
             <Link
               href="/settings"
               className={cn(
@@ -262,15 +297,27 @@ const Sidebar = ({
               <div className="flex items-center justify-center h-full">
                 {isExpanded ? (
                   <>
-                    <Settings className="w-5 h-5 shrink-0" />
+                    <div className="w-5 h-5 relative shrink-0">
+                      <Image
+                        src={avatarUrl || '/images/default-avatar.jpg'}
+                        alt="Avatar"
+                        fill
+                        className="rounded-full object-cover"
+                      />
+                    </div>
                     <span className="ml-3 text-base font-medium transition-all duration-300">Mon Profil</span>
                   </>
                 ) : (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="flex items-center justify-center h-full">
-                          <Settings className="w-5 h-5 shrink-0" />
+                        <div className="w-5 h-5 relative">
+                          <Image
+                            src={avatarUrl || '/images/default-avatar.jpg'}
+                            alt="Avatar"
+                            fill
+                            className="rounded-full object-cover"
+                          />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
@@ -285,7 +332,7 @@ const Sidebar = ({
             <button
               onClick={() => setIsSettingsOpen(!isSettingsOpen)}
               className={cn(
-                "flex items-center w-full h-10 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 rounded-lg",
+                "hidden lg:flex items-center w-full h-10 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 rounded-lg",
                 isExpanded ? "px-3" : "justify-center"
               )}
             >
@@ -319,6 +366,54 @@ const Sidebar = ({
           />
         </div>
       </div>
+
+      {/* Mobile Navigation - Only on home page */}
+      {(segments.length === 0) && (
+        <div className="fixed top-0 left-0 right-0 w-full z-[100] flex justify-between items-center px-4 py-4 lg:hidden">
+          <div className="w-8 h-8">
+            <Image
+              src="/images/logo.svg"
+              alt="Logo"
+              width={32}
+              height={32}
+              className="w-full h-full"
+            />
+          </div>
+          <Link href="/settings">
+            <div className="w-8 h-8 relative">
+              <Image
+                src={avatarUrl || '/images/default-avatar.jpg'}
+                alt="Avatar"
+                fill
+                className="rounded-full object-cover"
+              />
+            </div>
+          </Link>
+        </div>
+      )}
+
+      <div className="fixed bottom-0 left-0 right-0 w-full z-[100] flex flex-row items-center justify-between bg-dark-secondary px-4 py-4 shadow-t-sm lg:hidden">
+        {navLinks.map((link, i) => (
+          <Link
+            href={link.href}
+            key={i}
+            className={cn(
+              'relative flex flex-col items-center space-y-1 text-center w-full',
+              link.active
+                ? 'text-white'
+                : 'text-white/70',
+            )}
+          >
+            {link.active && (
+              <div className="absolute top-0 -mt-4 h-1 w-full rounded-b-lg bg-white" />
+            )}
+            <link.icon className="w-5 h-5" />
+            <p className="text-xs">{link.label}</p>
+          </Link>
+        ))}
+      </div>
+
+      {children}
     </div>
   );
 };
