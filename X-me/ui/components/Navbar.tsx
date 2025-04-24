@@ -45,27 +45,27 @@ const Navbar = ({
   }, []);
 
   return (
-    <div className="sticky top-0 z-50 w-full border-b border-dark-200 bg-dark-primary rounded-t-xl">
+    <div className="sticky top-0 z-50 w-full border-b border-dark-200 bg-light-secondary dark:bg-dark-primary rounded-t-xl">
       <div className="w-full px-4 flex items-center justify-between py-4">
         <div className="flex items-center space-x-4">
           <a
             href="/"
-            className="active:scale-95 transition duration-100 cursor-pointer lg:hidden"
+            className="active:scale-95 transition duration-100 cursor-pointer lg:hidden text-black/70 dark:text-white/70"
           >
             <Edit size={17} />
           </a>
           <div className="hidden lg:flex items-center space-x-2">
-            <Clock size={17} />
-            <p className="text-xs text-white/70">Il y a {timeAgo}</p>
+            <Clock size={17} className="text-black/70 dark:text-white/70" />
+            <p className="text-xs text-black/70 dark:text-white/70">Il y a {timeAgo}</p>
           </div>
-          <span className="hidden lg:block text-white/30">|</span>
-          <p className="hidden lg:block text-xs text-white/70">{title}</p>
+          <span className="hidden lg:block text-black/30 dark:text-white/30">|</span>
+          <p className="hidden lg:block text-xs text-black/70 dark:text-white/70">{title}</p>
         </div>
 
         <div className="flex items-center space-x-4">
           <Share
             size={17}
-            className="active:scale-95 transition duration-100 cursor-pointer text-white/70"
+            className="active:scale-95 transition duration-100 cursor-pointer text-black/70 dark:text-white/70"
           />
           <DeleteChat redirect chatId={chatId} chats={[]} setChats={() => {}} />
         </div>

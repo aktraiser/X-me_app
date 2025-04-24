@@ -4,7 +4,7 @@ import type { BaseChatModel } from '@langchain/core/language_models/chat_models'
 import type { Embeddings } from '@langchain/core/embeddings';
 import logger from '../utils/logger';
 import db from '../db';
-import { chats, messages as messagesSchema } from '../db/schema';
+import { chats, messages as messagesSchema, MessageInsert, ChatInsert } from '../db/schema';
 import { eq, asc, gt } from 'drizzle-orm';
 import crypto from 'crypto';
 import { getFileDetails } from '../utils/files';
@@ -12,36 +12,17 @@ import MetaSearchAgent, {
   MetaSearchAgentType,
 } from '../search/metaSearchAgent';
 import prompts from '../prompts';
-import MarketResearchAgent from '../search/marketResearchAgent';
 import { suggestionService } from '../services/suggestionService';
+import { MessageType, ChatType, WSMessageType, SearchHandlerType } from '../types/messages';
 
-
+// Types simplifiés pour l'usage local si nécessaire
 type Message = {
   messageId: string;
   chatId: string;
   content: string;
 };
 
-type SearchHandlerType = 
-  | 'webSearch' 
-  | 'marketResearch' 
-  | 'academicSearch' 
-  | 'writingAssistant' 
-  | 'wolframAlphaSearch' 
-  | 'youtubeSearch' 
-  | 'redditSearch'
-  | 'legal'
-  | 'documents'
-  | 'uploads';
-
-type WSMessage = {
-  message: Message;
-  optimizationMode: 'speed' | 'balanced' | 'quality';
-  type: 'message' | 'sources' | 'error' | 'suggestions';
-  focusMode: SearchHandlerType;
-  history: Array<[string, string]>;
-  files: Array<string>;
-};
+type WSMessage = WSMessageType;
 
 export const searchHandlers = {
   webSearch: new MetaSearchAgent({
@@ -53,16 +34,9 @@ export const searchHandlers = {
     searchWeb: true,
     summarizer: false,
     searchDatabase: true,
-  }),
-  marketResearch: new MarketResearchAgent({
-    activeEngines: ['google'],
-    rerank: true,
-    rerankThreshold: 0.5,
-    searchWeb: true,
-    summarizer: false,
-    searchDatabase: true,
-    queryGeneratorPrompt: prompts.webSearchetudeRetrieverPrompt,
-    responsePrompt: prompts.webSearchetudeResponsePrompt
+    useOpenAISearch: true,
+    useFirecrawl: true,
+    searchModel: 'gpt-4o-mini'
   }),
   academicSearch: new MetaSearchAgent({
     activeEngines: ['google'],
@@ -73,6 +47,9 @@ export const searchHandlers = {
     searchWeb: true,
     summarizer: false,
     searchDatabase: true,
+    useOpenAISearch: true,
+    useFirecrawl: true,
+    searchModel: 'gpt-4o-mini'
   }),
   writingAssistant: new MetaSearchAgent({
     activeEngines: [],
@@ -83,6 +60,7 @@ export const searchHandlers = {
     searchWeb: false,
     summarizer: false,
     searchDatabase: true,
+    useOpenAISearch: false
   }),
   wolframAlphaSearch: new MetaSearchAgent({
     activeEngines: ['wolframalpha'],
@@ -93,6 +71,9 @@ export const searchHandlers = {
     searchWeb: true,
     summarizer: false,
     searchDatabase: true,
+    useOpenAISearch: true,
+    useFirecrawl: true,
+    searchModel: 'gpt-4o-mini'
   }),
   youtubeSearch: new MetaSearchAgent({
     activeEngines: ['youtube'],
@@ -103,6 +84,8 @@ export const searchHandlers = {
     searchWeb: true,
     summarizer: false,
     searchDatabase: true,
+    useOpenAISearch: true,
+    searchModel: 'gpt-4o-mini-search-preview-2025-03-11'
   }),
   redditSearch: new MetaSearchAgent({
     activeEngines: ['reddit'],
@@ -113,6 +96,8 @@ export const searchHandlers = {
     searchWeb: true,
     summarizer: false,
     searchDatabase: true,
+    useOpenAISearch: true,
+    searchModel: 'gpt-4o-mini-search-preview-2025-03-11'
   }),
 };
 
@@ -178,6 +163,22 @@ const handleEmitterEvents = (
             messageId: messageId,
           }),
         );
+      } else if (parsedData.type === 'researchActivity') {
+        // Transmission des activités de recherche Firecrawl
+        console.log('[DEBUG] Activité de recherche reçue:', {
+          type: parsedData.data?.type, 
+          message: parsedData.data?.message,
+          depth: parsedData.data?.depth
+        });
+        
+        // Transmettre directement au client
+        ws.send(
+          JSON.stringify({
+            type: 'researchActivity',
+            data: parsedData.data,
+            messageId: messageId,
+          }),
+        );
       }
     } catch (error) {
       console.error('❌ Erreur lors du traitement des données:', error);
@@ -207,17 +208,20 @@ const handleEmitterEvents = (
 
     console.log('[DEBUG] Sauvegarde en base de données');
     try {
+      // Utilisation du type MessageInsert
+      const messageData: MessageInsert = {
+        content: receivedMessage,
+        chatId: chatId,
+        messageId: messageId,
+        type: 'assistant', // Nom correct du champ dans la DB
+        metadata: JSON.stringify({
+          createdAt: new Date(),
+          ...(sources && sources.length > 0 && { sources }),
+        }),
+      };
+      
       await db.insert(messagesSchema)
-        .values({
-          content: receivedMessage,
-          chatId: chatId,
-          messageId: messageId,
-          role: 'assistant',
-          metadata: JSON.stringify({
-            createdAt: new Date(),
-            ...(sources && sources.length > 0 && { sources }),
-          }),
-        })
+        .values(messageData)
         .execute();
     } catch (err) {
       console.error('Error saving message to database:', err);
@@ -355,15 +359,18 @@ export const handleMessage = async (
           });
 
           if (!chat) {
+            // Utilisation du type ChatInsert
+            const chatData: ChatInsert = {
+              id: parsedMessage.chatId,
+              title: parsedMessage.content,
+              createdAt: new Date().toString(),
+              focusMode: parsedWSMessage.focusMode,
+              files: parsedWSMessage.files.map(getFileDetails),
+            };
+            
             await db
               .insert(chats)
-              .values({
-                id: parsedMessage.chatId,
-                title: parsedMessage.content,
-                createdAt: new Date().toString(),
-                focusMode: parsedWSMessage.focusMode,
-                files: parsedWSMessage.files.map(getFileDetails),
-              })
+              .values(chatData)
               .execute();
           }
 
@@ -372,17 +379,20 @@ export const handleMessage = async (
           });
 
           if (!messageExists) {
+            // Utilisation du type MessageInsert
+            const messageData: MessageInsert = {
+              content: parsedMessage.content,
+              chatId: parsedMessage.chatId,
+              messageId: humanMessageId,
+              type: 'user', // Nom correct du champ dans la DB
+              metadata: JSON.stringify({
+                createdAt: new Date(),
+              }),
+            };
+            
             await db
               .insert(messagesSchema)
-              .values({
-                content: parsedMessage.content,
-                chatId: parsedMessage.chatId,
-                messageId: humanMessageId,
-                role: 'user',
-                metadata: JSON.stringify({
-                  createdAt: new Date(),
-                }),
-              })
+              .values(messageData)
               .execute();
           } else {
             await db

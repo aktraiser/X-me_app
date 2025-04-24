@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Home, Search, SquarePen, Settings, Clock, Library, ArrowLeftToLine, ArrowRightToLine } from 'lucide-react';
+import { Home, Search, SquarePen, Settings, Clock, Library, ArrowLeftToLine, ArrowRightToLine, User } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useSelectedLayoutSegments } from 'next/navigation';
@@ -29,14 +29,14 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
 };
 
 const IconWithTooltip = ({ icon: Icon, label, isExpanded }: { icon: any, label: string, isExpanded: boolean }) => {
-  if (isExpanded) return <Icon className="shrink-0 w-5 h-5" />;
+  if (isExpanded) return <Icon className="shrink-0 w-5 h-5 text-black dark:text-white" />;
   
   return (
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
           <div>
-            <Icon className="shrink-0 w-5 h-5" />
+            <Icon className="shrink-0 w-5 h-5 text-black dark:text-white" />
           </div>
         </TooltipTrigger>
         <TooltipContent side="right" className="flex items-center gap-2">
@@ -60,7 +60,6 @@ const Sidebar = ({
   const [chatHistory, setChatHistory] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -68,20 +67,10 @@ const Sidebar = ({
       const { data: { session } } = await supabase.auth.getSession();
       if (session?.user) {
         setUser(session.user);
-        // Fetch profile data
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('avatar_url')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (data && !error) {
-          setAvatarUrl(data.avatar_url);
-        }
       }
     };
     getUser();
-  }, []);
+  }, [supabase]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -98,14 +87,17 @@ const Sidebar = ({
         });
         const data = await res.json();
         if (data && data.chats) {
-          // Garder seulement les deux dernières discussions existantes
-          const existingChats = chatHistory.slice(-2);
-          // Ajouter les nouvelles discussions au début
-          const newChats = data.chats.filter(
-            (newChat: Chat) => !existingChats.some((chat) => chat.id === newChat.id)
-          );
-          // Combiner les nouvelles discussions avec les deux dernières existantes
-          setChatHistory([...newChats, ...existingChats].slice(-3));
+          // Utiliser le chatHistory via une fonction de mise à jour
+          setChatHistory((prevChatHistory: Chat[]) => {
+            // Garder seulement les deux dernières discussions existantes
+            const existingChats = prevChatHistory.slice(-2);
+            // Ajouter les nouvelles discussions au début
+            const newChats = data.chats.filter(
+              (newChat: Chat) => !existingChats.some((chat) => chat.id === newChat.id)
+            );
+            // Combiner les nouvelles discussions avec les deux dernières existantes
+            return [...newChats, ...existingChats].slice(-3);
+          });
         }
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') {
@@ -124,7 +116,7 @@ const Sidebar = ({
     return () => {
       controller.abort();
     };
-  }, [isExpanded, chatHistory]);
+  }, [isExpanded]);
 
   useEffect(() => {
     onExpandChange?.(isExpanded);
@@ -149,12 +141,6 @@ const Sidebar = ({
       href: '/discover',
       active: segments.includes('discover'),
       label: 'Recherche',
-    },
-    {
-      icon: Clock,
-      href: '/etude',
-      active: segments.includes('etude'),
-      label: 'Etudes',
     },
     {
       icon: Library,
@@ -192,15 +178,15 @@ const Sidebar = ({
               <Link href="/" className="w-full">
               {isExpanded ? (
                 <div className="flex items-center gap-3 w-full h-full px-4 py-3 border border-black/20 dark:border-white/20 rounded-full hover:border-[#c59d3f] transition-all">
-                  <SquarePen className="w-5 h-5 shrink-0" />
-                  <span className="text-base font-medium">Discussion</span>
+                  <SquarePen className="w-5 h-5 shrink-0 text-black dark:text-white" />
+                  <span className="text-base font-medium text-black dark:text-white">Discussion</span>
                 </div>
               ) : (
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center justify-center h-full">
-                        <SquarePen className="w-5 h-5 shrink-0" />
+                        <SquarePen className="w-5 h-5 shrink-0 text-black dark:text-white" />
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -253,7 +239,7 @@ const Sidebar = ({
             ))}
           </VerticalIconContainer>
 
-          <div className="flex flex-col items-center gap-y-4 w-full">
+          <div className="flex flex-col items-center gap-y-4 w-full ">
             <button 
               onClick={() => setIsExpanded(!isExpanded)}
               className={cn(
@@ -264,7 +250,7 @@ const Sidebar = ({
               <div className="flex items-center justify-center h-full">
                 {isExpanded ? (
                   <>
-                    <ArrowLeftToLine className="w-5 h-5 shrink-0" />
+                    <ArrowLeftToLine className="w-5 h-5 shrink-0 text-black dark:text-white" />
                     <span className="ml-3 text-base font-medium text-black/70 dark:text-white/70 transition-all duration-300">Réduire</span>
                   </>
                 ) : (
@@ -272,7 +258,7 @@ const Sidebar = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center justify-center h-full">
-                          <ArrowRightToLine className="w-5 h-5 shrink-0" />
+                          <ArrowRightToLine className="w-5 h-5 shrink-0 text-black dark:text-white" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
@@ -297,27 +283,17 @@ const Sidebar = ({
               <div className="flex items-center justify-center h-full">
                 {isExpanded ? (
                   <>
-                    <div className="w-5 h-5 relative shrink-0">
-                      <Image
-                        src={avatarUrl || '/images/default-avatar.jpg'}
-                        alt="Avatar"
-                        fill
-                        className="rounded-full object-cover"
-                      />
+                    <div className="w-8 h-8 relative shrink-0 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+                      <User className="w-5 h-5 text-black dark:text-white" />
                     </div>
-                    <span className="ml-3 text-base font-medium transition-all duration-300">Mon Profil</span>
+                    <span className="ml-3 text-base font-medium transition-all duration-300 text-black/70 dark:text-white/70">Mon Profil</span>
                   </>
                 ) : (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="w-5 h-5 relative">
-                          <Image
-                            src={avatarUrl || '/images/default-avatar.jpg'}
-                            alt="Avatar"
-                            fill
-                            className="rounded-full object-cover"
-                          />
+                        <div className="w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+                          <User className="w-5 h-5 text-black dark:text-white" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
@@ -339,7 +315,7 @@ const Sidebar = ({
               <div className="flex items-center justify-center h-full">
                 {isExpanded ? (
                   <>
-                    <Settings className="w-5 h-5 shrink-0" />
+                    <Settings className="w-5 h-5 shrink-0 text-black dark:text-white" />
                     <span className="ml-3 text-sm font-medium text-black/70 dark:text-white/70 transition-all duration-300">Réglages</span>
                   </>
                 ) : (
@@ -347,7 +323,7 @@ const Sidebar = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center justify-center h-full">
-                          <Settings className="w-5 h-5 shrink-0" />
+                          <Settings className="w-5 h-5 shrink-0 text-black dark:text-white" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
@@ -380,13 +356,8 @@ const Sidebar = ({
             />
           </div>
           <Link href="/settings">
-            <div className="w-8 h-8 relative">
-              <Image
-                src={avatarUrl || '/images/default-avatar.jpg'}
-                alt="Avatar"
-                fill
-                className="rounded-full object-cover"
-              />
+            <div className="w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+              <User className="w-5 h-5 text-black dark:text-white" />
             </div>
           </Link>
         </div>
@@ -407,7 +378,7 @@ const Sidebar = ({
             {link.active && (
               <div className="absolute top-0 -mt-4 h-1 w-full rounded-b-lg bg-white" />
             )}
-            <link.icon className="w-5 h-5" />
+            <link.icon className="w-5 h-5 text-white" />
             <p className="text-xs">{link.label}</p>
           </Link>
         ))}

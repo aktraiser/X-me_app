@@ -16,26 +16,21 @@ import {
   youtubeSearchResponsePrompt,
   youtubeSearchRetrieverPrompt,
 } from './youtubeSearch';
-import {
-  webSearchetudeRetrieverPrompt,
-  webSearchetudeResponsePrompt,
-} from './webEtude';
 
 export { webSearchRetrieverPrompt, webSearchResponsePrompt } from './webSearch';
-export { webSearchetudeRetrieverPrompt, webSearchetudeResponsePrompt } from './webEtude';
+export { academicSearchRetrieverPrompt, academicSearchResponsePrompt } from './academicSearch';
+export { wolframAlphaSearchRetrieverPrompt, wolframAlphaSearchResponsePrompt } from './wolframAlpha';
 
 export default {
-  webSearchResponsePrompt,
   webSearchRetrieverPrompt,
-  webSearchetudeRetrieverPrompt,
-  webSearchetudeResponsePrompt,
-  academicSearchResponsePrompt,
+  webSearchResponsePrompt,
   academicSearchRetrieverPrompt,
+  academicSearchResponsePrompt,
   redditSearchResponsePrompt,
   redditSearchRetrieverPrompt,
-  wolframAlphaSearchResponsePrompt,
   wolframAlphaSearchRetrieverPrompt,
-  writingAssistantPrompt,
-  youtubeSearchResponsePrompt,
+  wolframAlphaSearchResponsePrompt,
   youtubeSearchRetrieverPrompt,
+  youtubeSearchResponsePrompt,
+  writingAssistantPrompt,
 };

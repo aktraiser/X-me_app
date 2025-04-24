@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 const Home = () => {
   return (
     <div>
-      <Suspense>
+      <Suspense fallback={<div className="p-4 text-white">Chargement de ChatWindow...</div>}>
         <ChatWindow />
       </Suspense>
     </div>

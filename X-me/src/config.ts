@@ -76,6 +76,22 @@ export const getOpenAIBaseURL = () => {
   return process.env.OPENAI_API_BASE_URL || 'https://api.openai.com/v1';
 };
 
+export const isOpenAISearchEnabled = () => {
+  const apiKey = getOpenaiApiKey();
+  return !!apiKey && apiKey.length > 0;
+};
+
+// Clé API Firecrawl par défaut
+const DEFAULT_FIRECRAWL_API_KEY = 'fc-12aa7e5b001e40d28ce76781635ab389';
+
+export const getFirecrawlApiKey = () => 
+  process.env.FIRECRAWL_API_KEY || DEFAULT_FIRECRAWL_API_KEY;
+
+export const isFirecrawlEnabled = () => {
+  const apiKey = getFirecrawlApiKey();
+  return !!apiKey && apiKey.length > 0;
+};
+
 export const updateConfig = (config: RecursivePartial<Config>) => {
   const currentConfig = loadConfig();
 

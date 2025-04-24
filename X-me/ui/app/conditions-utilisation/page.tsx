@@ -1,17 +1,24 @@
+'use client';
+
 import React from 'react';
+import { useTheme } from 'next-themes';
+import { Moon, Sun } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+
 
 export default function ConditionsUtilisation() {
   return (
     <div className="min-h-screen bg-light-primary dark:bg-dark-primary p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-light-text dark:text-dark-text">
+        <h1 className="text-3xl font-bold mb-8 text-white dark:text-black">
           Conditions Générales d&apos;Utilisation et de Vente (CGU/CGV) de X&ME
         </h1>
-        <p className="text-sm mb-8 text-light-text dark:text-dark-text">
+        <p className="text-sm mb-8 text-white dark:text-black">
           Version en vigueur au 17 février 2025
         </p>
         
-        <div className="space-y-8 text-light-text dark:text-dark-text">
+        <div className="space-y-8 text-white dark:text-black">
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Objet</h2>
             <p className="mb-4">
@@ -343,4 +350,4 @@ export default function ConditionsUtilisation() {
       </div>
     </div>
   );
-} 
+}

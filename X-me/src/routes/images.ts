@@ -74,15 +74,35 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Invalid model selected' });
     }
 
+    console.log('🔍 Recherche d\'images avec le modèle:', chatModel, 'et la requête:', body.query);
     
     const images = await handleImageSearch(
       { query: body.query, chat_history: chatHistory },
       llm,
     );
 
+    console.log('📸 Résultat de la recherche d\'images:', images?.length || 0, 'images trouvées');
+
+    if (!images || !Array.isArray(images)) {
+      console.warn('⚠️ La recherche d\'images a retourné un résultat non valide');
+      return res.status(200).json({ images: [] });
+    }
+
+    if (images.length === 0) {
+      console.log('⚠️ Aucune image trouvée, vérifier la configuration de la base Supabase');
+    }
+
     res.status(200).json({ images });
   } catch (err) {
-    res.status(500).json({ message: 'An error has occurred.' });
+    console.error('❌ Erreur détaillée dans la recherche d\'images:', err);
+    if (err instanceof Error) {
+      console.error('❌ Message d\'erreur:', err.message);
+      console.error('❌ Stack trace:', err.stack);
+    }
+    res.status(500).json({ 
+      message: 'Une erreur est survenue lors de la recherche d\'images.', 
+      error: err instanceof Error ? err.message : String(err)
+    });
     logger.error(`Error in image search: ${err.message}`);
   }
 });

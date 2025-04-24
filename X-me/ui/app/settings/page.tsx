@@ -1,334 +1,117 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Moon, Sun, Edit2, Settings, X } from 'lucide-react';
+import { Moon, Sun, Edit2, Settings, X, Video as VideoIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import PageHeader from '@/components/PageHeader';
 import { useTheme } from 'next-themes';
 import { toast } from 'react-hot-toast';
-import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
-import Script from 'next/script';
+import { Switch } from '../../components/ui/switch';
+import { Textarea } from '../../components/Textarea';
+import { ImagesIcon } from '../../components/icons';
+import { useUser, useClerk } from '@clerk/nextjs';
 
-declare global {
-  namespace JSX {
-    interface IntrinsicElements {
-      'stripe-buy-button': React.DetailedHTMLProps<
-        React.HTMLAttributes<HTMLElement> & {
-          'buy-button-id': string;
-          'publishable-key': string;
-          'client-reference-id'?: string;
-          'success-url'?: string;
-          'cancel-url'?: string;
-        },
-        HTMLElement
-      >;
-    }
-  }
-}
-
-const subscriptionPlans = [
-  {
-    title: "Pack Découverte",
-    credits: 1,
-    price: 9.99,
-    priceId: 'price_1QrDjWHFhbg7l1Zn0eTfFXLq',
-    features: [
-      "1 crédit d'étude de marché",
-      "Analyse complète du marché",
-      "Rapport détaillé",
-      "Support par email"
-    ]
-  }
-];
-
-const SubscriptionCard = ({ 
+const SettingsSection = ({ 
   title, 
-  credits, 
-  price, 
-  priceId, 
-  features,
-  userId,
-  userEmail
+  children,
+  className
 }: { 
   title: string;
-  credits: number;
-  price: number;
-  priceId: string;
-  features: string[];
-  userId: string;
-  userEmail: string;
+  children: React.ReactNode;
+  className?: string;
 }) => {
-  console.log('SubscriptionCard userId:', userId);
-  console.log('SubscriptionCard userEmail:', userEmail);
-
   return (
-    <div className="bg-white dark:bg-dark-secondary rounded-lg p-8 max-w-sm w-full mx-auto relative border border-white/20 dark:border-white/20">
-      <div className="text-center">
-        <h3 className="text-xl font-bold text-black dark:text-white">{title}</h3>
-        <p className="text-blue-500 text-2xl font-bold mt-2">{price}€</p>
-        <p className="text-gray-500 dark:text-gray-400 text-sm">{credits} crédit{credits > 1 ? 's' : ''}</p>
+    <section className={className}>
+      <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">{title}</h2>
+      <div className="bg-light-secondary dark:bg-dark-secondary rounded-lg p-6 space-y-6">
+        {children}
       </div>
-      
-      <div className="bg-gray-50 dark:bg-dark-100 p-4 rounded-lg mt-6">
-        <div className="flex flex-col items-center space-y-3">
-          {features.map((feature, index) => (
-            <div key={index} className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
-              <span className="text-green-500">✓</span>
-              <span>{feature}</span>
-            </div>
-          ))}
-        </div>
-      </div>
+    </section>
+  );
+};
 
-      <div className="flex justify-center mt-6">
-        <stripe-buy-button
-          buy-button-id="buy_btn_1Qr18ZHFhbg7l1Zn3mdeTqaM"
-          publishable-key="pk_test_51QqFgrHFhbg7l1ZnnY3mFGzvVF1p462vvbg4UhT9hZAP22m1IVtL0VK5il3HEmg18inHg2tlJ3xu3VH07yXlXOWW00uTelO38R"
-          client-reference-id={userId}
-          customer-email={userEmail}
-          customer-creation="always"
-          success-url={`${process.env.NEXT_PUBLIC_WEBSITE_URL}/settings?success=true&session_id={CHECKOUT_SESSION_ID}`}
-          cancel-url={`${process.env.NEXT_PUBLIC_WEBSITE_URL}/settings?canceled=true`}
-        >
-        </stripe-buy-button>
-      </div>
+const ThemeSwitcher = () => {
+  const { theme, setTheme } = useTheme();
+  
+  return (
+    <div className="flex items-center space-x-2 bg-light-200 dark:bg-dark-primary rounded-lg p-1">
+      <button
+        onClick={() => setTheme('light')}
+        className={cn(
+          "py-2 px-3 rounded-md flex items-center space-x-2 transition-colors",
+          theme === 'light' ? "bg-white text-black" : "text-black/70 dark:text-white/70"
+        )}
+      >
+        <Sun size={18} />
+        <span>Lumière</span>
+      </button>
+      <button
+        onClick={() => setTheme('dark')}
+        className={cn(
+          "py-2 px-3 rounded-md flex items-center space-x-2 transition-colors",
+          theme === 'dark' ? "bg-dark-100 text-white" : "text-black/70 dark:text-white/70"
+        )}
+      >
+        <Moon size={18} />
+        <span>Sombre</span>
+      </button>
     </div>
   );
 };
 
-// Composant Modal
-const SuccessModal = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-dark-secondary rounded-lg p-6 max-w-md w-full mx-4 relative">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-white"
-        >
-          <X size={24} />
-        </button>
-        
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
-            <span className="text-3xl">✨</span>
-          </div>
-          
-          <h3 className="text-xl font-bold text-white">Paiement réussi !</h3>
-          
-          <p className="text-gray-300">
-            Votre crédit a été ajouté à votre compte. Vous pouvez maintenant l&apos;utiliser pour votre étude de marché.
-          </p>
-          
-          <button
-            onClick={onClose}
-            className="w-full py-2 px-4 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-          >
-            Continuer
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 export default function SettingsPage() {
-  const supabase = createClient();
   const router = useRouter();
+  const { user, isLoaded, isSignedIn } = useUser();
+  const { signOut } = useClerk();
   const [loading, setLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
-  const [fullName, setFullName] = useState<string | null>(null);
-  const [phone, setPhone] = useState<string | null>(null);
-  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [isThemeOpen, setIsThemeOpen] = useState(false);
   const { theme, setTheme } = useTheme();
-  const [credits, setCredits] = useState<number>(0);
-  const [isStripeLoaded, setIsStripeLoaded] = useState(false);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
-
-  const getProfile = useCallback(async () => {
-    try {
-      setLoading(true);
-      if (!user) return;
-
-      const { data, error, status } = await supabase
-        .from('profiles')
-        .select(`full_name, phone, avatar_url, credits`)
-        .eq('id', user.id)
-        .single();
-
-      if (error && status !== 406) {
-        throw error;
-      }
-
-      if (data) {
-        setFullName(data.full_name);
-        setPhone(data.phone);
-        setAvatarUrl(data.avatar_url);
-        setCredits(data.credits);
-      }
-    } catch (error) {
-      console.error('Error loading user data:', error);
-      toast.error('Erreur lors du chargement des données');
-    } finally {
-      setLoading(false);
-    }
-  }, [user, supabase]);
-
-  // Écouter les changements en temps réel sur la table profiles
+  const [automaticImageSearch, setAutomaticImageSearch] = useState(true);
+  const [automaticVideoSearch, setAutomaticVideoSearch] = useState(true);
+  const [systemInstructions, setSystemInstructions] = useState("");
+  const [savingStates, setSavingStates] = useState<Record<string, boolean>>({});
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  
+  // Charger les préférences depuis localStorage
   useEffect(() => {
-    if (!user) {
-      console.log('❌ Pas d\'utilisateur connecté pour configurer le canal');
-      return;
-    }
-
-    console.log('🔄 Configuration du canal pour l\'utilisateur:', user.id);
-
-    const channel = supabase.channel('profiles')
-      .on(
-        'postgres_changes' as const,
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'profiles',
-          filter: `id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('⚡️ Payload reçu dans le callback:', payload);
-          console.log('📊 État actuel des crédits:', credits);
-          console.log('🎭 État actuel de showSuccessModal:', showSuccessModal);
-          
-          // Vérifier si les crédits ont changé
-          if (payload.new.credits !== credits) {
-            console.log('💫 Mise à jour des crédits détectée:', payload.new.credits);
-            setShowSuccessModal(true);
-            console.log('✅ setShowSuccessModal appelé avec true');
-            getProfile();
-          } else {
-            console.log('ℹ️ Pas de changement de crédits détecté');
-          }
+    if (isLoaded && isSignedIn) {
+      try {
+        setLoading(true);
+        
+        // Charger les configurations depuis localStorage
+        const storedImageSearch = localStorage.getItem('automaticImageSearch');
+        if (storedImageSearch !== null) {
+          setAutomaticImageSearch(storedImageSearch === 'true');
         }
-      )
-      .subscribe((status) => {
-        console.log('📡 Statut de la souscription:', status);
-      });
-
-    console.log('🔌 Canal configuré et souscription activée');
-
-    return () => {
-      console.log('🔌 Désinscription du canal profiles');
-      channel.unsubscribe();
-    };
-  }, [user, supabase, getProfile, credits, showSuccessModal]);
-
-  useEffect(() => {
-    const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        router.push('/login');
-        return;
+        
+        const storedVideoSearch = localStorage.getItem('automaticVideoSearch');
+        if (storedVideoSearch !== null) {
+          setAutomaticVideoSearch(storedVideoSearch === 'true');
+        }
+        
+        const storedInstructions = localStorage.getItem('systemInstructions');
+        if (storedInstructions) {
+          setSystemInstructions(storedInstructions);
+        }
+      } catch (error) {
+        console.error('Error loading settings:', error);
+        toast.error('Erreur lors du chargement des paramètres');
+      } finally {
+        setLoading(false);
       }
-      setUser(session.user);
-    };
-    getUser();
-  }, [supabase, router]);
-
-  useEffect(() => {
-    if (user) {
-      getProfile();
+    } else if (isLoaded && !isSignedIn) {
+      router.push('/login');
     }
-  }, [user, getProfile]);
-
-  async function updateProfile({
-    full_name,
-    phone,
-    avatar_url,
-  }: {
-    full_name?: string | null;
-    phone?: string | null;
-    avatar_url?: string | null;
-  }) {
-    try {
-      setLoading(true);
-      if (!user) return;
-
-      const { error } = await supabase.from('profiles').upsert({
-        id: user.id,
-        full_name,
-        phone,
-        avatar_url,
-        email: user.email,
-        updated_at: new Date().toISOString(),
-      });
-
-      if (error) throw error;
-      toast.success('Profil mis à jour !');
-      getProfile();
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Erreur lors de la mise à jour');
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      if (!user) return;
-      setLoading(true);
-
-      if (!event.target.files || event.target.files.length === 0) {
-        throw new Error('Vous devez sélectionner une image à télécharger');
-      }
-
-      const file = event.target.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(filePath);
-
-      await updateProfile({ avatar_url: publicUrl });
-      setAvatarUrl(publicUrl);
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('Erreur lors du téléchargement de l\'avatar');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleFullNameUpdate = async () => {
-    const newFullName = prompt('Entrez votre nom complet', fullName || '');
-    if (newFullName) {
-      await updateProfile({ full_name: newFullName });
-    }
-  };
-
-  const handlePhoneUpdate = async () => {
-    const newPhone = prompt('Entrez votre numéro de téléphone', phone || '');
-    if (newPhone) {
-      await updateProfile({ phone: newPhone });
-    }
-  };
+  }, [isLoaded, isSignedIn, router]);
 
   const handleSignOut = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-      
+      await signOut();
       toast.success('Déconnexion réussie');
       router.push('/login');
     } catch (error) {
@@ -339,162 +122,185 @@ export default function SettingsPage() {
     }
   };
 
-  const updateCredits = async (newCredits: number) => {
+  const handleDeleteAccount = async () => {
     try {
-      setLoading(true);
-      if (!user) return;
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({ credits: newCredits })
-        .eq('id', user.id);
-
-      if (error) throw error;
-      
-      setCredits(newCredits);
-      toast.success('Crédits mis à jour !');
+      setIsDeletingAccount(true);
+      await user?.delete();
+      toast.success('Votre compte a été supprimé avec succès');
+      router.push('/login');
     } catch (error) {
-      console.error('Error updating credits:', error);
-      toast.error('Erreur lors de la mise à jour des crédits');
+      console.error('Error deleting account:', error);
+      toast.error('Erreur lors de la suppression du compte');
     } finally {
-      setLoading(false);
+      setIsDeletingAccount(false);
+      setConfirmDeleteOpen(false);
     }
   };
 
-  // Suivre les changements de showSuccessModal
-  useEffect(() => {
-    console.log('🔔 showSuccessModal a changé:', showSuccessModal);
-  }, [showSuccessModal]);
+  // Fonction pour enregistrer la configuration
+  const saveConfig = (key: string, value: any) => {
+    setSavingStates((prev) => ({ ...prev, [key]: true }));
+    
+    // Sauvegarder dans localStorage
+    setTimeout(() => {
+      localStorage.setItem(key, JSON.stringify(value));
+      setSavingStates((prev) => ({ ...prev, [key]: false }));
+      toast.success('Configuration sauvegardée');
+    }, 500);
+  };
 
   return (
     <>
-      <Script 
-        src="https://js.stripe.com/v3/buy-button.js"
-        strategy="afterInteractive"
-        onLoad={() => setIsStripeLoaded(true)}
-        onError={(e) => {
-          console.error('Erreur lors du chargement du script Stripe:', e);
-          toast.error('Erreur lors du chargement du bouton de paiement');
-        }}
-      />
-      <SuccessModal 
-        isOpen={showSuccessModal} 
-        onClose={() => {
-          setShowSuccessModal(false);
-          getProfile();
-          router.refresh();
-        }} 
-      />
       <PageHeader
         title="Réglages"
         icon={<Settings className="w-6 h-6" />}
       />
       <main className="min-h-screen pt-8">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="space-y-8">
+          <div className="space-y-8 pb-24 md:pb-32">
             <section>
-              <h2 className="text-xl font-semibold mb-4">Compte client</h2>
-              <div className="space-y-6 bg-dark-secondary rounded-lg p-4">
+              <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">Mon compte client</h2>
+              <div className="space-y-6 bg-light-secondary dark:bg-dark-secondary rounded-lg p-6">
                 <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-medium">Avatar</h3>
-                  </div>
-                  <div className="relative">
-                    <Image
-                      src={avatarUrl || '/images/default-avatar.jpg'}
-                      alt="Avatar"
-                      width={64}
-                      height={64}
-                      className="rounded-full object-cover"
-                      priority
-                    />
-                    <label className="absolute bottom-0 right-0 bg-dark-primary p-1 rounded-full cursor-pointer">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleAvatarUpload}
-                        className="hidden"
-                        disabled={loading}
-                      />
-                      <Edit2 className="w-4 h-4" />
-                    </label>
+                  <div className="flex flex-col">
+                    <h3 className="text-lg font-medium text-black dark:text-white">Nom complet</h3>
+                    <span className="mt-1 text-black/60 dark:text-white/60">{user?.fullName || 'Non défini'}</span>
                   </div>
                 </div>
 
-                <div className="h-px bg-gray-700" />
+                <div className="h-px bg-gray-500 dark:bg-gray-700" />
 
                 <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-medium">Nom complet</h3>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span>{fullName || 'Non défini'}</span>
-                    <button onClick={handleFullNameUpdate} disabled={loading}>
-                      <Edit2 className="w-4 h-4" />
-                    </button>
+                  <div className="flex flex-col">
+                    <h3 className="text-lg font-medium text-black dark:text-white">Téléphone</h3>
+                    <span className="mt-1 text-black/60 dark:text-white/60">{user?.primaryPhoneNumber?.phoneNumber || 'Non défini'}</span>
                   </div>
                 </div>
 
-                <div className="h-px bg-gray-700" />
+                <div className="h-px bg-gray-500 dark:bg-gray-700" />
 
                 <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-medium">Téléphone</h3>
+                  <div className="flex flex-col">
+                    <h3 className="text-lg font-medium text-black dark:text-white">E-mail</h3>
+                    <span className="mt-1 text-black/60 dark:text-white/60">{user?.primaryEmailAddress?.emailAddress || 'Non défini'}</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span>{phone || 'Non défini'}</span>
-                    <button onClick={handlePhoneUpdate} disabled={loading}>
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-
-                <div className="h-px bg-gray-700" />
-
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-medium">E-mail</h3>
-                  </div>
-                  <span>{user?.email}</span>
                 </div>
               </div>
             </section>
 
-            <section>
-              <h2 className="text-xl font-semibold mb-4">Crédit</h2>
-              <div className="bg-dark-secondary rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h3 className="text-lg font-medium">Balance crédit</h3>
-                    <p className="text-gray-400">Acheter des crédits pour votre étude de marché</p>
-                  </div>
-                  <div>
-                    <p className="text-xl font-bold">{credits} crédits</p>
-                  </div>
-                </div>
-
-                <div className="h-px bg-gray-700 my-6" />
-
-                <div className="grid gap-6">
-                  {subscriptionPlans.map((plan, index) => (
-                    <SubscriptionCard
-                      key={index}
-                      {...plan}
-                      userId={user?.id || ''}
-                      userEmail={user?.email || ''}
-                    />
-                  ))}
-                </div>
+            <SettingsSection title="Apparence" className="text-black dark:text-white">
+              <div className="flex justify-between items-center">
+                <p className="text-lg font-medium text-black dark:text-white">
+                  Theme
+                </p>
+                <ThemeSwitcher />
               </div>
-            </section>
+            </SettingsSection>
+
+            <SettingsSection title="Automatic Search">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-light-200 dark:bg-dark-secondary rounded-lg">
+                    <ImagesIcon
+                      size={18}
+                      className="text-black/70 dark:text-white/70"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm text-black/90 dark:text-white/90 font-medium">
+                      Automatic Image Search
+                    </p>
+                    <p className="text-xs text-black/60 dark:text-white/60 mt-0.5">
+                      Automatically search for relevant images in chat
+                      responses
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={automaticImageSearch}
+                  onChange={(checked: boolean) => {
+                    setAutomaticImageSearch(checked);
+                    saveConfig('automaticImageSearch', checked);
+                  }}
+                  className={cn(
+                    automaticImageSearch
+                    ? 'bg-dark-200 dark:bg-dark-200'
+                    : 'bg-dark-secondary',
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      automaticImageSearch
+                        ? 'translate-x-6'
+                        : 'translate-x-1',
+                      'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                    )}
+                  />
+                </Switch>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-light-200 dark:bg-dark-secondary rounded-lg">
+                    <VideoIcon
+                      size={18}
+                      className="text-black/70 dark:text-white/70"
+                    />
+                  </div>
+                  <div>
+                    <p className="text-sm text-black/90 dark:text-white/90 font-medium">
+                      Automatic Video Search
+                    </p>
+                    <p className="text-xs text-black/60 dark:text-white/60 mt-0.5">
+                      Automatically search for relevant videos in chat
+                      responses
+                    </p>
+                  </div>
+                </div>
+                <Switch
+                  checked={automaticVideoSearch}
+                  onChange={(checked: boolean) => {
+                    setAutomaticVideoSearch(checked);
+                    saveConfig('automaticVideoSearch', checked);
+                  }}
+                  className={cn(
+                    automaticVideoSearch
+                      ? 'bg-dark-200 dark:bg-dark-200'
+                      : 'bg-dark-secondary',
+                    'relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none',
+                  )}
+                >
+                  <span
+                    className={cn(
+                      automaticVideoSearch
+                        ? 'translate-x-6'
+                        : 'translate-x-1',
+                      'inline-block h-4 w-4 transform rounded-full bg-white transition-transform',
+                    )}
+                  />
+                </Switch>
+              </div>
+            </SettingsSection>
+
+            <SettingsSection title="Systeme Instructions">
+              <Textarea
+                value={systemInstructions}
+                isSaving={savingStates['systemInstructions']}
+                onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => {
+                  setSystemInstructions(e.target.value);
+                }}
+                onSave={(value: string) => saveConfig('systemInstructions', value)}
+              />
+            </SettingsSection>
 
             <section>
-              <h2 className="text-xl font-semibold mb-4">Système</h2>
-              <div className="space-y-6 bg-dark-secondary rounded-lg p-4">
+              <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">Système</h2>
+              <div className="space-y-6 bg-light-secondary dark:bg-dark-secondary  rounded-lg p-6">
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg font-medium">Compte actif</h3>
-                    <p className="text-gray-400">Vous êtes connecté en tant que {user?.email}</p>
+                    <h3 className="text-lg font-medium text-black dark:text-white">Compte actif</h3>
+                    <p className="mt-1 text-black/60 dark:text-white/60">Vous êtes connecté en tant que {user?.primaryEmailAddress?.emailAddress}</p>
                   </div>
                   <button 
                     onClick={handleSignOut}
@@ -509,10 +315,14 @@ export default function SettingsPage() {
 
                 <div className="flex justify-between items-center">
                   <div>
-                    <h3 className="text-lg font-medium">Supprimer le compte</h3>
-                    <p className="text-gray-400">Supprimer définitivement votre compte et vos données</p>
+                    <h3 className="text-lg font-medium text-black dark:text-white">Supprimer le compte</h3>
+                    <p className="mt-1 text-black/60 dark:text-white/60">Supprimer définitivement votre compte et vos données</p>
                   </div>
-                  <button className="px-4 py-2 rounded-lg bg-dark-primary text-white hover:bg-red-600">
+                  <button 
+                    onClick={() => setConfirmDeleteOpen(true)}
+                    className="px-4 py-2 rounded-lg bg-dark-primary text-white hover:bg-red-600"
+                    disabled={loading || isDeletingAccount}
+                  >
                     Supprimer
                   </button>
                 </div>
@@ -520,7 +330,36 @@ export default function SettingsPage() {
             </section>
           </div>
         </div>
+        <div className="h-18"></div>
       </main>
+
+      {/* Modal de confirmation de suppression */}
+      {confirmDeleteOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-dark-secondary rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-semibold mb-4 text-black dark:text-white">Confirmer la suppression</h3>
+            <p className="text-black/80 dark:text-white/80 mb-6">
+              Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible et toutes vos données seront perdues.
+            </p>
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setConfirmDeleteOpen(false)}
+                className="px-4 py-2 rounded-lg bg-gray-200 text-black hover:bg-gray-300"
+                disabled={isDeletingAccount}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleDeleteAccount}
+                className="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700"
+                disabled={isDeletingAccount}
+              >
+                {isDeletingAccount ? 'Suppression...' : 'Supprimer définitivement'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }

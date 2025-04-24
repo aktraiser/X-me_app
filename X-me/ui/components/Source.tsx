@@ -31,7 +31,7 @@ const Source = ({
   return (
     <div className="bg-light-secondary dark:bg-dark-primary border border-light-200 dark:border-gray-400 rounded-lg shadow-lg p-4 w-full">
       <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium leading-6 dark:text-white">
+        <h3 className="text-lg font-medium leading-6 text-black/70 dark:text-white/70">
           {filteredSources.length} sources
         </h3>
         <button
@@ -52,16 +52,16 @@ const Source = ({
               href={url}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-light-secondary hover:bg-light-200 dark:bg-dark-secondary dark:hover:bg-gray-800 transition duration-200 rounded-lg p-3 flex flex-col justify-between h-24 font-medium"
+              className="bg-white hover:bg-light-200 dark:bg-dark-secondary dark:hover:bg-gray-800 transition duration-200 rounded-lg p-3 flex flex-col justify-between h-24 font-medium"
             >
-              <p className="dark:text-white text-xs line-clamp-2">
+              <p className="text-black dark:text-white text-xs line-clamp-2">
                 {source.metadata.title}
               </p>
               <div className="flex flex-row items-center justify-between">
                 <div className="flex flex-row items-center space-x-1">
                   {isFile ? (
                     <div className="bg-dark-200 hover:bg-dark-100 transition duration-200 flex items-center justify-center w-6 h-6 rounded-full">
-                      <File size={12} className="text-white/70" />
+                      <File size={12} className="text-black/70 dark:text-white/70" />
                     </div>
                   ) : (
                     <Image
@@ -80,7 +80,7 @@ const Source = ({
                         : 'Source'}
                   </p>
                 </div>
-                <div className="flex flex-row items-center space-x-1 text-black/50 dark:text-white/50 text-xs">
+                <div className="flex flex-row items-center space-x-1 text-black/50 text-black dark:text-white/50 text-xs">
                   <div className="bg-black/50 dark:bg-white/50 h-[4px] w-[4px] rounded-full" />
                   <span>{i + 1}</span>
                 </div>

@@ -7,7 +7,7 @@ import {
   import formatChatHistoryAsString from '../utils/formatHistory';
   import { BaseMessage } from '@langchain/core/messages';
   import { StringOutputParser } from '@langchain/core/output_parsers';
-  import { searchSearxng } from '../lib/searxng';
+  import { searchFirecrawl } from '../lib/firecrawlSearch';
   import type { BaseChatModel } from '@langchain/core/language_models/chat_models';
   
   const legalSearchChainPrompt = `
@@ -69,30 +69,27 @@ import {
       llm,
       strParser,
       RunnableLambda.from(async (input: string) => {
-        const pdfQuery = `${input} filetype:pdf`;
+        const legalQuery = `${input} filetype:pdf site:legifrance.gouv.fr OR site:service-public.fr OR site:journal-officiel.gouv.fr OR site:urssaf.fr OR site:cci.fr`;
         
-        const res = await searchSearxng(pdfQuery, {
-          engines: [
-            'legifrance',
-            'journal_officiel',
-            'service_public',
-            'URSSAF',
-            'CCI'
-          ],
-          language: 'fr',
-          categories: ['general', 'files']
+        const res = await searchFirecrawl(legalQuery, {
+          limit: 10,
+          maxDepth: 1,  // Limiter la profondeur pour les recherches juridiques
+          timeLimit: 30 // Limiter le temps pour optimiser
         });
   
         const documents = [];
   
         res.results.forEach((result) => {
           if (result.url && result.title) {
+            const domain = result.url.split('/')[2] || 'unknown';
+            const isPdf = result.url.toLowerCase().endsWith('.pdf');
+            
             documents.push({
               url: result.url,
               title: result.title,
               snippet: result.content || '',
-              source: result.url.split('/')[2] || 'unknown',
-              type: 'pdf'
+              source: domain,
+              type: isPdf ? 'pdf' : 'web'
             });
           }
         });

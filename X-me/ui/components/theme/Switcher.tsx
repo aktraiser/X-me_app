@@ -4,7 +4,7 @@ import { SunIcon, MoonIcon, MonitorIcon } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { Select } from '../SettingsDialog';
 
-type Theme = 'dark' | 'light' | 'system';
+type Theme = 'sombre' | 'lumière' | 'system';
 
 const ThemeSwitcher = ({ className }: { className?: string }) => {
   const [mounted, setMounted] = useState(false);
@@ -24,11 +24,11 @@ const ThemeSwitcher = ({ className }: { className?: string }) => {
   useEffect(() => {
     if (isTheme('system')) {
       const preferDarkScheme = window.matchMedia(
-        '(prefers-color-scheme: dark)',
+        '(prefers-color-scheme: sombre)',
       );
 
       const detectThemeChange = (event: MediaQueryListEvent) => {
-        const theme: Theme = event.matches ? 'dark' : 'light';
+        const theme: Theme = event.matches ? 'sombre' : 'lumière';
         setTheme(theme);
       };
 
@@ -51,8 +51,8 @@ const ThemeSwitcher = ({ className }: { className?: string }) => {
       value={theme}
       onChange={(e) => handleThemeSwitch(e.target.value as Theme)}
       options={[
-        { value: 'light', label: 'Light' },
-        { value: 'dark', label: 'Dark' },
+        { value: 'lumière', label: 'sombre' },
+        { value: 'lumière', label: 'Sombre' },
       ]}
     />
   );

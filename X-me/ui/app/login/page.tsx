@@ -1,64 +1,47 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { Session } from '@supabase/supabase-js';
-import { createBrowserClient } from '@supabase/ssr';
-import { Loader } from 'rsuite';
-import LoginForm from '@/components/auth/LoginForm';
-import SignUpForm from '@/components/auth/SignUpForm';
+import { SignIn } from '@clerk/nextjs';
+import { dark } from '@clerk/themes';
+import { useTheme } from 'next-themes';
+import { useState, useEffect } from 'react';
 
-// Créer le client Supabase
-const supabase = createBrowserClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+export default function LoginPage() {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
 
-function Login() {
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [isLoginMode, setIsLoginMode] = useState(true);
-
+  // Éviter les erreurs d'hydratation
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
+    setMounted(true);
   }, []);
 
-  if (loading) return <Loader center content="loading" />;
+  // Déterminer si le thème sombre est actif
+  const isDarkTheme = mounted && theme === 'dark';
 
   return (
-    <div className="min-h-screen bg-gray-900">
-      {!session ? (
-        <div className="container mx-auto px-4">
-          {isLoginMode ? (
-            <LoginForm onToggleMode={() => setIsLoginMode(false)} />
-          ) : (
-            <SignUpForm onToggleMode={() => setIsLoginMode(true)} />
-          )}
-        </div>
-      ) : (
-        <div className="container mx-auto px-4 py-8 text-center">
-          <p className="text-white mb-4">Welcome back {session.user.email}</p>
-          <button
-            onClick={async () => {
-              await supabase.auth.signOut();
-            }}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            Logout
-          </button>
-        </div>
-      )}
+    <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <SignIn 
+          appearance={{
+            baseTheme: isDarkTheme ? dark : undefined,
+            elements: {
+              formButtonPrimary: 
+                'bg-blue-600 hover:bg-blue-700 text-white',
+              card: 'bg-white dark:bg-[#1E293B]',
+              headerTitle: 'text-black dark:text-white text-2xl font-bold',
+              headerSubtitle: 'text-gray-600 dark:text-gray-400',
+              formFieldLabel: 'text-black dark:text-white',
+              formFieldInput: 'bg-gray-50 dark:bg-[#374151] border border-gray-300 dark:border-gray-600 text-black dark:text-white',
+              footer: 'text-gray-600 dark:text-gray-400',
+              footerActionLink: 'text-blue-500 hover:text-blue-400',
+            },
+          }}
+          path="/login"
+          routing="path"
+          signUpUrl="/register"
+          redirectUrl="/"
+        />
+      </div>
     </div>
   );
 }
 
-export default Login;

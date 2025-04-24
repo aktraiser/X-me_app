@@ -4,9 +4,9 @@ export default function PolitiqueConfidentialite() {
   return (
     <div className="min-h-screen bg-light-primary dark:bg-dark-primary p-8">
       <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-light-text dark:text-dark-text">Politique de confidentialité</h1>
+        <h1 className="text-3xl font-bold mb-8 text-white dark:text-black">Politique de confidentialité</h1>
         
-        <div className="space-y-6 text-light-text dark:text-dark-text">
+        <div className="space-y-6 text-white dark:text-black">
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Collecte des données</h2>
             <p className="mb-4">

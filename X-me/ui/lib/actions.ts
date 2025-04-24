@@ -1,4 +1,5 @@
 import { Message } from '@/components/ChatWindow';
+import { ExpertService, ExpertServiceData } from '@/types';
 
 export interface Expert {
   id: number;
@@ -6,6 +7,7 @@ export interface Expert {
   nom: string;
   prenom: string;
   adresse: string;
+  telephone?: number;
   pays: string;
   ville: string;
   expertises: string;
@@ -14,7 +16,15 @@ export interface Expert {
   services: any;
   created_at: string;
   image_url: string;
+  logo?: string;
   url: string;
+  activité?: string;
+  email?: string;
+  reseau?: string;
+  site_web?: string;
+  recommandations_count?: number;
+  missions_vérifiées?: number;
+  peut_venir_sur_site?: boolean;
 }
 
 export const getSuggestions = async (chatHisory: Message[]) => {
@@ -92,6 +102,7 @@ export const getSuggestions = async (chatHisory: Message[]) => {
           nom: expert.nom || '',
           prenom: expert.prenom || '',
           adresse: expert.adresse || '',
+          telephone: expert.telephone || null,
           pays: expert.pays || '',
           ville: expert.ville || '',
           expertises: expert.expertises || '',
@@ -100,7 +111,12 @@ export const getSuggestions = async (chatHisory: Message[]) => {
           services: expert.services || {},
           created_at: expert.created_at || '',
           image_url: expert.image_url || '',
-          url: expert.url || ''
+          logo: expert.logo || '',
+          url: expert.url || '',
+          activité: expert.activité || '',
+          email: expert.email || '',
+          reseau: expert.reseau || '',
+          site_web: expert.site_web || ''
         }))
       : [];
 
@@ -151,6 +167,7 @@ export const getSuggestedExperts = async (chatHistory: Message[]) => {
         nom: expert.nom || '',
         prenom: expert.prenom || '',
         adresse: expert.adresse || '',
+        telephone: expert.telephone || null,
         pays: expert.pays || '',
         ville: expert.ville || '',
         expertises: expert.expertises || '',
@@ -159,7 +176,12 @@ export const getSuggestedExperts = async (chatHistory: Message[]) => {
         services: expert.services || {},
         created_at: expert.created_at || '',
         image_url: expert.image_url || '',
-        url: expert.url || ''
+        logo: expert.logo || '',
+        url: expert.url || '',
+        activité: expert.activité || '',
+        email: expert.email || '',
+        reseau: expert.reseau || '',
+        site_web: expert.site_web || ''
       }))
     : [];
 };
@@ -222,3 +244,37 @@ export const loadMessages = async (
   setFocusMode(data.chat.focusMode);
   setIsMessagesLoaded(true);
 };
+
+/**
+ * Crée un service d'expert au format spécifié
+ */
+export function createExpertService(
+  data: {
+    services_proposes?: string[];
+    valueAddDescription?: string;
+    valueAddPoints?: string[];
+    results?: string[];
+  }
+): ExpertServiceData {
+  const service: ExpertServiceData = {};
+  
+  // Ajouter les services proposés si fournis
+  if (data.services_proposes && data.services_proposes.length > 0) {
+    service.services_proposes = data.services_proposes;
+  }
+
+  // Ajouter la valeur ajoutée si des données sont fournies
+  if (data.valueAddDescription || (data.valueAddPoints && data.valueAddPoints.length > 0)) {
+    service.valeur_ajoutee = {
+      description: data.valueAddDescription,
+      points_forts: data.valueAddPoints || []
+    };
+  }
+
+  // Ajouter les résultats si fournis
+  if (data.results && data.results.length > 0) {
+    service.resultats_apportes = data.results;
+  }
+
+  return service;
+}

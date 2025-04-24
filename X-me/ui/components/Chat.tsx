@@ -2,34 +2,45 @@
 
 import { Fragment, useEffect, useRef, useState } from 'react';
 import MessageInput from './MessageInput';
-import { File, Message } from './ChatWindow';
+import { File, Message, ResearchActivity } from './ChatWindow';
 import MessageBox from './MessageBox';
 import MessageBoxLoading from './MessageBoxLoading';
 
-const Chat = ({
-  loading,
-  messages,
-  sendMessage,
-  messageAppeared,
-  rewrite,
-  fileIds,
-  setFileIds,
-  files,
-  setFiles,
-}: {
+interface ChatProps {
+  loading: boolean;
   messages: Message[];
   sendMessage: (message: string) => void;
-  loading: boolean;
   messageAppeared: boolean;
   rewrite: (messageId: string) => void;
   fileIds: string[];
   setFileIds: (fileIds: string[]) => void;
   files: File[];
   setFiles: (files: File[]) => void;
-}) => {
+  researchActivities?: ResearchActivity[];
+}
+
+const Chat = ({
+  messages,
+  sendMessage,
+  loading,
+  messageAppeared,
+  rewrite,
+  fileIds,
+  setFileIds,
+  files,
+  setFiles,
+  researchActivities = []
+}: ChatProps) => {
   const [dividerWidth, setDividerWidth] = useState(0);
   const dividerRef = useRef<HTMLDivElement | null>(null);
   const messageEnd = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (researchActivities.length > 0) {
+      console.log('🔍 Chat - Activités Firecrawl reçues:', researchActivities.length);
+      console.log('🔍 Première activité:', researchActivities[0]);
+    }
+  }, [researchActivities]);
 
   useEffect(() => {
     const updateDividerWidth = () => {
@@ -79,7 +90,8 @@ const Chat = ({
             </Fragment>
           );
         })}
-        {loading && !messageAppeared && <MessageBoxLoading />}
+        {/* Le bloc jaune de débogage est supprimé car nous utilisons maintenant le bouton "Détails" */}
+        {loading && !messageAppeared && <MessageBoxLoading researchActivities={researchActivities} />}
         <div ref={messageEnd} />
         {dividerWidth > 0 && (
           <div

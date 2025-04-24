@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Filter, X, Users } from 'lucide-react';
+import { Search, Filter, X, Users, MapPin, Star, Briefcase, Clock, XCircle } from 'lucide-react';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
@@ -9,103 +9,46 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
-import { Expert } from '@/lib/actions';
+import { Expert } from '@/types/index';
 import PageHeader from '@/components/PageHeader';
-import { FilterDropdown } from "@/components/FilterModal";
+import { Dialog, Transition } from '@headlessui/react';
+import { Fragment } from 'react';
+import ExpertDrawer from './components/ExpertDrawer';
+import ExpertCard from '@/components/ExpertCard';
+import SidebarFilters from './components/SidebarFilters';
+import BecomeExpertCard from './components/BecomeExpertCard';
 
 interface Location {
   pays: string;
   villes: string[];
 }
 
-interface Expertise {
+interface Activité {
   id: string;
   name: string;
 }
-
-const ExpertCard = ({ expert }: { expert: Expert }) => {
-  const router = useRouter();
-
-  return (
-    <Link
-      href={`/expert/${expert.id_expert}`}
-      key={expert.id}
-      className="group relative w-full aspect-[4/5] rounded-xl overflow-hidden bg-white dark:bg-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
-    >
-      {/* Image Section - Top 60% */}
-      <div className="absolute inset-0 h-[60%]">
-        {expert.image_url ? (
-          <>
-            <Image
-              src={expert.image_url}
-              alt={`${expert.prenom} ${expert.nom}`}
-              fill
-              className="object-cover"
-              onError={(e) => {
-                const target = e.target as HTMLImageElement;
-                target.onerror = null;
-                target.src = '/placeholder-image.jpg';
-              }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/60" />
-            <div className="absolute bottom-0 left-0 p-4 w-full">
-              <h2 className="text-2xl font-bold text-white mb-1">
-                {expert.prenom}
-              </h2>
-              <div className="flex items-center text-white/90 text-sm">
-                <svg className="w-4 h-4 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Localisé(e) à {expert.ville}
-              </div>
-            </div>
-          </>
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-gray-800 to-gray-600 flex items-center justify-center">
-            <Users className="w-20 h-20 text-gray-600" />
-          </div>
-        )}
-      </div>
-
-      {/* Content Section - Bottom 40% */}
-      <div className="absolute bottom-0 left-0 right-0 h-[40%] bg-dark-secondary backdrop-blur-sm p-4">
-        <div className="flex items-center justify-between mb-3">
-          {expert.tarif && (
-            <div className="inline-block px-2 py-0.5 bg-white/20 backdrop-blur-sm rounded-full text-white text-sm">
-              {expert.tarif}€<span className="text-xs">/jour</span>
-            </div>
-          )}
-        </div>
-        
-        {/* Expertises */}
-        <div className="space-y-1">
-          {expert.expertises.split(';').map((expertise, index) => (
-            <div
-              key={index}
-              className="text-white/90 text-sm font-medium"
-            >
-              {expertise.trim()}
-            </div>
-          ))}
-        </div>
-      </div>
-    </Link>
-  );
-};
 
 const Page = () => {
   const [experts, setExperts] = useState<Expert[] | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPays, setSelectedPays] = useState('');
   const [selectedVille, setSelectedVille] = useState('');
   const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedExpertises, setSelectedExpertises] = useState<string[]>([]);
+  const [selectedActivite, setSelectedActivite] = useState('');
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const filterRef = useRef<HTMLDivElement>(null);
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  
+  // État pour le drawer d'expert
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
+
+  // Fonction pour ouvrir le drawer avec l'expert sélectionné
+  const openExpertDrawer = (expert: Expert) => {
+    setSelectedExpert(expert);
+    setDrawerOpen(true);
+  };
 
   const handleThemeToggle = () => {
     setIsDarkMode(!isDarkMode);
@@ -114,8 +57,7 @@ const Page = () => {
 
   // Calcul du nombre de filtres actifs
   const activeFiltersCount = [
-    ...(selectedExpertises.length > 0 ? [1] : []),
-    selectedPays,
+    ...(selectedActivite.length > 0 ? [1] : []),
     selectedVille
   ].filter(Boolean).length;
 
@@ -135,23 +77,27 @@ const Page = () => {
         );
       }
 
-      // Apply expertise filters
-      if (selectedExpertises.length > 0) {
-        query = query.or(
-          selectedExpertises.map(expertise => 
-            // Recherche avec le point-virgule pour correspondre exactement au format en base
-            `expertises.ilike.%;${expertise.trim()}%,expertises.ilike.%${expertise.trim()};%`
-          ).join(',')
-        );
+      // Préparer les filtres d'activité et de ville
+      let activiteFilter = '';
+      if (selectedActivite) {
+        activiteFilter = `or(expertises.ilike.%;${selectedActivite.trim()}%,expertises.ilike.%${selectedActivite.trim()};%,activité.eq.${selectedActivite.trim()})`;
       }
-
-      // Apply location filters
-      if (selectedPays) {
-        query = query.eq('pays', selectedPays);
-      }
-
-      if (selectedVille) {
-        query = query.eq('ville', selectedVille);
+      
+      // Appliquer les filtres
+      if (selectedActivite && selectedVille) {
+        // Si les deux filtres sont actifs, on utilise une requête plus spécifique
+        query = query
+          .or(activiteFilter)
+          .eq('ville', selectedVille);
+      } else {
+        // Sinon, on applique chaque filtre individuellement
+        if (selectedActivite) {
+          query = query.or(activiteFilter);
+        }
+        
+        if (selectedVille) {
+          query = query.eq('ville', selectedVille);
+        }
       }
 
       const { data, error } = await query;
@@ -178,7 +124,7 @@ const Page = () => {
     } finally {
       setLoading(false);
     }
-  }, [searchQuery, selectedPays, selectedVille, selectedExpertises]);
+  }, [searchQuery, selectedVille, selectedActivite]);
 
   // Add helper function for calculating search relevance
   const calculateRelevance = (expert: Expert, searchTerms: string[]) => {
@@ -251,15 +197,10 @@ const Page = () => {
     }
   };
 
-  // Reset ville quand le pays change
-  useEffect(() => {
-    setSelectedVille('');
-  }, [selectedPays]);
-
   // Trigger search when filters change
   useEffect(() => {
     fetchExperts();
-  }, [searchQuery, selectedPays, selectedVille, selectedExpertises, fetchExperts]);
+  }, [searchQuery, selectedVille, selectedActivite, fetchExperts]);
 
   // Add debounce for search query
   useEffect(() => {
@@ -274,14 +215,6 @@ const Page = () => {
   useEffect(() => {
     fetchLocations();
   }, []);
-
-  // Add console logs for debugging
-  useEffect(() => {
-    console.log('Search Query:', searchQuery);
-    console.log('Selected Pays:', selectedPays);
-    console.log('Selected Ville:', selectedVille);
-    console.log('Selected Expertises:', selectedExpertises);
-  }, [searchQuery, selectedPays, selectedVille, selectedExpertises]);
 
   // Close filter dropdown when clicking outside
   useEffect(() => {
@@ -333,83 +266,67 @@ const Page = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
                         <div className="text-gray-500">
-                          Plus de 300 experts à votre écoute
+                          Trouver votre expert en accommpagnement
                         </div>
                       </div>
-                      
-                      <div className="flex items-center gap-4">
-                        {/* Search Bar - Hidden on mobile, showing only icon */}
-                        <div className="relative md:w-64 w-auto">
-                          <div className="md:hidden">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setIsSearchOpen(!isSearchOpen)}
-                              className="h-8 w-8"
-                            >
-                              <Search className="h-4 w-4" />
-                            </Button>
-                          </div>
-                          <div className="hidden md:block relative">
-                            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input
-                              type="text"
-                              placeholder="Rechercher..."
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="pl-10 w-full bg-transparent"
-                            />
-                          </div>
-                        </div>
-                        
-                        <div className="relative">
-                          <Button 
-                            onClick={() => setIsFilterOpen(!isFilterOpen)}
-                            variant="outline"
-                            className="flex items-center gap-2"
-                          >
-                            <Filter size={18} />
-                            <span className="hidden md:inline">Filter</span>
-                            {activeFiltersCount > 0 && (
-                              <span className="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
-                                {activeFiltersCount}
-                              </span>
-                            )}
-                          </Button>
-
-                          {/* Desktop Dropdown Container */}
-                          <div className="hidden md:block">
-                            <FilterDropdown
-                              selectedPays={selectedPays}
-                              setSelectedPays={setSelectedPays}
-                              selectedVille={selectedVille}
-                              setSelectedVille={setSelectedVille}
-                              selectedExpertises={selectedExpertises}
-                              setSelectedExpertises={setSelectedExpertises}
-                              locations={locations}
-                              experts={experts}
-                              isOpen={isFilterOpen}
-                              onClose={() => setIsFilterOpen(false)}
-                            />
-                          </div>
-                        </div>
-                      </div>
+                      {/* Bouton de filtre mobile */}
+                      <button
+                        type="button"
+                        onClick={() => setIsFilterOpen(true)}
+                        className="flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-700 dark:hover:bg-gray-700 lg:hidden"
+                      >
+                        <Filter className="mr-2 h-4 w-4" />
+                        <span>Filtres</span>
+                        {activeFiltersCount > 0 && (
+                          <span className="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-800 dark:bg-indigo-800 dark:text-indigo-100">
+                            {activeFiltersCount}
+                          </span>
+                        )}
+                      </button>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="max-w-[1800px] mx-auto pt-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-28 lg:pb-8">
-                  {experts && experts.length > 0 ? (
-                    experts.map((expert) => (
-                      <ExpertCard key={expert.id} expert={expert} />
-                    ))
-                  ) : (
-                    <p className="col-span-full text-center text-gray-500">
-                      Aucun expert trouvé
-                    </p>
-                  )}
+                <div className="lg:grid lg:grid-cols-4 lg:gap-x-8">
+                  {/* Sidebar filters - Desktop */}
+                  <aside className="hidden lg:block">
+                    <SidebarFilters
+                      selectedVille={selectedVille}
+                      setSelectedVille={setSelectedVille}
+                      selectedActivite={selectedActivite}
+                      setSelectedActivite={setSelectedActivite}
+                      locations={locations}
+                      experts={experts}
+                      mobileFiltersOpen={isFilterOpen}
+                      setMobileFiltersOpen={setIsFilterOpen}
+                    />
+                  </aside>
+
+                  {/* Mobile filters modal - Supprimé car maintenant géré dans SidebarFilters */}
+
+                  {/* Expert list */}
+                  <div className="lg:col-span-3">
+                    <div className="grid grid-cols-1 gap-6 pb-28 lg:pb-8">
+                      {/* Carte de promotion pour devenir expert */}
+                      <BecomeExpertCard onContactClick={() => toast.info('Fonctionnalité en développement')} />
+                      
+                      {experts && experts.length > 0 ? (
+                        experts.map((expert) => (
+                          <ExpertCard 
+                            key={expert.id} 
+                            expert={expert} 
+                            onClick={() => openExpertDrawer(expert)}
+                          />
+                        ))
+                      ) : (
+                        <p className="col-span-full text-center text-gray-500">
+                          Aucun expert trouvé
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -417,46 +334,13 @@ const Page = () => {
         </div>
       </main>
 
-      {/* Mobile Search Overlay */}
-      {isSearchOpen && (
-        <div className="fixed inset-0 bg-light-secondary dark:bg-dark-secondary z-50 md:hidden">
-          <div className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700">
-            <Search className="text-gray-400 w-4 h-4 mr-3" />
-            <Input
-              type="text"
-              placeholder="Rechercher..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="flex-1 bg-transparent border-none focus:ring-0"
-              autoFocus
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsSearchOpen(false)}
-              className="ml-2 h-8 w-8"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Mobile Filter Modal */}
-      <div className="md:hidden">
-        <FilterDropdown
-          selectedPays={selectedPays}
-          setSelectedPays={setSelectedPays}
-          selectedVille={selectedVille}
-          setSelectedVille={setSelectedVille}
-          selectedExpertises={selectedExpertises}
-          setSelectedExpertises={setSelectedExpertises}
-          locations={locations}
-          experts={experts}
-          isOpen={isFilterOpen}
-          onClose={() => setIsFilterOpen(false)}
-        />
-      </div>
+      {/* Expert Drawer */}
+      <ExpertDrawer 
+        expert={selectedExpert} 
+        open={drawerOpen} 
+        setOpen={setDrawerOpen}
+        className="max-w-5xl"
+      />
     </>
   );
 };

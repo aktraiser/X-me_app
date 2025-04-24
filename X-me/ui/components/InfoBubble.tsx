@@ -30,15 +30,15 @@ const InfoBubble = () => {
     <div className="fixed bottom-6 right-6 z-50">
       <Popover>
         <PopoverTrigger asChild>
-          <button className="rounded-full p-2 bg-light-secondary dark:bg-dark-secondary shadow-lg hover:bg-gray-700 outline-none">
-            <HelpCircle className="h-5 w-5" />
+          <button className="rounded-full p-2 bg-light-secondary dark:bg-dark-secondary shadow-lg hover:bg-gray-700 dark:hover:bg-dark-100 transition-colors outline-none">
+            <HelpCircle className="h-5 w-5 text-black/70 dark:text-white/70" />
           </button>
         </PopoverTrigger>
         <PopoverContent>
           <div className="flex flex-col space-y-2">
             <Link 
               href="/conditions-utilisation"
-              className="text-sm hover:underline"
+              className="text-sm text-black/90 dark:text-white/90 hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -46,7 +46,7 @@ const InfoBubble = () => {
             </Link>
             <Link 
               href="/politique-confidentialite"
-              className="text-sm hover:underline"
+              className="text-sm text-black/90 dark:text-white/90 hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >
@@ -54,7 +54,7 @@ const InfoBubble = () => {
             </Link>
             <Link 
               href="/a-propos"
-              className="text-sm hover:underline"
+              className="text-sm text-black/90 dark:text-white/90 hover:underline"
               target="_blank"
               rel="noopener noreferrer"
             >

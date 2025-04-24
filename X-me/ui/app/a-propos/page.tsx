@@ -1,12 +1,18 @@
+'use client';
+
 import React from 'react';
+import { useTheme } from 'next-themes';
+import { Moon, Sun } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
 
 export default function APropos() {
   return (
     <div className="min-h-screen bg-light-primary dark:bg-dark-primary p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-light-text dark:text-dark-text">Qui sommes-nous ?</h1>
+        <h1 className="text-3xl font-bold mb-8 text-white dark:text-black">Qui sommes-nous ?</h1>
         
-        <div className="space-y-8 text-light-text dark:text-dark-text">
+        <div className="space-y-8 text-white dark:text-black">
           <section className="prose dark:prose-invert max-w-none">
             <p className="mb-6">
               L&apos;entrepreneuriat n&apos;est plus un rêve réservé à quelques audacieux, c&apos;est devenu une réalité tangible. 

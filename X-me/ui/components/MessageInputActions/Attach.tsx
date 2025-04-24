@@ -5,9 +5,15 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
-import { CopyPlus, File, LoaderCircle, Plus, Trash } from 'lucide-react';
+import { Paperclip, File, LoaderCircle, Plus, Trash } from 'lucide-react';
 import { Fragment, useRef, useState } from 'react';
 import { File as FileType } from '../ChatWindow';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../ui/tooltip";
 
 const Attach = ({
   fileIds,
@@ -28,9 +34,28 @@ const Attach = ({
   const handleChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setLoading(true);
     const data = new FormData();
+    const validFiles: globalThis.File[] = [];
+    const MAX_SIZE = 20 * 1024 * 1024; // 20MB
 
     for (let i = 0; i < e.target.files!.length; i++) {
-      data.append('files', e.target.files![i]);
+      const file = e.target.files![i];
+      if (file.size > MAX_SIZE) {
+        // TODO: Afficher une erreur à l'utilisateur pour ce fichier
+        console.error(`Le fichier ${file.name} est trop volumineux (${(file.size / 1024 / 1024).toFixed(2)} Mo). La taille maximale est de 20 Mo.`);
+        continue; // Ignorer ce fichier
+      }
+      if (file.type !== 'application/pdf') {
+        // TODO: Afficher une erreur à l'utilisateur pour ce fichier
+         console.error(`Le fichier ${file.name} n'est pas un PDF.`);
+         continue; // Ignorer ce fichier
+      }
+      validFiles.push(file);
+      data.append('files', file);
+    }
+
+    if (validFiles.length === 0) {
+      setLoading(false);
+      return; // Aucun fichier valide à téléverser
     }
 
     const embeddingModelProvider = localStorage.getItem(
@@ -57,7 +82,7 @@ const Attach = ({
     <div className="flex flex-row items-center justify-between space-x-1">
       <LoaderCircle size={18} className="text-sky-400 animate-spin" />
       <p className="text-sky-400 inline whitespace-nowrap text-xs font-medium">
-        Uploading..
+        Chargement..
       </p>
     </div>
   ) : files.length > 0 ? (
@@ -73,7 +98,7 @@ const Attach = ({
           <>
             <File size={19} className="text-sky-400" />
             <p className="text-sky-400 inline whitespace-nowrap text-xs font-medium">
-              {files.length} files
+              {files.length} Fichier
             </p>
           </>
         )}
@@ -104,7 +129,7 @@ const Attach = ({
           <div className="bg-light-primary dark:bg-dark-primary border rounded-md border-light-200 dark:border-dark-200 w-full max-h-[200px] md:max-h-none overflow-y-auto flex flex-col">
             <div className="flex flex-row items-center justify-between px-3 py-2">
               <h4 className="text-black dark:text-white font-medium text-sm">
-                Attached files
+                Attacher un document
               </h4>
               <div className="flex flex-row items-center space-x-4">
                 <button
@@ -116,12 +141,12 @@ const Attach = ({
                     type="file"
                     onChange={handleChange}
                     ref={fileInputRef}
-                    accept=".pdf,.docx,.txt"
+                    accept=".pdf"
                     multiple
                     hidden
                   />
                   <Plus size={18} />
-                  <p className="text-xs">Add</p>
+                  <p className="text-xs">Ajouter</p>
                 </button>
                 <button
                   onClick={() => {
@@ -131,7 +156,7 @@ const Attach = ({
                   className="flex flex-row items-center space-x-1 text-white/70 hover:text-white transition duration-200"
                 >
                   <Trash size={14} />
-                  <p className="text-xs">Clear</p>
+                  <p className="text-xs">Effacer</p>
                 </button>
               </div>
             </div>
@@ -160,25 +185,34 @@ const Attach = ({
       </Transition>
     </Popover>
   ) : (
-    <button
-      type="button"
-      onClick={() => fileInputRef.current.click()}
-      className={cn(
-        'flex flex-row items-center space-x-1 text-black/50 dark:text-white/50 rounded-xl hover:bg-light-secondary dark:hover:bg-dark-secondary transition duration-200 hover:text-black dark:hover:text-white',
-        showText ? '' : 'p-2',
-      )}
-    >
-      <input
-        type="file"
-        onChange={handleChange}
-        ref={fileInputRef}
-        accept=".pdf,.docx,.txt"
-        multiple
-        hidden
-      />
-      <CopyPlus size={showText ? 18 : undefined} />
-      {showText && <p className="text-xs font-medium pl-[1px]">Attach</p>}
-    </button>
+    <TooltipProvider delayDuration={0}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={() => fileInputRef.current.click()}
+            className={cn(
+              'flex flex-row items-center space-x-1 text-black/50 dark:text-white/50 rounded-xl hover:bg-light-secondary dark:hover:bg-dark-secondary transition duration-200 hover:text-black dark:hover:text-white',
+              showText ? '' : 'p-2',
+            )}
+          >
+            <input
+              type="file"
+              onChange={handleChange}
+              ref={fileInputRef}
+              accept=".pdf"
+              multiple
+              hidden
+            />
+            <Paperclip size={showText ? 18 : undefined} />
+            {showText && <p className="text-xs font-medium pl-[1px]">Attacher</p>}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" sideOffset={4}>
+          Attacher un document
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 

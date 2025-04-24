@@ -2,7 +2,6 @@
 
 /* eslint-disable @next/next/no-img-element */
 import React, { MutableRefObject, useEffect, useState, useRef } from 'react';
-import ReactDOMServer from 'react-dom/server';
 import { Message } from './ChatWindow';
 import { cn } from '@/lib/utils';
 import {
@@ -20,11 +19,29 @@ import Markdown from 'markdown-to-jsx';
 import Copy from './MessageActions/Copy';
 import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
-import LegalSearch from './LegalSearch';
 import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
 import { Expert } from '@/lib/actions';
+import { Document } from '@langchain/core/documents';
 import Source from './Source';
+import PartnerAds from './PartnerAds';
+import ExpertCard from './ExpertCard';
+import ExpertDrawer from '@/app/discover/components/ExpertDrawer';
+
+// Define SourceMetadata interface (similar to Source.tsx)
+interface SourceMetadata {
+  url?: string;
+  isFile?: boolean;
+  type?: string;
+  page?: number;
+  title?: string;
+  favicon?: string;
+}
+
+// Define the type for source documents
+interface SourceDocument extends Document {
+  metadata: SourceMetadata;
+}
 
 const formatImageUrl = (url: string): string => {
   if (!url) return '';
@@ -36,6 +53,99 @@ const formatImageUrl = (url: string): string => {
   }
   
   return url;
+};
+
+// Define SourcePopover component internally
+const SourcePopover = ({ source, number, onExpertClick }: { source: SourceDocument, number: number, onExpertClick?: (source: SourceDocument) => void }) => {
+  const sourceUrl = source?.metadata?.url || '#';
+  const sourceTitle = source?.metadata?.title || 'Source';
+  const isFile = source?.metadata?.isFile;
+  const pageNumber = source?.metadata?.page || 1;
+  const isExpert = source?.metadata?.type === 'expert';
+  
+  let faviconUrl: string | null = null;
+  try {
+    if (!isFile && sourceUrl && sourceUrl !== '#') {
+      faviconUrl = `https://s2.googleusercontent.com/s2/favicons?domain_url=${encodeURIComponent(new URL(sourceUrl).origin)}`;
+    } 
+  } catch (error) {
+    faviconUrl = null;
+  }
+  
+  const hostname = isFile ? `Page ${pageNumber}` : (sourceUrl && sourceUrl !== '#') ? new URL(sourceUrl).hostname.replace(/^www\./, '') : 'Source';
+
+  // Format page content to remove excessive whitespace and links
+  const formatContent = (content: string): string => {
+    if (!content) return '';
+    // Remove multiple spaces, tabs, and newlines
+    let formatted = content.replace(/\s+/g, ' ').trim();
+    // Remove common link patterns and HTML tags
+    formatted = formatted.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
+    formatted = formatted.replace(/<[^>]+>/g, '');
+    // Limit length
+    return formatted.length > 150 ? formatted.substring(0, 150) + '...' : formatted;
+  };
+
+  // Générer un extrait direct du contenu sans appel API
+  const excerpt = formatContent(source.pageContent);
+
+  return (
+    <span className="group relative inline-flex align-middle mx-px"> {/* inline-flex pour bon alignement */} 
+      <span 
+        className="inline-flex items-center justify-center rounded px-1.5 py-0.5 text-xs bg-black/10 dark:bg-white/10 text-black dark:text-white cursor-pointer hover:bg-[#c59d3f]/20 hover:text-[#c59d3f] dark:hover:bg-[#c59d3f]/20 dark:hover:text-[#c59d3f] transition-colors"
+        onClick={(e: React.MouseEvent) => {
+          e.stopPropagation();
+          
+          // Si c'est un expert et la fonction de callback est fournie
+          if (isExpert && onExpertClick) {
+            onExpertClick(source);
+          } else {
+            // Comportement normal pour les autres sources
+            window.open(sourceUrl, '_blank');
+          }
+        }}
+      >
+        {number}
+      </span>
+      <div className="absolute z-50 w-[300px] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-2 bottom-full left-1/2 transform -translate-x-1/2 border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+        <div className="flex flex-col space-y-2">
+          <h3 className="text-sm font-medium text-black dark:text-white line-clamp-2">
+            {sourceTitle}
+          </h3>
+          <p className="text-xs text-black dark:text-gray-400 line-clamp-3">
+            {excerpt}
+          </p>
+          <div className="flex items-center mt-1">
+            {isFile ? (
+              <div className="flex-shrink-0 bg-gray-800 flex items-center justify-center w-4 h-4 rounded-full mr-2">
+                <File size={10} className="text-black dark:text-white" />
+              </div>
+            ) : faviconUrl ? (
+              <img
+                src={faviconUrl}
+                width={16}
+                height={16}
+                alt="favicon"
+                className="flex-shrink-0 rounded-sm h-4 w-4 object-cover mr-2"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div className="flex-shrink-0 bg-gray-700 flex items-center justify-center w-4 h-4 rounded-full mr-2">
+                <File size={10} className="text-white" />
+              </div>
+            )}
+            <p className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium">
+              {isFile
+                ? `Document PDF - Page ${pageNumber}`
+                : hostname}
+            </p>
+          </div>
+        </div>
+      </div>
+    </span>
+  );
 };
 
 const MessageBox = ({
@@ -57,110 +167,45 @@ const MessageBox = ({
   rewrite: (messageId: string) => void;
   sendMessage: (message: string) => void;
 }) => {
-  const [parsedMessage, setParsedMessage] = useState(message.content);
+  // Removed parsedMessage state
   const [speechMessage, setSpeechMessage] = useState(message.content);
   const [isSourcesOpen, setIsSourcesOpen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
+  const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
 
   /**
-   * Composant SourceLink (non utilisé dans le remplacement mais conservé ici pour référence)
-   * Affiche le numéro de la source dans un badge cliquable avec une modale d'aperçu.
-   */
-  const SourceLink = ({ sourceIndex }: { sourceIndex: number }) => {
-    const source = message.sources?.[sourceIndex];
-    if (!source) return null;
-    const url = source.metadata?.url || '';
-    const isFile = source.metadata?.isFile;
-    let faviconUrl: string | null = null;
-    try {
-      if (!isFile && url) {
-        faviconUrl = `https://s2.googleusercontent.com/s2/favicons?domain_url=${encodeURIComponent(new URL(url).origin)}`;
-      }
-    } catch (error) {
-      faviconUrl = null;
-    }
-    const displayNumber = sourceIndex + 1;
-
-    return (
-      <span className="group relative inline">
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={(e) => e.stopPropagation()}
-          className="ml-1 text-xs text-light-200 dark:text-white hover:underline"
-        >
-          {displayNumber}
-        </a>
-        <div className="absolute z-50 w-[300px] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-2 bottom-full left-1/2 transform -translate-x-1/2 border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-          <div className="flex items-start space-x-3">
-            {isFile ? (
-              <div className="bg-gray-800 flex items-center justify-center w-10 h-10 rounded-lg">
-                <File size={16} className="text-white" />
-              </div>
-            ) : faviconUrl ? (
-              <img
-                src={faviconUrl}
-                width={16}
-                height={16}
-                alt="favicon"
-                className="rounded-lg h-4 w-4 object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="bg-gray-700 flex items-center justify-center w-10 h-10 rounded-lg">
-                <File size={16} className="text-white" />
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                {source.metadata?.title || 'Source'}
-              </h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                {source.pageContent}
-              </p>
-              <div className="flex items-center mt-2">
-                <p className="text-xs text-gray-500 dark:text-gray-400">
-                  {isFile
-                    ? `Document PDF - Page ${source.metadata?.page || 1}`
-                    : url
-                    ? new URL(url).hostname.replace(/^www\./, '')
-                    : 'Source'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </span>
-    );
-  };
-
-  /**
-   * Remplacement des références de type [Source X] dans le contenu par un badge HTML.
-   * On ajoute ici un attribut inline onClick pour stopper la propagation du clic.
+   * Prepare content for speech synthesis (remove citations)
    */
   useEffect(() => {
-    const regex = /\[(\d+)\]/g;
-
-    if (
-      message.role === 'assistant' &&
-      message?.sources &&
-      message.sources.length > 0
-    ) {
-      return setParsedMessage(
-        message.content.replace(
-          regex,
-          (_, number) =>
-            `<a href="${message.sources?.[number - 1]?.metadata?.url}" target="_blank" className="bg-light-secondary dark:bg-dark-secondary px-1 rounded ml-1 no-underline text-xs text-black/70 dark:text-white/70 relative">${number}</a>`,
-        ),
-      );
-    }
-
+    const regex = /\[((?:\d+\s*,\s*)*\d+)\]/g;
     setSpeechMessage(message.content.replace(regex, ''));
-    setParsedMessage(message.content);
-  }, [message.content, message.sources, message.role]);
+  }, [message.content]);
+
+  // Fonction pour gérer les clics sur les sources d'experts
+  const handleExpertSourceClick = (source: SourceDocument) => {
+    console.log('🔍 Expert source clicked:', source.metadata);
+    
+    // Chercher l'expert correspondant parmi les experts suggérés
+    if (message.suggestedExperts && message.suggestedExperts.length > 0) {
+      console.log('👥 Experts suggérés disponibles:', message.suggestedExperts.length);
+      
+      // Rechercher d'abord par type 'expert'
+      if (source.metadata.type === 'expert') {
+        // Si nous avons les experts suggérés, utiliser le premier
+        const expert = message.suggestedExperts[0];
+        
+        if (expert) {
+          console.log('✅ Expert sélectionné pour affichage:', expert.prenom, expert.nom);
+          setSelectedExpert(expert);
+          setDrawerOpen(true);
+          return;
+        }
+      }
+    } else {
+      console.log('❌ Aucun expert suggéré disponible dans le message actuel');
+    }
+  };
 
   useEffect(() => {
     if (message.sources && message.sources.length > 0) {
@@ -172,6 +217,7 @@ const MessageBox = ({
     }
   }, [message.sources]);
 
+
   const { speechStatus, start, stop } = useSpeech({ text: speechMessage });
 
   const openSourcesModal = () => {
@@ -181,6 +227,32 @@ const MessageBox = ({
   const closeSourcesModal = () => {
     setIsSourcesOpen(false);
   };
+
+  // Pre-process content for Markdown rendering with placeholders
+  let processedContent = message.content;
+  if (message.role === 'assistant' && message.sources && message.sources.length > 0) {
+      // Remplacer les références [X] par des balises <sourceref> (tout en minuscules)
+      processedContent = processedContent.replace(/\[(\d+)\]/g, (match, numberString) => {
+          const number = parseInt(numberString.trim(), 10);
+          const sourceIndex = number - 1;
+          
+          if (sourceIndex >= 0 && message.sources && sourceIndex < message.sources.length) {
+              // Utiliser une balise HTML personnalisée en minuscules - important !
+              return `<sourceref index="${sourceIndex}" number="${number}" />`;
+          } else {
+              return `[${number}]`; // Keep original text if source index is invalid
+          }
+      });
+  }
+
+  // Normaliser les listes dans le contenu
+  if (message.role === 'assistant') {
+    // Normalisation des listes à puces pour s'assurer qu'elles utilisent le format "- "
+    processedContent = processedContent.replace(/^(\s*)[-•⚫⚪●○]\s+/gm, '$1- ');
+    
+    // Normalisation des listes numérotées pour s'assurer qu'elles utilisent le format "1. "
+    processedContent = processedContent.replace(/^(\s*)(\d+)\)\s+/gm, '$1$2. ');
+  }
 
   return (
     <div>
@@ -207,7 +279,7 @@ const MessageBox = ({
             {message.sources && message.sources[0]?.metadata?.illustrationImage && (
               <div className="flex flex-col space-y-2 -mx-6 md:mx-0 mb-4">
                 <div className="w-full aspect-[21/6] relative overflow-hidden md:rounded-xl shadow-lg">
-                  <img 
+                  <img
                     src={formatImageUrl(message.sources[0].metadata.illustrationImage)}
                     alt="Illustration"
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
@@ -236,14 +308,8 @@ const MessageBox = ({
             )}
             {message.sources && message.sources.length > 0 && (
               <div className="flex flex-col space-y-2">
-                <div className="flex flex-row items-center space-x-2">
-                  <BookCopy className="text-black dark:text-white" size={20} />
-                  <h3 className="text-black dark:text-white font-medium text-xl">
-                    Sources
-                  </h3>
-                </div>
-                <MessageSources 
-                  sources={message.sources} 
+                <MessageSources
+                  sources={message.sources as SourceDocument[]} // Assurer le type
                   openModal={openSourcesModal}
                   onClose={closeSourcesModal}
                 />
@@ -251,62 +317,138 @@ const MessageBox = ({
             )}
 
             {/* Mobile: SearchVideos and LegalSearch */}
-            <div className="md:hidden space-y-3">
+            <div className="lg:hidden space-y-3">
               <SearchVideos
                 chatHistory={history.slice(0, messageIndex - 1)}
                 query={history[messageIndex - 1].content}
               />
-              <LegalSearch
+              <PartnerAds
                 query={history[messageIndex - 1].content}
                 chatHistory={history.slice(0, messageIndex - 1)}
               />
             </div>
 
-            <div ref={contentRef} className="flex flex-col space-y-2 w-full">
-              <div className="flex flex-row items-center space-x-2">
-                <Disc3
-                  className={cn(
-                    'text-black dark:text-white',
-                    isLast && loading ? 'animate-spin' : 'animate-none',
-                  )}
-                  size={20}
-                />
-                <h3 className="text-black dark:text-white font-medium text-xl">
-                  Réponse
-                </h3>
+            <div ref={contentRef} className="flex flex-col space-y-4 w-full">
+
+              {/* Utilisation de Markdown pour rendre le contenu pré-traité */}
+              <div className="mb-3 max-w-full prose prose-sm dark:prose-invert prose-img:mx-auto dark:text-white max-w-none">
+                <Markdown
+                  remarkPlugins={[]}
+                  options={{
+                    // Utiliser options.overrides au lieu de components
+                    overrides: {
+                      // Définir le composant pour la balise <sourceref>
+                      sourceref: {
+                        component: ({index, number, ...props}) => {
+                          const sourceIndex = parseInt(index, 10);
+                          const originalNumber = parseInt(number, 10);
+                          
+                          // Vérifier que la source existe
+                          if (message.sources && sourceIndex >= 0 && sourceIndex < message.sources.length) {
+                            return (
+                              <SourcePopover
+                                source={message.sources[sourceIndex] as SourceDocument}
+                                number={originalNumber}
+                                onExpertClick={handleExpertSourceClick}
+                              />
+                            );
+                          }
+                          
+                          // Fallback pour source invalide
+                          return <span>[{originalNumber}]</span>;
+                        }
+                      },
+                      // Autres overrides si nécessaire...
+                    }
+                  }}
+                  components={{
+                    // Ne pas utiliser components pour les balises personnalisées
+                    p: {
+                      component: ({ children, ...props }: React.PropsWithChildren<any>) => {
+                          // Si le contenu est juste une image, pas besoin d'un <p>
+                          if (typeof children === 'object' && React.isValidElement(children) && children.type === 'img') {
+                            return children;
+                          }
+                          // Paragraphe normal - on le rend comme un p
+                          return <p className="my-2" {...props}>{children}</p>;
+                        }
+                      },
+                    // Style pour les listes à puces (ul)
+                    ul: {
+                      component: ({ children, ...props }: React.PropsWithChildren<any>) => {
+                        return (
+                          <ul className="my-4 pl-2" {...props}>
+                            {children}
+                          </ul>
+                        );
+                      }
+                    },
+                    // Style pour les listes numérotées (ol)
+                    ol: {
+                      component: ({ children, ...props }: React.PropsWithChildren<any>) => {
+                        return (
+                          <ol className="my-4 pl-2" {...props}>
+                            {children}
+                          </ol>
+                        );
+                      }
+                    },
+                    // Style pour les éléments de liste (li)
+                    li: {
+                      component: ({ children, ...props }: React.PropsWithChildren<any>) => {
+                        let itemContent = children;
+                        let listType = 'bullet'; // Par défaut
+                        let bulletOrNumber = '-'; // Valeur par défaut
+                        
+                        // Vérifier le contenu pour détecter le type de liste
+                        if (typeof children === 'string') {
+                          // Recherche de formats de liste numérotée: 1., 2., etc.
+                          const numericRegex = /^\s*(\d+)[\.\)]\s*(.+)$/;
+                          const bulletRegex = /^\s*[-•⚫⚪●○]\s*(.+)$/;
+                          
+                          // Test pour liste numérotée
+                          const numericMatch = children.match(numericRegex);
+                          if (numericMatch) {
+                            bulletOrNumber = numericMatch[1]; // Le numéro
+                            itemContent = numericMatch[2]; // Le contenu après le numéro
+                            listType = 'numbered';
+                          } 
+                          // Test pour liste à puces
+                          else if (bulletRegex.test(children)) {
+                            const bulletMatch = children.match(bulletRegex);
+                            if (bulletMatch) {
+                              itemContent = bulletMatch[1]; // Le contenu après la puce
+                            } else {
+                              // Cas de fallback si le regex match mais pas la capture
+                              itemContent = children.replace(/^\s*[-•⚫⚪●○]\s*/, '');
+                            }
+                            listType = 'bullet';
+                          }
+                          // Si le texte commence simplement par un tiret sans espace
+                          else if (children.startsWith('-')) {
+                            itemContent = children.substring(1);
+                            listType = 'bullet';
+                          }
+                        }
+                        
+                        return (
+                          <li className="my-1 pl-6 flex flex-row" {...props}>
+                            {/* Afficher différemment selon le type de liste */}
+                            {listType === 'numbered' ? (
+                              <span className="inline-block mr-2 font-medium flex-shrink-0">{bulletOrNumber}.</span>
+                            ) : (
+                              <span className="inline-block mr-2 flex-shrink-0">-</span>
+                            )}
+                            <span className="flex-grow">{itemContent}</span>
+                          </li>
+                        );
+                      }
+                    },
+                  }}>
+                  {processedContent}
+                </Markdown>
               </div>
-              <div className={cn(
-                'prose prose-h1:mb-3 prose-h2:mb-2 prose-h2:mt-6 prose-h2:font-[800] prose-h3:mt-4 prose-h3:mb-1.5 prose-h3:font-[600] dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 font-[400] prose-p:inline',
-                'max-w-none w-full break-words text-black dark:text-white',
-              )}>
-                {Array.isArray(parsedMessage) ? 
-                  parsedMessage.map((element, index) => (
-                    typeof element === 'string' ? (
-                      <Markdown
-                        key={index}
-                        className="max-w-none break-words text-black dark:text-white inline"
-                        options={{
-                          wrapper: 'span',
-                          disableParsingRawHTML: false,
-                          forceWrapper: true,
-                        }}
-                      >
-                        {element}
-                      </Markdown>
-                    ) : (
-                      <span key={index} className="inline-flex align-baseline">{element}</span>
-                    )
-                  ))
-                  : (
-                    <Markdown
-                      className="prose prose-h1:mb-3 prose-h2:mb-2 prose-h2:mt-6 prose-h2:font-[800] prose-h3:mt-4 prose-h3:mb-1.5 prose-h3:font-[600] dark:prose-invert prose-p:leading-relaxed prose-pre:p-0 font-[400] max-w-none break-words text-black dark:text-white"
-                      options={{ disableParsingRawHTML: false }}
-                    >
-                      {parsedMessage}
-                    </Markdown>
-                  )
-                }
-              </div>
+              
               {loading && isLast ? null : (
                 <div className="flex flex-row items-center justify-between w-full text-black dark:text-white py-4 -mx-2">
                   <div className="flex flex-row items-center space-x-1">
@@ -338,10 +480,7 @@ const MessageBox = ({
                 (message.suggestedExperts && message.suggestedExperts.length > 0)) &&
                 message.role === 'assistant' &&
                 !loading && (
-                  <>
-                    {console.log('Debug - Message complet:', JSON.stringify(message, null, 2))}
-                    {console.log('Debug - Suggestions:', message.suggestions)}
-                    {console.log('Debug - Experts:', message.suggestedExperts)}
+                  <div className="mt-4">
                     <div className="h-px w-full bg-light-secondary dark:bg-dark-secondary" />
                     <div className="flex flex-col space-y-3 text-black dark:text-white">
                       {message.suggestions && message.suggestions.length > 0 && (
@@ -384,75 +523,39 @@ const MessageBox = ({
                               <h3 className="text-xl font-medium">On vous accompagne</h3>
                             </div>
                           </div>
-                          <div className="flex flex-col space-y-4">
+                          <div className="flex flex-col space-y-4 w-full mx-auto">
                             {message.suggestedExperts.map((expert: Expert, i) => (
-                              <div
-                                key={expert.id_expert || i}
-                                className="flex flex-row items-start p-4 rounded-lg bg-light-secondary dark:bg-dark-secondary hover:bg-light-secondary/80 dark:hover:bg-dark-secondary/80 transition-colors duration-200 cursor-pointer gap-4"
-                                onClick={() => {
-                                  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-                                  const url = `${baseUrl}/expert/${expert.prenom.toLowerCase()}-${expert.nom.toLowerCase()}-${expert.id_expert}`;
-                                  window.open(url, '_blank');
-                                }}
-                              >
-                                <div className="flex-shrink-0">
-                                  {expert.image_url ? (
-                                    <img
-                                      src={expert.image_url}
-                                      alt={`${expert.prenom} ${expert.nom}`}
-                                      className="w-20 h-20 rounded-lg object-cover"
-                                      onError={(e) => {
-                                        console.error("Erreur de chargement de l'image expert:", e);
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="w-20 h-20 rounded-lg bg-gray-200 dark:bg-gray-700 flex items-center justify-center">
-                                      <User className="w-8 h-8 text-gray-500" />
-                                    </div>
-                                  )}
-                                </div>
-
-                                <div className="flex-grow">
-                                  <div className="flex justify-between items-start">
-                                    <div>
-                                      <h4 className="font-medium text-lg">{expert.prenom} {expert.nom}</h4>
-                                      <p className="text-sm text-gray-500">{expert.expertises}</p>
-                                      <p className="text-sm text-gray-500">{expert.ville}, {expert.pays}</p>
-                                    </div>
-                                    <div className="flex flex-col items-end">
-                                      <span className="text-lg font-medium text-[#24A0ED]">{expert.tarif}€/h</span>
-                                      <button 
-                                        className="mt-2 px-4 py-2 bg-[#24A0ED] text-white rounded-md hover:bg-[#1a8cd8] transition-colors duration-200"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          const expertUrl = `/expert/${expert.id_expert}`;
-                                          window.open(expertUrl, '_blank');
-                                        }}
-                                      >
-                                        Voir le profil
-                                      </button>
-                                    </div>
-                                  </div>
-                                  <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 line-clamp-2">{expert.biographie}</p>
-                                </div>
+                              <div key={expert.id_expert || i} className="w-full mx-auto">
+                                <ExpertCard 
+                                  expert={expert}
+                                  onClick={() => {
+                                    setSelectedExpert(expert);
+                                    setDrawerOpen(true);
+                                  }}
+                                />
                               </div>
                             ))}
                           </div>
+                          <ExpertDrawer
+                            expert={selectedExpert}
+                            open={drawerOpen}
+                            setOpen={setDrawerOpen}
+                            className="max-w-5xl"
+                          />
                         </>
                       )}
                     </div>
-                  </>
+                  </div>
                 )}
             </div>
           </div>
 
           {/* Desktop: Sidebar content */}
-          <div className="hidden md:flex lg:sticky lg:top-20 flex-col items-center space-y-3 w-full md:w-3/12 z-30 h-full pb-4">
+          <div className="hidden lg:flex lg:sticky lg:top-20 flex-col items-center space-y-3 w-full md:w-3/12 z-30 h-full pb-4">
             {message.sources && message.sources.length > 0 && (
               <div className="w-full">
-                <Source 
-                  sources={message.sources}
+                <Source
+                  sources={message.sources as SourceDocument[]} // Assurer le type
                   isOpen={isSourcesOpen}
                   onClose={closeSourcesModal}
                 />
@@ -463,13 +566,15 @@ const MessageBox = ({
                 chatHistory={history.slice(0, messageIndex - 1)}
                 query={history[messageIndex - 1].content}
               />
-              <LegalSearch
+            </div>
+            <div className="w-full">
+              <PartnerAds
                 query={history[messageIndex - 1].content}
-                chatHistory={history.slice(0, messageIndex - 1)}
-              />
+                  chatHistory={history.slice(0, messageIndex - 1)}
+                />
+            </div>
             </div>
           </div>
-        </div>
       )}
     </div>
   );

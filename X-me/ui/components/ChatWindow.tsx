@@ -10,6 +10,14 @@ import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
 import { getSuggestions, Expert } from '@/lib/actions';
 import Error from 'next/error';
+import { useAuth, useSession } from '@clerk/nextjs';
+import { createClient } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
+
+// Logs de débogage
+console.log('[DEBUG ChatWindow] Composant chargé');
+console.log('[DEBUG ChatWindow] URL WebSocket:', process.env.NEXT_PUBLIC_WS_URL);
+console.log('[DEBUG ChatWindow] URL API:', process.env.NEXT_PUBLIC_API_URL);
 
 export type Message = {
   messageId: string;
@@ -28,6 +36,46 @@ export interface File {
   fileId: string;
 }
 
+export interface ResearchActivity {
+  type: string;
+  status: string;
+  message: string;
+  timestamp: string;
+  depth: number;
+  maxDepth?: number;
+}
+
+// Ajouter une déclaration d'interface pour étendre la définition de Window
+interface ExtendedWindow extends Window {
+  Clerk?: {
+    session: {
+      getToken: (options: { template: string }) => Promise<string>;
+    };
+  };
+}
+
+// Fonction pour obtenir le jeton JWT Clerk pour Supabase
+const getSupabaseSession = async () => {
+  try {
+    // Utiliser la méthode window.Clerk si disponible
+    if (typeof window !== 'undefined' && (window as ExtendedWindow).Clerk) {
+      const token = await (window as ExtendedWindow).Clerk!.session.getToken({ template: "supabase" });
+      return token;
+    }
+    
+    // Sinon essayer via une API
+    const session = await fetch('/api/clerk/session').then(r => r.json());
+    if (session && session.getToken) {
+      return await session.getToken({ template: "supabase" });
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('[DEBUG] Impossible d\'obtenir le jeton Clerk:', error);
+    return null;
+  }
+};
+
 const useSocket = (
   url: string,
   setIsWSReady: (ready: boolean) => void,
@@ -38,6 +86,7 @@ const useSocket = (
   useEffect(() => {
     if (!ws) {
       const connectWs = async () => {
+        console.log('[DEBUG WebSocket] Tentative de connexion à:', url);
         let chatModel = localStorage.getItem('chatModel');
         let chatModelProvider = localStorage.getItem('chatModelProvider');
         let embeddingModel = localStorage.getItem('embeddingModel');
@@ -45,169 +94,188 @@ const useSocket = (
           'embeddingModelProvider',
         );
 
-        const providers = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/models`,
-          {
-            headers: {
-              'Content-Type': 'application/json',
+        try {
+          console.log('[DEBUG WebSocket] Récupération des modèles depuis:', `${process.env.NEXT_PUBLIC_API_URL}/models`);
+          const providers = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/models`,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+              },
             },
-          },
-        ).then(async (res) => await res.json());
+          ).then(async (res) => await res.json());
+          
+          console.log('[DEBUG WebSocket] Modèles récupérés:', providers);
 
-        if (
-          !chatModel ||
-          !chatModelProvider ||
-          !embeddingModel ||
-          !embeddingModelProvider
-        ) {
-          if (!chatModel || !chatModelProvider) {
-            const chatModelProviders = providers.chatModelProviders;
+          if (
+            !chatModel ||
+            !chatModelProvider ||
+            !embeddingModel ||
+            !embeddingModelProvider
+          ) {
+            if (!chatModel || !chatModelProvider) {
+              const chatModelProviders = providers.chatModelProviders;
 
-            chatModelProvider = Object.keys(chatModelProviders)[0];
+              // Forcer l'utilisation de 'openai' au lieu de custom_openai
+              chatModelProvider = 'openai';
+              console.log('[DEBUG WebSocket] Fournisseur forcé à:', chatModelProvider);
 
-            if (chatModelProvider === 'custom_openai') {
-              toast.error(
-                'Seems like you are using the custom OpenAI provider, please open the settings and configure the API key and base URL',
-              );
-              setError(true);
-              return;
-            } else {
+              // Sélectionner un modèle disponible
               chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+              console.log('[DEBUG WebSocket] Modèle forcé à:', chatModel);
+              
               if (
                 !chatModelProviders ||
                 Object.keys(chatModelProviders).length === 0
               )
                 return toast.error('No chat models available');
             }
-          }
 
-          if (!embeddingModel || !embeddingModelProvider) {
-            const embeddingModelProviders = providers.embeddingModelProviders;
+            if (!embeddingModel || !embeddingModelProvider) {
+              const embeddingModelProviders = providers.embeddingModelProviders;
 
-            if (
-              !embeddingModelProviders ||
-              Object.keys(embeddingModelProviders).length === 0
-            )
-              return toast.error('No embedding models available');
+              if (
+                !embeddingModelProviders ||
+                Object.keys(embeddingModelProviders).length === 0
+              )
+                return toast.error('No embedding models available');
 
-            embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-            embeddingModel = Object.keys(
-              embeddingModelProviders[embeddingModelProvider],
-            )[0];
-          }
+              embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+              embeddingModel = Object.keys(
+                embeddingModelProviders[embeddingModelProvider],
+              )[0];
+            }
 
-          localStorage.setItem('chatModel', chatModel!);
-          localStorage.setItem('chatModelProvider', chatModelProvider);
-          localStorage.setItem('embeddingModel', embeddingModel!);
-          localStorage.setItem(
-            'embeddingModelProvider',
-            embeddingModelProvider,
-          );
-        } else {
-          const chatModelProviders = providers.chatModelProviders;
-          const embeddingModelProviders = providers.embeddingModelProviders;
-
-          if (
-            Object.keys(chatModelProviders).length > 0 &&
-            !chatModelProviders[chatModelProvider]
-          ) {
-            chatModelProvider = Object.keys(chatModelProviders)[0];
+            localStorage.setItem('chatModel', chatModel!);
             localStorage.setItem('chatModelProvider', chatModelProvider);
-          }
-
-          if (
-            chatModelProvider &&
-            chatModelProvider != 'custom_openai' &&
-            !chatModelProviders[chatModelProvider][chatModel]
-          ) {
-            chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-            localStorage.setItem('chatModel', chatModel);
-          }
-
-          if (
-            Object.keys(embeddingModelProviders).length > 0 &&
-            !embeddingModelProviders[embeddingModelProvider]
-          ) {
-            embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+            localStorage.setItem('embeddingModel', embeddingModel!);
             localStorage.setItem(
               'embeddingModelProvider',
               embeddingModelProvider,
             );
+          } else {
+            const chatModelProviders = providers.chatModelProviders;
+            const embeddingModelProviders = providers.embeddingModelProviders;
+
+            if (
+              Object.keys(chatModelProviders).length > 0 &&
+              !chatModelProviders[chatModelProvider]
+            ) {
+              chatModelProvider = Object.keys(chatModelProviders)[0];
+              localStorage.setItem('chatModelProvider', chatModelProvider);
+            }
+
+            if (
+              chatModelProvider &&
+              chatModelProvider != 'custom_openai' &&
+              !chatModelProviders[chatModelProvider][chatModel]
+            ) {
+              chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+              localStorage.setItem('chatModel', chatModel);
+            }
+
+            if (
+              Object.keys(embeddingModelProviders).length > 0 &&
+              !embeddingModelProviders[embeddingModelProvider]
+            ) {
+              embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+              localStorage.setItem(
+                'embeddingModelProvider',
+                embeddingModelProvider,
+              );
+            }
+
+            if (
+              embeddingModelProvider &&
+              !embeddingModelProviders[embeddingModelProvider][embeddingModel]
+            ) {
+              embeddingModel = Object.keys(
+                embeddingModelProviders[embeddingModelProvider],
+              )[0];
+              localStorage.setItem('embeddingModel', embeddingModel);
+            }
           }
 
-          if (
-            embeddingModelProvider &&
-            !embeddingModelProviders[embeddingModelProvider][embeddingModel]
-          ) {
-            embeddingModel = Object.keys(
-              embeddingModelProviders[embeddingModelProvider],
-            )[0];
-            localStorage.setItem('embeddingModel', embeddingModel);
-          }
-        }
+          const wsURL = new URL(url);
+          const searchParams = new URLSearchParams({});
 
-        const wsURL = new URL(url);
-        const searchParams = new URLSearchParams({});
+          searchParams.append('chatModel', chatModel!);
+          searchParams.append('chatModelProvider', chatModelProvider);
 
-        searchParams.append('chatModel', chatModel!);
-        searchParams.append('chatModelProvider', chatModelProvider);
-
-        if (chatModelProvider === 'custom_openai') {
-          searchParams.append(
-            'openAIApiKey',
-            localStorage.getItem('openAIApiKey')!,
-          );
-          searchParams.append(
-            'openAIBaseURL',
-            localStorage.getItem('openAIBaseURL')!,
-          );
-        }
-
-        searchParams.append('embeddingModel', embeddingModel!);
-        searchParams.append('embeddingModelProvider', embeddingModelProvider);
-
-        wsURL.search = searchParams.toString();
-
-        const ws = new WebSocket(wsURL.toString());
-
-        const timeoutId = setTimeout(() => {
-          if (ws.readyState !== 1) {
-            toast.error(
-              'Failed to connect to the server. Please try again later.',
+          if (chatModelProvider === 'custom_openai') {
+            searchParams.append(
+              'openAIApiKey',
+              localStorage.getItem('openAIApiKey')!,
+            );
+            searchParams.append(
+              'openAIBaseURL',
+              localStorage.getItem('openAIBaseURL')!,
             );
           }
-        }, 10000);
 
-        ws.addEventListener('message', (e) => {
-          const data = JSON.parse(e.data);
-          if (data.type === 'signal' && data.data === 'open') {
-            const interval = setInterval(() => {
-              if (ws.readyState === 1) {
-                setIsWSReady(true);
-                clearInterval(interval);
-              }
-            }, 5);
+          searchParams.append('embeddingModel', embeddingModel!);
+          searchParams.append('embeddingModelProvider', embeddingModelProvider);
+
+          wsURL.search = searchParams.toString();
+          
+          console.log('[DEBUG WebSocket] URL finale:', wsURL.toString());
+
+          const ws = new WebSocket(wsURL.toString());
+
+          // Augmentation du timeout à 30 secondes
+          const timeoutId = setTimeout(() => {
+            if (ws.readyState !== 1) {
+              console.error('[DEBUG WebSocket] Échec de connexion après 30 secondes');
+              toast.error(
+                'Failed to connect to the server. Please try again later.',
+              );
+            }
+          }, 30000);
+
+          ws.addEventListener('message', (e) => {
+            const data = JSON.parse(e.data);
+            console.log('[DEBUG WebSocket] Message reçu:', data);
+            if (data.type === 'signal' && data.data === 'open') {
+              const interval = setInterval(() => {
+                if (ws.readyState === 1) {
+                  console.log('[DEBUG WebSocket] Connexion établie avec succès');
+                  setIsWSReady(true);
+                  clearInterval(interval);
+                }
+              }, 5);
+              clearTimeout(timeoutId);
+              console.log('[DEBUG] opened');
+            }
+            if (data.type === 'error') {
+              console.error('[DEBUG WebSocket] Erreur reçue:', data.data);
+              toast.error(data.data);
+            }
+          });
+
+          ws.onerror = (event) => {
+            console.error('[DEBUG WebSocket] Erreur de connexion:', event);
             clearTimeout(timeoutId);
-            console.log('[DEBUG] opened');
-          }
-          if (data.type === 'error') {
-            toast.error(data.data);
-          }
-        });
+            setError(true);
+            toast.error('WebSocket connection error.');
+          };
 
-        ws.onerror = () => {
-          clearTimeout(timeoutId);
+          ws.onopen = () => {
+            console.log('[DEBUG WebSocket] Connexion ouverte');
+          };
+
+          ws.onclose = (event) => {
+            console.error('[DEBUG WebSocket] Connexion fermée:', event.code, event.reason);
+            clearTimeout(timeoutId);
+            setError(true);
+            console.log('[DEBUG] closed');
+          };
+
+          setWs(ws);
+        } catch (error: any) {
+          console.error('[DEBUG WebSocket] Erreur lors de la configuration:', error);
           setError(true);
-          toast.error('WebSocket connection error.');
-        };
-
-        ws.onclose = () => {
-          clearTimeout(timeoutId);
-          setError(true);
-          console.log('[DEBUG] closed');
-        };
-
-        setWs(ws);
+          toast.error(`Error setting up WebSocket: ${error.message}`);
+        }
       };
 
       connectWs();
@@ -245,6 +313,100 @@ const loadMessages = async (
 
   const data = await res.json();
 
+  // Obtenir un jeton JWT pour Supabase
+  const authToken = await getSupabaseSession();
+
+  // Vérifier si une version complète de la conversation existe dans Supabase
+  try {
+    // Créer un client Supabase
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+      {
+        auth: {
+          persistSession: false,
+          autoRefreshToken: false,
+          detectSessionInUrl: false,
+        },
+        global: {
+          headers: authToken ? {
+            Authorization: `Bearer ${authToken}`
+          } : {},
+        },
+      }
+    );
+
+    // Récupérer la conversation complète depuis Supabase
+    const { data: supabaseData, error } = await supabase
+      .from('chats')
+      .select('*')
+      .eq('id', chatId)
+      .single();
+
+    if (!error && supabaseData && supabaseData.metadata?.complete_conversation) {
+      console.log('[DEBUG] Conversation complète récupérée depuis Supabase');
+      
+      // Utiliser la conversation complète depuis Supabase
+      const completeMessages = supabaseData.metadata.complete_conversation.map((msg: any) => {
+        // S'assurer que les propriétés cruciales sont présentes
+        const message = {
+          ...msg,
+          chatId: chatId,
+          createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+          // Garantir que les sources sont correctement formatées
+          sources: Array.isArray(msg.sources) ? msg.sources.map((source: any) => {
+            // Assurer la structure correcte de chaque source
+            if (typeof source === 'object') {
+              return {
+                pageContent: source.pageContent || '',
+                metadata: source.metadata || {}
+              };
+            }
+            return source;
+          }) : undefined,
+          // Garantir que les suggestions sont présentes
+          suggestions: msg.suggestions || [],
+          // Garantir que les experts suggérés sont présents
+          suggestedExperts: msg.suggestedExperts || []
+        };
+        
+        console.log("[DEBUG] Message restauré avec sources:", message);
+        return message as Message;
+      });
+
+      setMessages(completeMessages);
+
+      const history = completeMessages.map((msg: Message) => {
+        return [msg.role === 'user' ? 'human' : 'assistant', msg.content];
+      }) as [string, string][];
+
+      setChatHistory(history);
+      setFocusMode(supabaseData.metadata?.focus_mode || 'webSearch');
+      document.title = completeMessages[0]?.content?.slice(0, 100) || 'Conversation';
+      setIsMessagesLoaded(true);
+      
+      // Charger les fichiers s'ils existent
+      if (data.chat && data.chat.files) {
+        const files = data.chat.files.map((file: any) => {
+          return {
+            fileName: file.name,
+            fileExtension: file.name.split('.').pop(),
+            fileId: file.fileId,
+          };
+        });
+
+        setFiles(files);
+        setFileIds(files.map((file: File) => file.fileId));
+      }
+      
+      return;
+    }
+  } catch (error) {
+    console.error('[DEBUG] Erreur lors de la récupération depuis Supabase:', error);
+    // Continuer avec l'approche standard si la récupération depuis Supabase échoue
+  }
+
+  // Fallback à l'approche standard si les données Supabase ne sont pas disponibles
   const messages = data.messages.map((msg: any) => {
     return {
       ...msg,
@@ -279,8 +441,20 @@ const loadMessages = async (
 };
 
 const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: string }) => {
+  console.log('[DEBUG ChatWindow] Exécution du composant avec les props:', { id, defaultFocusMode });
+  
   const searchParams = useSearchParams();
   const initialMessage = searchParams.get('q');
+  const { userId } = useAuth();
+  const { session } = useSession();
+
+  // Initialisation du client Supabase - création d'une seule instance
+  const supabase = useRef(
+    createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    )
+  ).current;
 
   const [chatId, setChatId] = useState<string | undefined>(id);
   const [newChatCreated, setNewChatCreated] = useState(false);
@@ -297,6 +471,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
 
   const [loading, setLoading] = useState(false);
   const [messageAppeared, setMessageAppeared] = useState(false);
+  const [researchActivities, setResearchActivities] = useState<ResearchActivity[]>([]);
 
   const [chatHistory, setChatHistory] = useState<[string, string][]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -310,6 +485,106 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
   const [isMessagesLoaded, setIsMessagesLoaded] = useState(false);
 
   const [notFound, setNotFound] = useState(false);
+
+  // Sauvegarder la conversation dans Supabase
+  const saveConversationToSupabase = async (chatData: any) => {
+    try {
+      if (!chatData || !chatData.id) return;
+      
+      console.log('[DEBUG] Sauvegarde de la conversation dans Supabase:', chatData);
+      
+      // Extraire le contenu du premier message utilisateur pour le titre
+      let title = "Nouvelle conversation";
+      let content = "";
+      
+      if (messages.length > 0) {
+        const userMessages = messages.filter(msg => msg.role === 'user');
+        if (userMessages.length > 0) {
+          // Utiliser le premier message de l'utilisateur comme titre
+          title = userMessages[0].content.slice(0, 100);
+          
+          // Extraire le contenu du dernier message assistant pour le résumé
+          const assistantMessages = messages.filter(msg => msg.role === 'assistant');
+          if (assistantMessages.length > 0) {
+            content = assistantMessages[assistantMessages.length - 1].content.slice(0, 200);
+          }
+        }
+      }
+
+      // Préparer la liste complète des messages pour le stockage
+      const completeConversation = messages.map(msg => {
+        // Log pour vérifier les sources avant de les sauvegarder
+        if (msg.sources && msg.sources.length > 0) {
+          console.log('[DEBUG] Sources trouvées pour le message', msg.messageId, ':', msg.sources);
+        }
+        
+        return {
+          role: msg.role,
+          content: msg.content,
+          messageId: msg.messageId,
+          createdAt: msg.createdAt,
+          sources: msg.sources,
+          suggestions: msg.suggestions,
+          suggestedExperts: msg.suggestedExperts
+        };
+      });
+      
+      // Obtenir un jeton JWT de Clerk pour l'utilisateur actuel
+      let authToken = null;
+      if (userId) {
+        try {
+          // Obtenir le jeton JWT via la session Clerk avec le template "supabase"
+          authToken = await session?.getToken({ template: "supabase" });
+          console.log('[DEBUG] Jeton Clerk obtenu pour Supabase');
+        } catch (error) {
+          console.error('[DEBUG] Impossible d\'obtenir le jeton Clerk:', error);
+        }
+      }
+      
+      // Créer un client Supabase avec authentification JWT
+      const clientWithAuth = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+          },
+          global: {
+            headers: authToken ? {
+              Authorization: `Bearer ${authToken}`
+            } : {},
+          },
+        }
+      );
+      
+      // Préparer les données à sauvegarder
+      const chatToSave = {
+        id: chatData.id,
+        title: title,
+        created_at: new Date().toISOString(),
+        user_id: uuidv4(),
+        content: content || '',
+        metadata: {
+          clerk_user_id: userId,
+          focus_mode: focusMode,
+          complete_conversation: completeConversation
+        }
+      };
+      
+      // Sauvegarder ou mettre à jour dans Supabase
+      const { error } = await clientWithAuth
+        .from('chats')
+        .upsert(chatToSave, { onConflict: 'id' });
+      
+      if (error) throw error;
+      
+      console.log('[DEBUG] Conversation sauvegardée avec succès dans Supabase');
+    } catch (error) {
+      console.error('[DEBUG] Erreur lors de la sauvegarde dans Supabase:', error);
+    }
+  };
 
   useEffect(() => {
     if (
@@ -331,10 +606,22 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
     } else if (!chatId) {
       setNewChatCreated(true);
       setIsMessagesLoaded(true);
-      setChatId(crypto.randomBytes(20).toString('hex'));
+      // Utiliser uuidv4() au lieu de crypto.randomBytes
+      const newChatId = uuidv4();
+      setChatId(newChatId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Sauvegarder la conversation dans Supabase quand les messages changent
+  useEffect(() => {
+    if (chatId && messages.length > 0) {
+      saveConversationToSupabase({
+        id: chatId,
+        focusMode: focusMode
+      });
+    }
+  }, [messages, chatId, focusMode]);
 
   useEffect(() => {
     return () => {
@@ -364,12 +651,14 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
 
     setLoading(true);
     setMessageAppeared(false);
+    setResearchActivities([]);
 
     let sources: Document[] | undefined = undefined;
     let recievedMessage = '';
     let added = false;
 
-    messageId = messageId ?? crypto.randomBytes(7).toString('hex');
+    // Utiliser uuidv4 pour générer un ID valide au format UUID
+    messageId = messageId ?? uuidv4();
 
     ws?.send(
       JSON.stringify({
@@ -378,6 +667,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
           messageId: messageId,
           chatId: chatId!,
           content: message,
+          user_id: userId
         },
         files: fileIds,
         focusMode: focusMode,
@@ -520,6 +810,16 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
           );
         }
       }
+
+      if (data.type === 'researchActivity') {
+        console.log('🔍🔍 ChatWindow - Activité de recherche reçue:', data.data);
+        setResearchActivities(prev => {
+          const newActivities = [...prev, data.data];
+          console.log('🔍🔍 Total activités après mise à jour:', newActivities.length);
+          return newActivities;
+        });
+        setMessageAppeared(true);
+      }
     };
 
     ws?.addEventListener('message', messageHandler);
@@ -549,6 +849,18 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ws?.readyState, isReady, initialMessage, isWSReady]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent('firecrawlActivitiesUpdate', { 
+        detail: { 
+          activities: researchActivities,
+          isSearching: loading && researchActivities.length > 0
+        } 
+      });
+      window.dispatchEvent(event);
+    }
+  }, [researchActivities, loading]);
+
   if (hasError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
@@ -577,6 +889,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
               setFileIds={setFileIds}
               files={files}
               setFiles={setFiles}
+              researchActivities={researchActivities}
             />
           </>
         ) : (

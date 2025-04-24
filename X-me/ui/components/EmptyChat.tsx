@@ -38,11 +38,11 @@ const EmptyChat = ({
       </div>
       <div className="flex-1 flex items-center justify-center px-6 md:px-2">
         <div className="max-w-screen-sm w-full space-y-4 md:space-y-8 -mt-16">
-          <h2 className="text-black/70 dark:text-white text-3xl font-medium text-center">
-            Ici c&apos;est vous le <strong>patron</strong>.
+          <h2 className="text-black/90 dark:text-white text-3xl font-medium text-center">
+            Ici, c&apos;est vous le <strong><span className="text-blue-500">pat</span><span className="text-red-500">ron</span></strong>.
           </h2>
           <h3 className="text-black/70 dark:text-white/70 font-medium text-center">
-            Posez des questions, recherchez un expert pour répondre à vos besoins entrepreneuriaux
+            Posez des questions, recherchez un expert, je suis là pour répondre à vos besoins entrepreneuriaux
           </h3>
           <EmptyChatMessageInput
             sendMessage={sendMessage}

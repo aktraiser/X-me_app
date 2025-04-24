@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseUrl, getSupabaseKey } from '@/lib/config';
 import { Expert } from '@/lib/actions';
+import { ExpertService } from '@/types';
 
 const supabaseUrl = getSupabaseUrl();
 const supabaseKey = getSupabaseKey();
@@ -9,13 +10,34 @@ if (!supabaseUrl || !supabaseKey) {
   throw new Error('Missing Supabase credentials');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseKey);
+// Client supabase temporaire pendant la migration vers Clerk
+export const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 
 // Fonction pour formater l'URL de l'expert
 export const formatExpertUrl = (expert: any): Expert => {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  
+  // Corriger l'URL de l'image si elle existe
+  let imageUrl = expert.image_url;
+  if (imageUrl) {
+    // Remplacer les doubles slashes (sauf dans le protocole http://)
+    imageUrl = imageUrl.replace(/([^:]\/)\/+/g, "$1");
+  }
+  
+  // Corriger l'URL du logo si elle existe
+  let logoUrl = expert.logo;
+  if (logoUrl) {
+    // Remplacer les doubles slashes (sauf dans le protocole http://)
+    logoUrl = logoUrl.replace(/([^:]\/)\/+/g, "$1");
+  }
+  
   return {
     ...expert,
+    image_url: imageUrl,
+    logo: logoUrl,
     url: `${baseUrl}/expert/${expert.prenom.toLowerCase()}-${expert.nom.toLowerCase()}-${expert.id_expert}`.replace(/\s+/g, '-')
   };
 };
@@ -59,7 +81,7 @@ export async function uploadExpertImage(file: File, expertId: string) {
   try {
     const fileExt = file.name.split('.').pop();
     const fileName = `${expertId}-main.${fileExt}`;
-    const filePath = `experts/${fileName}`;
+    const filePath = `experts/${fileName}`.replace(/^\/+/, '');
 
     const { error: uploadError } = await supabase.storage
       .from('expert-images')  // Créez ce bucket dans Supabase
@@ -74,15 +96,18 @@ export async function uploadExpertImage(file: File, expertId: string) {
       .from('expert-images')
       .getPublicUrl(filePath);
 
+    // S'assurer que l'URL ne contient pas de doubles slashes avant de la stocker
+    const cleanedUrl = publicUrl.replace(/([^:]\/)\/+/g, "$1");
+
     // Mettre à jour l'expert avec l'URL de l'image
     const { error: updateError } = await supabase
       .from('experts')
-      .update({ image_url: publicUrl })
+      .update({ image_url: cleanedUrl })
       .eq('id_expert', expertId);
 
     if (updateError) throw updateError;
 
-    return publicUrl;
+    return cleanedUrl;
   } catch (error) {
     console.error('Error uploading image:', error);
     throw error;
@@ -106,5 +131,91 @@ export async function getExpertById(expertId: string) {
   } catch (error) {
     console.error('Error fetching expert:', error);
     return null;
+  }
+}
+
+// Fonction pour mettre à jour directement les services d'un expert
+export async function updateExpertServices(
+  expertId: string, 
+  services: any
+) {
+  try {
+    // Mettre à jour dans la base de données
+    const { error: updateError } = await supabase
+      .from('experts')
+      .update({ services: services })
+      .eq('id_expert', expertId);
+    
+    if (updateError) throw updateError;
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating expert services:', error);
+    return false;
+  }
+}
+
+// Fonction pour supprimer un service d'un expert
+export async function deleteExpertService(expertId: string, serviceName: string) {
+  try {
+    // Récupérer les services actuels de l'expert
+    const { data: expert, error: fetchError } = await supabase
+      .from('experts')
+      .select('services')
+      .eq('id_expert', expertId)
+      .single();
+
+    if (fetchError) throw fetchError;
+    
+    if (!expert?.services || !expert.services[serviceName]) {
+      return false; // Le service n'existe pas
+    }
+    
+    // Créer une copie des services actuels
+    const updatedServices = { ...expert.services };
+    
+    // Supprimer le service spécifié
+    delete updatedServices[serviceName];
+    
+    // Mettre à jour dans la base de données
+    const { error: updateError } = await supabase
+      .from('experts')
+      .update({ services: updatedServices })
+      .eq('id_expert', expertId);
+    
+    if (updateError) throw updateError;
+    
+    return true;
+  } catch (error) {
+    console.error('Error deleting expert service:', error);
+    return false;
+  }
+}
+
+// Fonction pour mettre à jour les services d'un expert au format spécifié
+export async function updateExpertServicesFormat(
+  expertId: string, 
+  data: {
+    services_proposes?: string[];
+    valeur_ajoutee?: {
+      description?: string;
+      points_forts?: string[];
+    };
+    resultats_apportes?: string[];
+  }
+) {
+  try {
+    // Mettre à jour dans la base de données
+    const { error: updateError } = await supabase
+      .from('experts')
+      .update({ services: data })
+      .eq('id_expert', expertId);
+    
+    if (updateError) throw updateError;
+    
+    return true;
+  } catch (error) {
+    console.error('Error updating expert services:', error);
+    return false;
   }
 }

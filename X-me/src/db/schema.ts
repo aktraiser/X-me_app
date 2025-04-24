@@ -10,6 +10,7 @@ export const messages = sqliteTable('messages', {
   metadata: text('metadata', {
     mode: 'json',
   }),
+  user_id: text('user_id'),
 });
 
 interface File {
@@ -25,4 +26,24 @@ export const chats = sqliteTable('chats', {
   files: text('files', { mode: 'json' })
     .$type<File[]>()
     .default(sql`'[]'`),
+  user_id: text('user_id'),
 });
+
+// Types d'insertion pour les tables
+export type MessageInsert = {
+  content: string;
+  chatId: string;
+  messageId: string;
+  type: 'assistant' | 'user'; // Nom de la colonne dans la base de données
+  metadata?: string;
+  user_id?: string;
+};
+
+export type ChatInsert = {
+  id: string;
+  title: string;
+  createdAt: string;
+  focusMode: string;
+  files?: File[]; // Uniquement un tableau de File, pas de string
+  user_id?: string;
+};

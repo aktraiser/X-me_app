@@ -3,7 +3,7 @@
 import { usePathname } from 'next/navigation';
 import Sidebar from './Sidebar';
 import InfoBubble from './InfoBubble';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 
 interface LayoutProps {
@@ -13,11 +13,30 @@ interface LayoutProps {
 const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
-  const isPublicRoute = ['/login', '/auth', '/register', '/forgot-password'].includes(pathname);
+  const [isAuthRoute, setIsAuthRoute] = useState(false);
 
-  if (isPublicRoute) {
+  // Vérifier si c'est une route d'authentification via les en-têtes
+  // ou fallback sur la vérification des chemins
+  useEffect(() => {
+    // Vérification basée sur les chemins comme fallback
+    const isPathAuthRoute = [
+      '/login',
+      '/auth',
+      '/register',
+      '/forgot-password',
+      '/sign-in',
+      '/sign-up'
+    ].some(route => pathname.startsWith(route));
+
+    setIsAuthRoute(isPathAuthRoute);
+
+    // On pourrait ajouter ici une vérification d'en-tête avec fetch
+    // si nécessaire dans le futur
+  }, [pathname]);
+
+  if (isAuthRoute) {
     return (
-      <div className="min-h-screen bg-light-primary dark:bg-dark-primary">
+      <div className="min-h-screen bg-light-secondary dark:bg-dark-secondary">
         <main className="max-w-[1200px] w-full mx-auto px-4">
           {children}
         </main>
@@ -26,7 +45,7 @@ const Layout = ({ children }: LayoutProps) => {
   }
 
   return (
-    <div className="min-h-screen bg-dark-secondary flex overflow-hidden relative">
+    <div className="min-h-screen bg-light-secondary dark:bg-dark-secondary flex overflow-hidden relative">
       {/* Sidebar - visible on all screens */}
       <Sidebar onExpandChange={setIsExpanded} />
 
@@ -51,7 +70,7 @@ const Layout = ({ children }: LayoutProps) => {
         )}>
           <div className={cn(
             "h-screen lg:h-[calc(100vh-24px)]",
-            "bg-dark-primary",
+            "bg-light-primary dark:bg-dark-primary",
             // Mobile: full width, no margins
             "m-0",
             // Desktop: margins and rounded corners

@@ -9,18 +9,22 @@ import {
 } from '../lib/providers';
 import { searchHandlers } from '../websocket/messageHandler';
 import { AIMessage, BaseMessage, HumanMessage } from '@langchain/core/messages';
-import { MetaSearchAgentType } from '../search/metaSearchAgent';
+import { MetaSearchAgent, MetaSearchAgentType } from '../search/metaSearchAgent';
+import { isFirecrawlEnabled } from '../config';
 
 const router = express.Router();
 
-interface chatModel {
+// Modèle de chat par défaut
+const DEFAULT_CHAT_MODEL = 'gpt-4o-mini';
+
+interface ChatModel {
   provider: string;
   model: string;
   customOpenAIBaseURL?: string;
   customOpenAIKey?: string;
 }
 
-interface embeddingModel {
+interface EmbeddingModel {
   provider: string;
   model: string;
 }
@@ -28,10 +32,11 @@ interface embeddingModel {
 interface ChatRequestBody {
   optimizationMode: 'speed' | 'balanced';
   focusMode: string;
-  chatModel?: chatModel;
-  embeddingModel?: embeddingModel;
+  chatModel?: ChatModel;
+  embeddingModel?: EmbeddingModel;
   query: string;
   history: Array<[string, string]>;
+  useFirecrawl?: boolean;  // Nouvelle option pour utiliser Firecrawl
 }
 
 router.post('/', async (req, res) => {
@@ -44,6 +49,12 @@ router.post('/', async (req, res) => {
 
     body.history = body.history || [];
     body.optimizationMode = body.optimizationMode || 'balanced';
+    
+    // Utiliser Firecrawl par défaut si disponible
+    const firecrawlEnabled = isFirecrawlEnabled();
+    body.useFirecrawl = body.useFirecrawl !== undefined 
+      ? body.useFirecrawl 
+      : firecrawlEnabled;
 
     const history: BaseMessage[] = body.history.map((msg) => {
       if (msg[0] === 'human') {
@@ -66,7 +77,8 @@ router.post('/', async (req, res) => {
       body.chatModel?.provider || Object.keys(chatModelProviders)[0];
     const chatModel =
       body.chatModel?.model ||
-      Object.keys(chatModelProviders[chatModelProvider])[0];
+      Object.keys(chatModelProviders[chatModelProvider])[0] ||
+      DEFAULT_CHAT_MODEL;
 
     const embeddingModelProvider =
       body.embeddingModel?.provider || Object.keys(embeddingModelProviders)[0];
@@ -116,10 +128,26 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'Invalid model selected' });
     }
 
-    const searchHandler: MetaSearchAgentType = searchHandlers[body.focusMode];
+    let searchHandler: MetaSearchAgentType;
 
-    if (!searchHandler) {
-      return res.status(400).json({ message: 'Invalid focus mode' });
+    if (body.focusMode in searchHandlers) {
+      searchHandler = searchHandlers[body.focusMode];
+    } else {
+      // Configuration par défaut avec MetaSearchAgent
+      const metaConfig = {
+        activeEngines: ['google', 'bing'],
+        rerank: true,
+        rerankThreshold: 0.7,
+        searchWeb: true,
+        summarizer: true,
+        searchDatabase: true,
+        useOpenAISearch: true,
+        useFirecrawl: body.useFirecrawl,
+        searchModel: DEFAULT_CHAT_MODEL
+      };
+      
+      const metaSearchAgent = new MetaSearchAgent(metaConfig);
+      searchHandler = metaSearchAgent;
     }
 
     const emitter = await searchHandler.searchAndAnswer(

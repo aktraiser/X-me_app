@@ -1,10 +1,5 @@
-import { createBrowserClient } from '@supabase/ssr'
+// Ce fichier est temporaire pendant la migration vers Clerk
+// Re-exporte simplement les fonctions du client pour maintenir la compatibilité
+import { createClient } from './client';
 
-export function createClient() {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-
-  return supabase
-}
+export { createClient }; 

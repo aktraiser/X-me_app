@@ -70,14 +70,14 @@ const MessageSources = ({
           
           const CardContent = () => (
             <>
-              <p className="dark:text-white text-xs line-clamp-2">
+              <p className="text-black dark:text-white text-xs line-clamp-2">
                 {source.metadata.title}
               </p>
               <div className="flex flex-row items-center justify-between mt-auto">
                 <div className="flex flex-row items-center space-x-1">
                   {isFile ? (
                     <div className="bg-gray-700 hover:bg-dark-100 transition duration-200 flex items-center justify-center w-6 h-6 rounded-full">
-                      <File size={12} className="text-white/70" />
+                      <File size={12} className="text-black dark:text-white" />
                     </div>
                   ) : faviconUrl ? (
                     <img
@@ -136,7 +136,7 @@ const MessageSources = ({
                       />
                     ) : (
                       <div className="bg-gray-700 flex items-center justify-center w-10 h-10 rounded-lg flex-shrink-0">
-                        <File size={16} className="text-white" />
+                        <File size={16} className="text-black dark:text-white" />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
