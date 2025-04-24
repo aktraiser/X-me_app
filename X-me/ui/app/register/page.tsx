@@ -21,7 +21,7 @@ export default function RegisterPage() {
   return (
     <div className="flex min-h-screen items-center justify-center p-4 flex-col">
       <div className="mb-8">
-        <Image src="/images/logo.svg" alt="Logo" width={120} height={120} />
+        <Image src="/images/logo.svg" alt="Logo" width={100} height={100} />
       </div>
       <div className="w-full max-w-md">
         <SignUp 

@@ -1,15 +1,16 @@
 FROM node:18-slim
 
-WORKDIR /home/perplexica
+WORKDIR /home/Xandme
 
-COPY src /home/perplexica/src
-COPY tsconfig.json /home/perplexica/
-COPY drizzle.config.ts /home/perplexica/
-COPY package.json /home/perplexica/
-COPY yarn.lock /home/perplexica/
+COPY src /home/Xandme/src
+COPY tsconfig.json /home/Xandme/
+COPY drizzle.config.ts /home/Xandme/
+COPY package.json /home/Xandme/
+COPY yarn.lock /home/Xandme/
+COPY config.toml /home/Xandme/
 
-RUN mkdir /home/perplexica/data
-RUN mkdir /home/perplexica/uploads
+RUN mkdir /home/Xandme/data
+RUN mkdir /home/Xandme/uploads
 
 RUN yarn install --network-timeout 600000
 RUN yarn build

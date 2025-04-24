@@ -8,7 +8,7 @@ ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
 
-WORKDIR /home/perplexica
+WORKDIR /home/Xandme
 
 # Copier d'abord package.json et yarn.lock
 COPY ui/package.json ui/yarn.lock ./

@@ -4,6 +4,7 @@ import { SignIn } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const { theme } = useTheme();
@@ -19,6 +20,9 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
+      <div className="mb-8">
+        <Image src="/images/logo.svg" alt="Logo" width={100} height={100} />
+      </div>
       <div className="w-full max-w-md">
         <SignIn 
           appearance={{
