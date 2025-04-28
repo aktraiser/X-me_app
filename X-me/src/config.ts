@@ -120,5 +120,5 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
 };
 
 export function getRedisUrl(): string {
-  return process.env.REDIS_URL || 'redis://localhost:6379';
+  return process.env.REDIS_URL || 'redis://redis-p0r3.onrender.com:6379';
 }

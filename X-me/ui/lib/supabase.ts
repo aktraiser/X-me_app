@@ -18,7 +18,7 @@ export const supabase = createClient(
 
 // Fonction pour formater l'URL de l'expert
 export const formatExpertUrl = (expert: any): Expert => {
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://xandme-frontend.onrender.com';
   
   // Corriger l'URL de l'image si elle existe
   let imageUrl = expert.image_url;

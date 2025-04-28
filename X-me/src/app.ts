@@ -68,7 +68,12 @@ function startWorker() {
             try {
               logger.info(`Synchronisation du lot ${batchCount + 1}...`);
               
-              const response = await axios.post(`http://localhost:${port}/api/chats/sync-from-supabase`, {
+              // Utiliser le hostname du serveur lui-même au lieu de localhost
+              const baseUrl = process.env.NODE_ENV === 'production' 
+                ? 'https://xandme-backend.onrender.com' 
+                : `http://localhost:${port}`;
+                
+              const response = await axios.post(`${baseUrl}/api/chats/sync-from-supabase`, {
                 limit,
                 offset,
                 // On ne filtre pas par date ou utilisateur pour la synchronisation initiale

@@ -18,10 +18,10 @@ export const getSupabaseKey = (): string =>
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 export const getApiUrl = (): string => 
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+  process.env.NEXT_PUBLIC_API_URL || 'https://xandme-backend.onrender.com/api';
 
 export const getWsUrl = (): string => 
-  process.env.NEXT_PUBLIC_WS_URL || 'ws://localhost:3001';
+  process.env.NEXT_PUBLIC_WS_URL || 'wss://xandme-backend.onrender.com';
 
 // Configuration complète
 export const config: Config = {
