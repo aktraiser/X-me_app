@@ -111,14 +111,23 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
           >
             <div className="flex items-center justify-between px-4">
               <h2 className="text-lg font-medium text-gray-900 dark:text-white">Filtres</h2>
-              <button
-                type="button"
-                onClick={() => setOpen(false)}
-                className="-mr-2 flex size-10 items-center justify-center p-2 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200"
-              >
-                <span className="sr-only">Fermer menu</span>
-                <X className="size-6" />
-              </button>
+              <div className="flex items-center">
+                <button
+                  type="button"
+                  onClick={resetFilters}
+                  className="mr-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+                >
+                  Réinitialiser
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOpen(false)}
+                  className="-mr-2 flex size-10 items-center justify-center p-2 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200"
+                >
+                  <span className="sr-only">Fermer menu</span>
+                  <X className="size-6" />
+                </button>
+              </div>
             </div>
 
             {/* Filters */}
@@ -208,6 +217,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
               Réinitialiser
             </button>
           </div>
+          <div className="border-b border-gray-200 dark:border-gray-700 mb-6"></div>
           <form className="divide-y divide-gray-200">
             {filters.map((section) => (
               <div key={section.name} className="py-10 first:pt-0 last:pb-0">

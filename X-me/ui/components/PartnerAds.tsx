@@ -137,15 +137,15 @@ const PartnerAds = ({
   const randomGradient = gradients[Math.floor(Math.random() * gradients.length)];
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-lg overflow-hidden relative mb-4">
+    <div className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-lg overflow-hidden relative mb-4">
       {/* Badge "Partenaire" */}
-      <div className="absolute top-2 right-2 bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full">
+      <div className="absolute top-2 right-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs px-2 py-1 rounded-full">
         Partenaire
       </div>
       
       <div className="flex flex-col">
         <div className="flex items-center space-x-3 mb-3">
-          <div className="w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 flex items-center justify-center p-1">
+          <div className="w-14 h-14 flex-shrink-0 rounded-md overflow-hidden bg-gray-100 dark:bg-white flex items-center justify-center p-1">
             {partner.logo_url ? (
               <img
                 src={partner.logo_url}
@@ -161,23 +161,23 @@ const PartnerAds = ({
             )}
           </div>
           <div className="flex-1">
-            <h4 className="text-base font-semibold text-gray-800">
+            <h4 className="text-base font-semibold text-gray-800 dark:text-white">
               {partner.name}
             </h4>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Partenaire de confiance
             </p>
           </div>
         </div>
         
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+        <p className="text-sm text-gray-600 dark:text-gray-300 mb-4 line-clamp-2">
           {partner.description}
         </p>
         
         <div className="flex justify-end">
           <button
             onClick={() => visitPartner(partner.website_url)}
-            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-1"
+            className="bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 px-4 py-2 rounded-md text-sm font-medium transition-colors duration-200 flex items-center space-x-1"
           >
             <span>Découvrir</span>
             <ChevronRight size={16} />

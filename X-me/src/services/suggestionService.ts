@@ -1,6 +1,7 @@
 import OpenAI from 'openai';
-import { cache } from '../utils/cache';
+import cache from '../utils/cache';
 import { getOpenaiApiKey } from '../config';
+import logger from '../utils/logger';
 
 interface SuggestionSource {
   type: 'static' | 'dynamic' | 'ai';
@@ -76,6 +77,7 @@ export class SuggestionService {
   // Appel à l'API OpenAI pour générer des suggestions
   private async getAISuggestions(input: string): Promise<string[]> {
     try {
+      logger.info(`🤖 Génération de suggestions IA pour l'entrée: "${input.substring(0, 30)}..."`);
       const completion = await this.openai.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [{
@@ -107,57 +109,90 @@ export class SuggestionService {
         .filter(s => s.endsWith('?') && s.length < 150)
         .slice(0, 5);
 
+      logger.info(`✅ ${aiSuggestions.length} suggestions IA générées avec succès`);
       return aiSuggestions;
     } catch (error) {
-      console.error('Erreur lors de la génération AI:', error);
+      logger.error(`❌ Erreur lors de la génération AI: ${error.message}`);
+      console.error('Erreur détaillée lors de la génération AI:', error);
       return [];
     }
   }
 
   // Récupère les suggestions en combinant les sources statiques et, si nécessaire, l'IA
   public async getSuggestions(input: string): Promise<string[]> {
-    if (!input || input.trim().length === 0) {
+    try {
+      if (!input || input.trim().length === 0) {
+        logger.info(`⚠️ Entrée vide, aucune suggestion retournée`);
+        return [];
+      }
+
+      const cacheKey = `suggestions:${input}`;
+      logger.info(`🔍 Recherche dans le cache pour la clé: ${cacheKey}`);
+      
+      // Vérifier le cache
+      try {
+        const cachedSuggestions = await cache.get(cacheKey);
+        if (cachedSuggestions) {
+          logger.info(`✅ Suggestions trouvées dans le cache`);
+          return cachedSuggestions as string[];
+        }
+        logger.info(`ℹ️ Aucune suggestion en cache, génération requise`);
+      } catch (cacheError) {
+        logger.error(`❌ Erreur lors de l'accès au cache: ${cacheError.message}`);
+      }
+
+      const inputLower = input.toLowerCase().trim();
+      let suggestions: string[] = [];
+
+      // Filtrer les suggestions statiques
+      if (this.sources.length > 0 && this.sources[0].data) {
+        logger.info(`🔍 Filtrage des suggestions statiques pour "${inputLower}"`);
+        suggestions = this.sources
+          .find(s => s.type === 'static')
+          ?.data
+          ?.filter(s => {
+            const cleanedSuggestion = s.replace(/^(entreprise|création|financement|fiscal|commercial|organisation)\s*:\s*/i, '').trim();
+            return cleanedSuggestion.toLowerCase().startsWith(inputLower) &&
+                 cleanedSuggestion.endsWith('?') &&
+                 cleanedSuggestion.length < 150;
+          }) || [];
+        logger.info(`✅ ${suggestions.length} suggestions statiques trouvées`);
+      }
+
+      // Si le nombre de suggestions statiques est insuffisant ou pour certains débuts spécifiques, on complète avec l'IA
+      if (
+        suggestions.length < 5 ||
+        inputLower.startsWith('comment') ||
+        inputLower.startsWith('quelles') ||
+        inputLower.startsWith('quels') ||
+        inputLower.startsWith('pourquoi')
+      ) {
+        logger.info(`🤖 Complétion avec l'IA requise (${suggestions.length} suggestions statiques insuffisantes)`);
+        const aiSuggestions = await this.getAISuggestions(input);
+        suggestions = [...suggestions, ...aiSuggestions];
+        logger.info(`✅ Total après ajout IA: ${suggestions.length} suggestions`);
+      }
+
+      const uniqueSuggestions = [...new Set(suggestions)]
+        .filter(s => s && s.length > 0)
+        .slice(0, 6);
+
+      logger.info(`🔢 ${uniqueSuggestions.length} suggestions uniques après déduplication`);
+
+      // Mise en cache pendant 5 minutes
+      try {
+        await cache.set(cacheKey, uniqueSuggestions, 300);
+        logger.info(`✅ Suggestions mises en cache avec TTL de 300 secondes`);
+      } catch (cacheError) {
+        logger.error(`❌ Erreur lors de la mise en cache: ${cacheError.message}`);
+      }
+      
+      return uniqueSuggestions;
+    } catch (error) {
+      logger.error(`❌ Erreur générale dans getSuggestions: ${error.message}`);
+      console.error('Erreur détaillée dans getSuggestions:', error);
       return [];
     }
-    const cacheKey = `suggestions:${input}`;
-    const cachedSuggestions = cache.get<string[]>(cacheKey);
-    if (cachedSuggestions) {
-      return cachedSuggestions;
-    }
-
-    const inputLower = input.toLowerCase().trim();
-    let suggestions: string[] = [];
-
-    // Filtrer les suggestions statiques et vérifier qu'elles correspondent bien à une question concise
-    suggestions = this.sources
-      .find(s => s.type === 'static')
-      ?.data
-      ?.filter(s => {
-        const cleanedSuggestion = s.replace(/^(entreprise|création|financement|fiscal|commercial|organisation)\s*:\s*/i, '').trim();
-        return cleanedSuggestion.toLowerCase().startsWith(inputLower) &&
-               cleanedSuggestion.endsWith('?') &&
-               cleanedSuggestion.length < 150;
-      }) || [];
-
-    // Si le nombre de suggestions statiques est insuffisant ou pour certains débuts spécifiques, on complète avec l'IA
-    if (
-      suggestions.length < 5 ||
-      inputLower.startsWith('comment') ||
-      inputLower.startsWith('quelles') ||
-      inputLower.startsWith('quels') ||
-      inputLower.startsWith('pourquoi')
-    ) {
-      const aiSuggestions = await this.getAISuggestions(input);
-      suggestions = [...suggestions, ...aiSuggestions];
-    }
-
-    const uniqueSuggestions = [...new Set(suggestions)]
-      .filter(s => s && s.length > 0)
-      .slice(0, 6);
-
-    // Mise en cache pendant 5 minutes
-    cache.set(cacheKey, uniqueSuggestions, 300);
-    return uniqueSuggestions;
   }
 }
 

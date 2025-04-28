@@ -17,6 +17,7 @@ import ExpertDrawer from './components/ExpertDrawer';
 import ExpertCard from '@/components/ExpertCard';
 import SidebarFilters from './components/SidebarFilters';
 import BecomeExpertCard from './components/BecomeExpertCard';
+import ContactModal from './components/ContactModal';
 
 interface Location {
   pays: string;
@@ -43,11 +44,20 @@ const Page = () => {
   // État pour le drawer d'expert
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
+  
+  // État pour la modale de contact
+  const [contactModalOpen, setContactModalOpen] = useState(false);
 
   // Fonction pour ouvrir le drawer avec l'expert sélectionné
   const openExpertDrawer = (expert: Expert) => {
     setSelectedExpert(expert);
     setDrawerOpen(true);
+  };
+  
+  // Fonction pour ouvrir la modale de contact
+  const openContactModal = (expert: Expert) => {
+    setSelectedExpert(expert);
+    setContactModalOpen(true);
   };
 
   const handleThemeToggle = () => {
@@ -234,7 +244,7 @@ const Page = () => {
     <>
       <PageHeader
         title="Nos Experts"
-        icon={<Users className="w-6 h-6" />}
+        icon={<Search className="w-6 h-6 text-black dark:text-white" />}
       />
       <main className="min-h-screen">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -266,7 +276,7 @@ const Page = () => {
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
                         <div className="text-gray-500">
-                          Trouver votre expert en accommpagnement
+                          Trouver votre expert
                         </div>
                       </div>
                       {/* Bouton de filtre mobile */}
@@ -310,7 +320,7 @@ const Page = () => {
                   <div className="lg:col-span-3">
                     <div className="grid grid-cols-1 gap-6 pb-28 lg:pb-8">
                       {/* Carte de promotion pour devenir expert */}
-                      <BecomeExpertCard onContactClick={() => toast.info('Fonctionnalité en développement')} />
+                      <BecomeExpertCard />
                       
                       {experts && experts.length > 0 ? (
                         experts.map((expert) => (
@@ -318,6 +328,7 @@ const Page = () => {
                             key={expert.id} 
                             expert={expert} 
                             onClick={() => openExpertDrawer(expert)}
+                            onContactClick={() => openContactModal(expert)}
                           />
                         ))
                       ) : (
@@ -339,7 +350,18 @@ const Page = () => {
         expert={selectedExpert} 
         open={drawerOpen} 
         setOpen={setDrawerOpen}
-        className="max-w-5xl"
+        className="max-w-full sm:max-w-5xl"
+        onContactClick={() => {
+          setDrawerOpen(false); // Fermer le drawer
+          setTimeout(() => setContactModalOpen(true), 300); // Ouvrir la modale après la fermeture du drawer
+        }}
+      />
+      
+      {/* Contact Modal */}
+      <ContactModal
+        expert={selectedExpert}
+        open={contactModalOpen}
+        setOpen={setContactModalOpen}
       />
     </>
   );

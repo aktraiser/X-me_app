@@ -118,3 +118,7 @@ export const updateConfig = (config: RecursivePartial<Config>) => {
     toml.stringify(config),
   );
 };
+
+export function getRedisUrl(): string {
+  return process.env.REDIS_URL || 'redis://localhost:6379';
+}

@@ -11,14 +11,14 @@ export default function ConditionsUtilisation() {
   return (
     <div className="min-h-screen bg-light-primary dark:bg-dark-primary p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-white dark:text-black">
+        <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-gray-200">
           Conditions Générales d&apos;Utilisation et de Vente (CGU/CGV) de X&ME
         </h1>
-        <p className="text-sm mb-8 text-white dark:text-black">
+        <p className="text-sm mb-8 text-gray-800 dark:text-gray-200">
           Version en vigueur au 17 février 2025
         </p>
         
-        <div className="space-y-8 text-white dark:text-black">
+        <div className="space-y-8 text-gray-800 dark:text-gray-200">
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Objet</h2>
             <p className="mb-4">

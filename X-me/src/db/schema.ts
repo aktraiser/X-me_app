@@ -27,6 +27,7 @@ export const chats = sqliteTable('chats', {
     .$type<File[]>()
     .default(sql`'[]'`),
   user_id: text('user_id'),
+  last_updated: text('last_updated'),
 });
 
 // Types d'insertion pour les tables
@@ -46,4 +47,5 @@ export type ChatInsert = {
   focusMode: string;
   files?: File[]; // Uniquement un tableau de File, pas de string
   user_id?: string;
+  last_updated?: string; // Renommé pour correspondre à la colonne
 };

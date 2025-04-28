@@ -1,6 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { getSupabaseUrl, getSupabaseKey } from '@/lib/config';
-import { Expert } from '@/lib/actions';
+import { Expert } from '@/types/index';
 import { ExpertService } from '@/types';
 
 const supabaseUrl = getSupabaseUrl();

@@ -35,7 +35,7 @@ export interface Expert {
   nom: string;
   prenom: string;
   adresse: string;
-  telephone: number;
+  telephone?: number;
   pays: string;
   ville: string;
   expertises: string;
@@ -47,9 +47,9 @@ export interface Expert {
   logo?: string;
   url: string;
   activité?: string;
-  email: string;
-  reseau: string;
-  site_web: string;
+  email?: string;
+  reseau?: string;
+  site_web?: string;
 }
 
 export interface Location {

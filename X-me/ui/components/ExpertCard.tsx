@@ -2,20 +2,22 @@
 
 import Image from 'next/image';
 import { Search, Filter, X, Users, MapPin, Star, Briefcase, Clock, XCircle } from 'lucide-react';
-import { Expert } from '@/lib/actions';
+import { Expert } from '@/types/index';
 
 interface ExpertCardProps {
   expert: Expert;
   onClick: () => void;
+  onContactClick: () => void;
 }
 
-const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick }) => {
+const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick }) => {
   // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
   const activité = expert.activité || expert.expertises?.split(',')[0].trim() || "Expert";
   
   return (
     <div
-      className="group w-full max-w-3xl mx-auto rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow hover:shadow-md transition-all duration-300 border border-gray-100 dark:border-gray-700"
+      className="group w-full rounded-xl overflow-hidden bg-white dark:bg-gray-800 shadow hover:shadow-lg dark:hover:shadow-lg border border-gray-100 dark:border-gray-700 hover:border-dark-200 dark:hover:border-dark-200 hover:bg-amber-50 dark:hover:bg-amber-800/20 transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+      onClick={onClick}
     >
       {/* Ligne 1: Photo, nom, activité et CTA */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 border-gray-100 dark:border-gray-700 gap-4">
@@ -54,8 +56,12 @@ const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick }) => {
         
         {/* CTA Contacter */}
         <button 
-          className="w-full sm:w-auto px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
-          onClick={onClick}
+          className="w-full sm:w-auto px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm font-medium transition-colors"
+          onClick={(e) => {
+            e.stopPropagation(); // Empêcher la propagation pour ne pas déclencher onClick de la carte
+            onContactClick();
+          }}
+          aria-label={`Contacter ${expert.prenom} ${expert.nom}`}
         >
           Contacter l&apos;expert
         </button>

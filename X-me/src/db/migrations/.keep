@@ -1,0 +1,2 @@
+# Ce fichier garantit que le dossier migrations existe dans Git et Docker
+# Il sera utilisé pour stocker les migrations SQLite 

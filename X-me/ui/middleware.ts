@@ -11,7 +11,9 @@ const authRoutes = createRouteMatcher([
   "/login(.*)",
   "/register(.*)",
   "/auth(.*)",
-  "/forgot-password(.*)"
+  "/forgot-password(.*)",
+  "/terms(.*)",
+  "/privacy(.*)"
 ]);
 
 // Middleware temporaire pendant la migration
@@ -27,6 +29,16 @@ const temporaryMiddleware = (request: NextRequest) => {
     const response = NextResponse.next();
     response.headers.set("x-auth-route", "true");
     return response;
+  }
+  
+  // Vérifier si l'utilisateur est authentifié via un cookie ou un JWT
+  // Pour le moment, on redirige vers la page de login si non connecté
+  // À remplacer par une vérification d'authentification complète
+  const authToken = request.cookies.get('__session');
+  
+  if (!authToken) {
+    // Rediriger vers la page de login si l'utilisateur n'est pas connecté
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   return NextResponse.next();

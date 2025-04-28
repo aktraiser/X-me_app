@@ -1,19 +1,10 @@
 import { Trash } from 'lucide-react';
-import {
-  Description,
-  Dialog,
-  DialogBackdrop,
-  DialogPanel,
-  DialogTitle,
-  Transition,
-  TransitionChild,
-} from '@headlessui/react';
 import { Fragment, useState } from 'react';
 import { toast } from 'sonner';
 import { Chat } from '@/app/library/page';
 import { createClient } from '@supabase/supabase-js';
 import { useAuth, useSession } from '@clerk/nextjs';
-import { v4 as uuidv4 } from 'uuid';
+import ConfirmationDialog from './ConfirmationDialog';
 
 // Ajouter une déclaration d'interface pour étendre la définition de Window
 interface ExtendedWindow extends Window {
@@ -82,10 +73,10 @@ const DeleteChat = ({
 
       // Supprimer également de Supabase avec JWT auth
       try {
-        // Obtenir un jeton JWT de Clerk pour l'utilisateur actuel
-        const authToken = await getSupabaseSession();
+        // Obtenir un jeton JWT de Clerk pour l'utilisateur actuel avec le template spécifique pour Supabase
+        const authToken = await session?.getToken({ template: "supabase" });
         if (authToken) {
-          console.log('[DEBUG] Jeton Clerk obtenu pour Supabase (suppression)');
+          console.log('[DEBUG] Jeton Clerk obtenu pour Supabase (suppression) avec template supabase');
         }
         
         // Créer un client Supabase avec authentification JWT
@@ -136,6 +127,14 @@ const DeleteChat = ({
     }
   };
 
+  const handleConfirmationClose = (confirmed: boolean) => {
+    if (confirmed && !loading) {
+      handleDelete();
+    } else {
+      setConfirmationDialogOpen(false);
+    }
+  };
+
   return (
     <>
       <button
@@ -146,59 +145,16 @@ const DeleteChat = ({
       >
         <Trash size={17} />
       </button>
-      <Transition appear show={confirmationDialogOpen} as={Fragment}>
-        <Dialog
-          as="div"
-          className="relative z-50"
-          onClose={() => {
-            if (!loading) {
-              setConfirmationDialogOpen(false);
-            }
-          }}
-        >
-          <DialogBackdrop className="fixed inset-0 bg-black/30" />
-          <div className="fixed inset-0 overflow-y-auto">
-            <div className="flex min-h-full items-center justify-center p-4 text-center">
-              <TransitionChild
-                as={Fragment}
-                enter="ease-out duration-200"
-                enterFrom="opacity-0 scale-95"
-                enterTo="opacity-100 scale-100"
-                leave="ease-in duration-100"
-                leaveFrom="opacity-100 scale-200"
-                leaveTo="opacity-0 scale-95"
-              >
-                <DialogPanel className="w-full max-w-md transform rounded-2xl bg-light-secondary dark:bg-dark-secondary border border-light-200 dark:border-dark-200 p-6 text-left align-middle shadow-xl transition-all">
-                  <DialogTitle className="text-lg font-medium leading-6 dark:text-white">
-                    Confirmation de suppression
-                  </DialogTitle>
-                  <Description className="text-sm dark:text-white/70 text-black/70">
-                    Êtes-vous sûr de vouloir supprimer cette conversation ?
-                  </Description>
-                  <div className="flex flex-row items-end justify-end space-x-4 mt-6">
-                    <button
-                      onClick={() => {
-                        if (!loading) {
-                          setConfirmationDialogOpen(false);
-                        }
-                      }}
-                      className="text-black/50 dark:text-white/50 text-sm hover:text-black/70 hover:dark:text-white/70 transition duration-200"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      onClick={handleDelete}
-                      className="text-red-400 text-sm hover:text-red-500 transition duration200"
-                    >
-                      Supprimer
-                    </button>
-                  </div>
-                </DialogPanel>
-              </TransitionChild>
-            </div>
-          </div>
-        </Dialog>
-      </Transition>
+      
+      <ConfirmationDialog
+        title="Confirmation de suppression"
+        description="Êtes-vous sûr de vouloir supprimer cette conversation ?"
+        confirmButtonText="Supprimer"
+        open={confirmationDialogOpen}
+        onClose={handleConfirmationClose}
+        isProcessing={loading}
+        dangerConfirm={true}
+      />
     </>
   );
 };

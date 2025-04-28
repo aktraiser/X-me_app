@@ -1,5 +1,5 @@
 import { Document } from '@langchain/core/documents';
-import { Expert } from '@/lib/actions';
+import { Expert } from '@/types/index';
 
 export interface Message {
   messageId: string;

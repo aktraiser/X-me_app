@@ -10,9 +10,9 @@ export default function APropos() {
   return (
     <div className="min-h-screen bg-light-primary dark:bg-dark-primary p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8 text-white dark:text-black">Qui sommes-nous ?</h1>
+        <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-gray-200">Qui sommes-nous ?</h1>
         
-        <div className="space-y-8 text-white dark:text-black">
+        <div className="space-y-8 text-gray-800 dark:text-gray-200">
           <section className="prose dark:prose-invert max-w-none">
             <p className="mb-6">
               L&apos;entrepreneuriat n&apos;est plus un rêve réservé à quelques audacieux, c&apos;est devenu une réalité tangible. 
@@ -36,7 +36,7 @@ export default function APropos() {
 
             <p className="mb-6">
               Ce constat, Xavier, entrepreneur et mentor depuis plus de 20 ans, l&apos;a fait à travers des milliers 
-              d&apos;accompagnements. Lucas, Lead IA Designer et Generative AI Expert, partageait la même vision : 
+              d&apos;accompagnements. Lucas, IA Ingenieur, partageait la même vision : 
               entrepreneurs et experts doivent se rencontrer plus naturellement, plus intelligemment.
             </p>
 
@@ -44,12 +44,12 @@ export default function APropos() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-6">Pourquoi X&ME ?</h2>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Pourquoi X&ME ?</h2>
             <p className="mb-4">Chaque élément du nom X&ME a une signification profonde, reflet de notre mission :</p>
 
             <div className="space-y-6">
               <div>
-                <h3 className="text-xl font-semibold mb-3">X : La rencontre avec les eXperts et les opportunités</h3>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">X : La rencontre avec les eXperts et les opportunités</h3>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Il incarne les talents invisibles, ces professionnels qui possèdent un savoir-faire essentiel mais qui ne sont pas toujours visibles.</li>
                   <li>Il symbolise la multiplicité et la diversité des compétences, des solutions et des chemins possibles.</li>
@@ -60,7 +60,7 @@ export default function APropos() {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-3">& : Le trait d&apos;union, l&apos;intelligence du lien</h3>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">& : Le trait d&apos;union, l&apos;intelligence du lien</h3>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Il représente la connexion entre entrepreneurs et experts, le lien qui facilite l&apos;accès aux bonnes ressources.</li>
                   <li>Il exprime l&apos;équilibre entre l&apos;humain & la technologie, en combinant le meilleur des deux mondes.</li>
@@ -70,7 +70,7 @@ export default function APropos() {
               </div>
 
               <div>
-                <h3 className="text-xl font-semibold mb-3">ME : L&apos;entrepreneur au centre de tout</h3>
+                <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-gray-100">ME : L&apos;entrepreneur au centre de tout</h3>
                 <ul className="list-disc pl-6 space-y-2">
                   <li>Moi, mon entreprise, ma vision. Chaque entrepreneur est unique, et notre mission est de l&apos;aider à bâtir son propre chemin.</li>
                   <li>Un outil fait pour vous, selon vos besoins. X&ME n&apos;impose rien, il met à disposition les bonnes ressources pour que chacun prenne ses propres décisions.</li>
@@ -82,7 +82,7 @@ export default function APropos() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Notre mission : connecter intelligemment entrepreneurs et experts</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Notre mission : connecter intelligemment entrepreneurs et experts</h2>
             <div className="space-y-4">
               <p>
                 Chez X&ME, nous voulons combler le fossé entre ceux qui entreprennent et ceux qui peuvent les aider, 
@@ -110,7 +110,7 @@ export default function APropos() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Un logo qui incarne notre mission</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Un logo qui incarne notre mission</h2>
             <p className="mb-6">
               Le logo de X&ME est l&apos;expression même de cette connexion et de ce trait d&apos;union intelligent entre 
               entrepreneurs et experts. Il intègre une bulle de message, symbole de communication et d&apos;échange, car 
@@ -125,7 +125,7 @@ export default function APropos() {
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Ici, c&apos;est vous le patron !</h2>
+            <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Ici, c&apos;est vous le patron !</h2>
             <p>
               Parce qu&apos;au final, c&apos;est vous qui prenez les décisions. Nous sommes là pour vous donner les clés, 
               vous faire gagner du temps et vous connecter aux bonnes personnes… mais la vision, l&apos;ambition et les 

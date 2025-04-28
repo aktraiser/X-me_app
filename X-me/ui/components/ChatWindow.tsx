@@ -8,11 +8,12 @@ import EmptyChat from './EmptyChat';
 import crypto from 'crypto';
 import { toast } from 'sonner';
 import { useSearchParams } from 'next/navigation';
-import { getSuggestions, Expert } from '@/lib/actions';
+import { getSuggestions } from '@/lib/actions';
+import { Expert } from '@/types/index';
 import Error from 'next/error';
 import { useAuth, useSession } from '@clerk/nextjs';
 import { createClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
+import { v4 as uuidv4, v5 as uuidv5 } from 'uuid';
 
 // Logs de débogage
 console.log('[DEBUG ChatWindow] Composant chargé');
@@ -364,10 +365,10 @@ const loadMessages = async (
             }
             return source;
           }) : undefined,
-          // Garantir que les suggestions sont présentes
-          suggestions: msg.suggestions || [],
-          // Garantir que les experts suggérés sont présents
-          suggestedExperts: msg.suggestedExperts || []
+          // Ne pas initialiser les suggestions avec un tableau vide, laisser undefined si pas de valeur
+          suggestions: msg.suggestions && msg.suggestions.length > 0 ? msg.suggestions : undefined,
+          // Ne pas initialiser les experts suggérés avec un tableau vide, laisser undefined si pas de valeur
+          suggestedExperts: msg.suggestedExperts && msg.suggestedExperts.length > 0 ? msg.suggestedExperts : undefined
         };
         
         console.log("[DEBUG] Message restauré avec sources:", message);
@@ -541,6 +542,10 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
         }
       }
       
+      // Créer un UUID basé sur chatId pour user_id qui reste constant
+      // L'utilisation du chatId garantit que le même user_id sera utilisé pour la même conversation
+      const deterministicUserId = uuidv5(chatData.id, '6ba7b810-9dad-11d1-80b4-00c04fd430c8'); // Génère un UUID v5 en utilisant chatId comme entrée
+      
       // Créer un client Supabase avec authentification JWT
       const clientWithAuth = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -564,7 +569,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
         id: chatData.id,
         title: title,
         created_at: new Date().toISOString(),
-        user_id: uuidv4(),
+        user_id: deterministicUserId,
         content: content || '',
         metadata: {
           clerk_user_id: userId,
@@ -777,6 +782,36 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
         setMessageAppeared(true);
       }
 
+      if (data.type === 'suggestions') {
+        console.log('📦 ChatWindow: Suggestions reçues via WS:', {
+          count: data.data?.suggestions?.length || 0,
+          expertsCount: data.data?.suggestedExperts?.length || 0,
+          messageId: data.messageId || 'non spécifié'
+        });
+        
+        // Si messageId est vide, utiliser le dernier message assistant
+        const targetMessageId = data.messageId || 
+          messagesRef.current.filter(m => m.role === 'assistant').pop()?.messageId;
+        
+        if (targetMessageId) {
+          setMessages((prev) =>
+            prev.map((message) => {
+              if (message.messageId === targetMessageId) {
+                return { 
+                  ...message, 
+                  suggestions: data.data?.suggestions || [],
+                  suggestedExperts: data.data?.suggestedExperts || []
+                };
+              }
+              return message;
+            }),
+          );
+          console.log('✅ ChatWindow: Suggestions et experts attachés au message:', targetMessageId);
+        } else {
+          console.error('❌ ChatWindow: Impossible d\'attacher les suggestions - aucun messageId');
+        }
+      }
+
       if (data.type === 'messageEnd') {
         setChatHistory((prevHistory) => [
           ...prevHistory,
@@ -788,26 +823,58 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
         setLoading(false);
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
+        console.log('📋 ChatWindow: État du dernier message après messageEnd:', {
+          messageId: lastMsg.messageId,
+          role: lastMsg.role,
+          hasSuggestions: !!lastMsg.suggestions,
+          suggestionCount: lastMsg.suggestions?.length || 0,
+          hasExperts: !!lastMsg.suggestedExperts,
+          expertCount: lastMsg.suggestedExperts?.length || 0
+        });
 
-        if (
-          lastMsg.role === 'assistant' &&
-          lastMsg.sources &&
-          lastMsg.sources.length > 0 &&
-          !lastMsg.suggestions
-        ) {
-          const { suggestions, suggestedExperts } = await getSuggestions(messagesRef.current);
-          setMessages((prev) =>
-            prev.map((msg) => {
-              if (msg.messageId === lastMsg.messageId) {
-                return { 
-                  ...msg, 
-                  suggestions: suggestions,
-                  suggestedExperts: suggestedExperts
-                };
-              }
-              return msg;
-            }),
+        // Si le message n'a pas encore de suggestions, faire une dernière tentative
+        if (!lastMsg.suggestions || lastMsg.suggestions.length === 0) {
+          console.log('🔄 ChatWindow: Dernière tentative de génération de suggestions');
+          
+          // Vérifier les experts dans les sources
+          const expertSources = lastMsg.sources?.filter(source => 
+            source.metadata?.type === 'expert' && source.metadata?.expertData
           );
+          
+          let existingExperts = undefined;
+          if (expertSources && expertSources.length > 0) {
+            existingExperts = expertSources
+              .map(source => source.metadata?.expertData)
+              .filter(Boolean);
+            console.log(`⚙️ ChatWindow: ${existingExperts.length} experts trouvés dans les sources`);
+          }
+          
+          try {
+            setLoading(true);
+            const suggestionsResult = await getSuggestions(messagesRef.current, existingExperts);
+            const { suggestions, suggestedExperts } = suggestionsResult;
+            
+            if (suggestions && suggestions.length > 0) {
+              console.log('✅ ChatWindow: Suggestions de secours générées:', suggestions.length);
+              
+              setMessages((prev) =>
+                prev.map((msg) => {
+                  if (msg.messageId === lastMsg.messageId) {
+                    return { 
+                      ...msg, 
+                      suggestions: suggestions,
+                      suggestedExperts: suggestedExperts || []
+                    };
+                  }
+                  return msg;
+                }),
+              );
+            }
+          } catch (error) {
+            console.error('❌ ChatWindow: Erreur lors de la génération des suggestions de secours:', error);
+          } finally {
+            setLoading(false);
+          }
         }
       }
 
@@ -839,6 +906,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
       return [...prev.slice(0, messages.length > 2 ? index - 1 : 0)];
     });
 
+    console.log("🔄 ChatWindow: Réécriture du message:", message.messageId);
     sendMessage(message.content, message.messageId);
   };
 

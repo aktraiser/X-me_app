@@ -62,9 +62,9 @@ const Page = () => {
         let authToken = null;
         if (userId) {
           try {
-            // Obtenir le jeton JWT via la session Clerk
+            // Obtenir le jeton JWT via la session Clerk avec le template "supabase"
             authToken = await session?.getToken({ template: "supabase" });
-            console.log('[DEBUG] Jeton Clerk obtenu pour Supabase');
+            console.log('[DEBUG] Jeton Clerk obtenu pour Supabase avec le template supabase');
           } catch (error) {
             console.error('[DEBUG] Impossible d\'obtenir le jeton Clerk:', error);
           }
@@ -126,21 +126,16 @@ const Page = () => {
     <>
       <PageHeader
         title="Historique"
-        icon={<Library className="w-6 h-6" />}
+        icon={<Library className="w-6 h-6 text-black dark:text-white" />}
       />
       <main className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>
             <div className="flex items-center justify-between py-4">
               <div className="flex flex-col">
                 <p className="text-gray-500 mt-1">
                   Retrouvez ici toutes vos discussions
                 </p>
-                {user && (
-                  <p className="text-sm text-gray-400 mt-1">
-                    Connecté avec: {user.email}
-                  </p>
-                )}
               </div>
             </div>
 

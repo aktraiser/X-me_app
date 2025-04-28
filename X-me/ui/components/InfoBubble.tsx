@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from 'next/link'
 import * as PopoverPrimitive from "@radix-ui/react-popover"
 import { cn } from "@/lib/utils"
-import { HelpCircle } from 'lucide-react'
+import { HelpCircle, X } from 'lucide-react'
 
 const Popover = PopoverPrimitive.Root
 const PopoverTrigger = PopoverPrimitive.Trigger
@@ -26,12 +26,18 @@ const PopoverContent = React.forwardRef<
 PopoverContent.displayName = PopoverPrimitive.Content.displayName
 
 const InfoBubble = () => {
+  const [isOpen, setIsOpen] = React.useState(false);
+
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
-          <button className="rounded-full p-2 bg-light-secondary dark:bg-dark-secondary shadow-lg hover:bg-gray-700 dark:hover:bg-dark-100 transition-colors outline-none">
-            <HelpCircle className="h-5 w-5 text-black/70 dark:text-white/70" />
+          <button className="group rounded-full p-2 bg-light-secondary dark:bg-dark-secondary shadow-lg hover:bg-gray-700 dark:hover:bg-dark-100 transition-colors outline-none">
+            {isOpen ? (
+              <X className="h-5 w-5 text-black/70 dark:text-white/70 group-hover:text-white" />
+            ) : (
+              <HelpCircle className="h-5 w-5 text-black/70 dark:text-white/70 group-hover:text-white" />
+            )}
           </button>
         </PopoverTrigger>
         <PopoverContent>

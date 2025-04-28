@@ -21,12 +21,14 @@ import Rewrite from './MessageActions/Rewrite';
 import MessageSources from './MessageSources';
 import SearchVideos from './SearchVideos';
 import { useSpeech } from 'react-text-to-speech';
-import { Expert } from '@/lib/actions';
+import { Expert } from '@/types/index';
 import { Document } from '@langchain/core/documents';
 import Source from './Source';
 import PartnerAds from './PartnerAds';
 import ExpertCard from './ExpertCard';
 import ExpertDrawer from '@/app/discover/components/ExpertDrawer';
+import SourcePopover from './SourcePopover';
+import ContactModal from '@/app/discover/components/ContactModal';
 
 // Define SourceMetadata interface (similar to Source.tsx)
 interface SourceMetadata {
@@ -36,6 +38,7 @@ interface SourceMetadata {
   page?: number;
   title?: string;
   favicon?: string;
+  expertId?: string;
 }
 
 // Define the type for source documents
@@ -53,99 +56,6 @@ const formatImageUrl = (url: string): string => {
   }
   
   return url;
-};
-
-// Define SourcePopover component internally
-const SourcePopover = ({ source, number, onExpertClick }: { source: SourceDocument, number: number, onExpertClick?: (source: SourceDocument) => void }) => {
-  const sourceUrl = source?.metadata?.url || '#';
-  const sourceTitle = source?.metadata?.title || 'Source';
-  const isFile = source?.metadata?.isFile;
-  const pageNumber = source?.metadata?.page || 1;
-  const isExpert = source?.metadata?.type === 'expert';
-  
-  let faviconUrl: string | null = null;
-  try {
-    if (!isFile && sourceUrl && sourceUrl !== '#') {
-      faviconUrl = `https://s2.googleusercontent.com/s2/favicons?domain_url=${encodeURIComponent(new URL(sourceUrl).origin)}`;
-    } 
-  } catch (error) {
-    faviconUrl = null;
-  }
-  
-  const hostname = isFile ? `Page ${pageNumber}` : (sourceUrl && sourceUrl !== '#') ? new URL(sourceUrl).hostname.replace(/^www\./, '') : 'Source';
-
-  // Format page content to remove excessive whitespace and links
-  const formatContent = (content: string): string => {
-    if (!content) return '';
-    // Remove multiple spaces, tabs, and newlines
-    let formatted = content.replace(/\s+/g, ' ').trim();
-    // Remove common link patterns and HTML tags
-    formatted = formatted.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-    formatted = formatted.replace(/<[^>]+>/g, '');
-    // Limit length
-    return formatted.length > 150 ? formatted.substring(0, 150) + '...' : formatted;
-  };
-
-  // Générer un extrait direct du contenu sans appel API
-  const excerpt = formatContent(source.pageContent);
-
-  return (
-    <span className="group relative inline-flex align-middle mx-px"> {/* inline-flex pour bon alignement */} 
-      <span 
-        className="inline-flex items-center justify-center rounded px-1.5 py-0.5 text-xs bg-black/10 dark:bg-white/10 text-black dark:text-white cursor-pointer hover:bg-[#c59d3f]/20 hover:text-[#c59d3f] dark:hover:bg-[#c59d3f]/20 dark:hover:text-[#c59d3f] transition-colors"
-        onClick={(e: React.MouseEvent) => {
-          e.stopPropagation();
-          
-          // Si c'est un expert et la fonction de callback est fournie
-          if (isExpert && onExpertClick) {
-            onExpertClick(source);
-          } else {
-            // Comportement normal pour les autres sources
-            window.open(sourceUrl, '_blank');
-          }
-        }}
-      >
-        {number}
-      </span>
-      <div className="absolute z-50 w-[300px] bg-white dark:bg-gray-800 rounded-lg shadow-lg p-4 mb-2 bottom-full left-1/2 transform -translate-x-1/2 border border-gray-200 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-        <div className="flex flex-col space-y-2">
-          <h3 className="text-sm font-medium text-black dark:text-white line-clamp-2">
-            {sourceTitle}
-          </h3>
-          <p className="text-xs text-black dark:text-gray-400 line-clamp-3">
-            {excerpt}
-          </p>
-          <div className="flex items-center mt-1">
-            {isFile ? (
-              <div className="flex-shrink-0 bg-gray-800 flex items-center justify-center w-4 h-4 rounded-full mr-2">
-                <File size={10} className="text-black dark:text-white" />
-              </div>
-            ) : faviconUrl ? (
-              <img
-                src={faviconUrl}
-                width={16}
-                height={16}
-                alt="favicon"
-                className="flex-shrink-0 rounded-sm h-4 w-4 object-cover mr-2"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
-            ) : (
-              <div className="flex-shrink-0 bg-gray-700 flex items-center justify-center w-4 h-4 rounded-full mr-2">
-                <File size={10} className="text-white" />
-              </div>
-            )}
-            <p className="text-xs text-gray-500 dark:text-gray-400 truncate font-medium">
-              {isFile
-                ? `Document PDF - Page ${pageNumber}`
-                : hostname}
-            </p>
-          </div>
-        </div>
-      </div>
-    </span>
-  );
 };
 
 const MessageBox = ({
@@ -173,6 +83,32 @@ const MessageBox = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [dedupedExperts, setDedupedExperts] = useState<Expert[]>([]);
+  const [contactModalOpen, setContactModalOpen] = useState(false);
+
+  /**
+   * Dédupliquer les experts suggérés pour éviter les doublons dans l'interface
+   */
+  useEffect(() => {
+    if (message.suggestedExperts && message.suggestedExperts.length > 0) {
+      // Utiliser un Map pour dédupliquer les experts par leur id_expert
+      const uniqueExpertsMap = new Map<string, Expert>();
+      
+      message.suggestedExperts.forEach(expert => {
+        if (expert.id_expert && !uniqueExpertsMap.has(expert.id_expert.toString())) {
+          uniqueExpertsMap.set(expert.id_expert.toString(), expert);
+        }
+      });
+      
+      // Convertir le Map en tableau
+      const uniqueExperts = Array.from(uniqueExpertsMap.values());
+      console.log(`🧹 Dédoublonnage des experts : ${message.suggestedExperts.length} → ${uniqueExperts.length}`);
+      
+      setDedupedExperts(uniqueExperts);
+    } else {
+      setDedupedExperts([]);
+    }
+  }, [message.suggestedExperts]);
 
   /**
    * Prepare content for speech synthesis (remove citations)
@@ -184,27 +120,18 @@ const MessageBox = ({
 
   // Fonction pour gérer les clics sur les sources d'experts
   const handleExpertSourceClick = (source: SourceDocument) => {
-    console.log('🔍 Expert source clicked:', source.metadata);
+    console.log('🔍 Clic sur source expert détecté:', source.metadata);
     
-    // Chercher l'expert correspondant parmi les experts suggérés
-    if (message.suggestedExperts && message.suggestedExperts.length > 0) {
-      console.log('👥 Experts suggérés disponibles:', message.suggestedExperts.length);
-      
-      // Rechercher d'abord par type 'expert'
-      if (source.metadata.type === 'expert') {
-        // Si nous avons les experts suggérés, utiliser le premier
-        const expert = message.suggestedExperts[0];
-        
-        if (expert) {
-          console.log('✅ Expert sélectionné pour affichage:', expert.prenom, expert.nom);
-          setSelectedExpert(expert);
-          setDrawerOpen(true);
-          return;
-        }
-      }
-    } else {
+    // Vérifier si nous avons des experts suggérés
+    if (!message.suggestedExperts || message.suggestedExperts.length === 0) {
       console.log('❌ Aucun expert suggéré disponible dans le message actuel');
+      return;
     }
+    
+    // Ouvrir le premier expert suggéré comme solution simple
+    console.log('👤 Sélection de l\'expert suggéré');
+    setSelectedExpert(message.suggestedExperts[0]);
+    setDrawerOpen(true);
   };
 
   useEffect(() => {
@@ -231,6 +158,45 @@ const MessageBox = ({
   // Pre-process content for Markdown rendering with placeholders
   let processedContent = message.content;
   if (message.role === 'assistant' && message.sources && message.sources.length > 0) {
+      // Associer les sources d'experts avec les experts suggérés
+      if (message.suggestedExperts && message.suggestedExperts.length > 0) {
+        console.log('⚙️ Traitement des sources d\'experts...');
+        message.sources.forEach(source => {
+          if (source.metadata?.type === 'expert' && message.suggestedExperts) {
+            const sourceTitle = source.metadata?.title || '';
+            console.log('📄 Titre de la source:', sourceTitle);
+            
+            // Extraire le nom de l'expert (avant le premier - ou la première virgule)
+            const expertName = sourceTitle.split(/[-,]/)[0].trim().toLowerCase();
+            console.log('👤 Nom extrait de la source:', expertName);
+            
+            // Chercher l'expert correspondant par son nom
+            const matchingExpert = message.suggestedExperts.find(expert => {
+              const fullName = `${expert.prenom} ${expert.nom}`.toLowerCase();
+              const lastName = expert.nom.toLowerCase();
+              const firstName = expert.prenom.toLowerCase();
+              
+              // Vérifier plusieurs possibilités de correspondance
+              return fullName === expertName || 
+                     fullName.includes(expertName) || 
+                     expertName.includes(fullName) ||
+                     expertName.includes(lastName) ||
+                     lastName.includes(expertName) ||
+                     firstName.includes(expertName) ||
+                     expertName.includes(firstName);
+            });
+            
+            // Si un expert correspondant est trouvé, ajouter son ID aux métadonnées de la source
+            if (matchingExpert && matchingExpert.id_expert) {
+              source.metadata.expertId = matchingExpert.id_expert.toString();
+              console.log('✅ ID Expert ajouté aux métadonnées de la source:', matchingExpert.prenom, matchingExpert.nom, matchingExpert.id_expert);
+            } else {
+              console.log('⚠️ Aucun expert correspondant trouvé pour la source:', sourceTitle);
+            }
+          }
+        });
+      }
+      
       // Remplacer les références [X] par des balises <sourceref> (tout en minuscules)
       processedContent = processedContent.replace(/\[(\d+)\]/g, (match, numberString) => {
           const number = parseInt(numberString.trim(), 10);
@@ -254,11 +220,62 @@ const MessageBox = ({
     processedContent = processedContent.replace(/^(\s*)(\d+)\)\s+/gm, '$1$2. ');
   }
 
+  // Fonction pour ouvrir le modal de contact
+  const openContactModal = (expert: Expert) => {
+    setSelectedExpert(expert);
+    setContactModalOpen(true);
+  };
+
+  useEffect(() => {
+    if (message.role === 'assistant') {
+      console.log(`🔍 MessageBox - Message ${messageIndex} info:`, {
+        hasSuggestions: !!message.suggestions,
+        suggestionsCount: message.suggestions?.length || 0,
+        hasExperts: !!message.suggestedExperts,
+        expertsCount: message.suggestedExperts?.length || 0,
+        hasSourcesLength: message.sources?.length || 0,
+        messageId: message.messageId,
+        isLast: isLast
+      });
+      
+      // Vérifier si les suggestions devraient être affichées
+      if (isLast && (!message.suggestions || message.suggestions.length === 0)) {
+        console.log(`⚠️ MessageBox - Dernier message sans suggestions. Message ID: ${message.messageId}`);
+      }
+      
+      if (isLast && message.suggestions && message.suggestions.length > 0) {
+        console.log(`✅ MessageBox - Dernier message avec ${message.suggestions.length} suggestion(s)`, message.suggestions);
+      }
+      
+      // Données d'experts sont présentes
+      if (isLast && message.suggestedExperts && message.suggestedExperts.length > 0) {
+        console.log(`👥 MessageBox - Dernier message avec ${message.suggestedExperts.length} expert(s)`, 
+          message.suggestedExperts.map(e => `${e.prenom} ${e.nom}`));
+      }
+
+      // Vérifier la condition d'affichage des suggestions
+      const shouldShowSuggestions = isLast && 
+        ((message.suggestions && message.suggestions.length > 0) ||
+         (message.suggestedExperts && message.suggestedExperts.length > 0)) &&
+        message.role === 'assistant' &&
+        !loading;
+      
+      console.log(`📊 MessageBox - Conditions d'affichage des suggestions:`, {
+        shouldShow: shouldShowSuggestions,
+        isLast,
+        hasSuggestions: !!message.suggestions && message.suggestions.length > 0,
+        hasExperts: !!message.suggestedExperts && message.suggestedExperts.length > 0,
+        isAssistant: message.role === 'assistant',
+        isLoading: loading
+      });
+    }
+  }, [message, messageIndex, isLast, loading]);
+
   return (
-    <div>
+    <div className="pb-8">
       {message.role === 'user' && (
-        <div className={cn('w-full', messageIndex === 0 ? 'pt-8' : 'pt-4')}>
-          <h3 className="text-black dark:text-white font-medium text-3xl lg:w-9/12">
+        <div className={cn('w-full', 'px-0 md:px-4', messageIndex === 0 ? 'pt-8' : 'pt-4')}>
+          <h3 className="text-black dark:text-white font-medium text-3xl lg:w-9/12 mb-6">
             {message.content}
           </h3>
         </div>
@@ -277,7 +294,7 @@ const MessageBox = ({
             className="flex flex-col space-y-3 w-full md:w-9/12"
           >
             {message.sources && message.sources[0]?.metadata?.illustrationImage && (
-              <div className="flex flex-col space-y-2 -mx-6 md:mx-0 mb-4">
+              <div className="flex flex-col -mx-6 md:mx-0 mb-2">
                 <div className="w-full aspect-[21/6] relative overflow-hidden md:rounded-xl shadow-lg">
                   <img
                     src={formatImageUrl(message.sources[0].metadata.illustrationImage)}
@@ -301,9 +318,6 @@ const MessageBox = ({
                     }}
                   />
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 italic mt-2 px-4 md:px-0">
-                  {message.sources[0].metadata.title || 'Illustration du sujet'}
-                </p>
               </div>
             )}
             {message.sources && message.sources.length > 0 && (
@@ -505,7 +519,7 @@ const MessageBox = ({
                                   </p>
                                   <Plus
                                     size={20}
-                                    className="text-[#24A0ED] flex-shrink-0"
+                                    className="text-black dark:text-white flex-shrink-0"
                                   />
                                 </div>
                               </div>
@@ -514,23 +528,33 @@ const MessageBox = ({
                         </>
                       )}
                       
-                      {message.suggestedExperts && message.suggestedExperts.length > 0 && (
+                      {/* Espacement visible entre les sections */}
+                      {message.suggestions && message.suggestions.length > 0 && 
+                       message.suggestedExperts && message.suggestedExperts.length > 0 && (
+                        <div className="py-4"></div>
+                      )}
+                      
+                      {dedupedExperts.length > 0 && (
                         <>
-                          <div className="mt-16">
+                          <div className="mt-8">
                             <div className="h-px w-full bg-light-secondary dark:bg-dark-secondary" />
                             <div className="flex flex-row items-center space-x-2 mt-4">
                               <UserCheck className="text-black dark:text-white" />
                               <h3 className="text-xl font-medium">On vous accompagne</h3>
                             </div>
                           </div>
-                          <div className="flex flex-col space-y-4 w-full mx-auto">
-                            {message.suggestedExperts.map((expert: Expert, i) => (
-                              <div key={expert.id_expert || i} className="w-full mx-auto">
+                          <div className="flex flex-col space-y-4 w-full">
+                            {dedupedExperts.map((expert: Expert, i) => (
+                              <div key={expert.id_expert || i} className="w-full">
                                 <ExpertCard 
                                   expert={expert}
                                   onClick={() => {
                                     setSelectedExpert(expert);
                                     setDrawerOpen(true);
+                                  }}
+                                  onContactClick={() => {
+                                    setSelectedExpert(expert);
+                                    setContactModalOpen(true);
                                   }}
                                 />
                               </div>
@@ -541,6 +565,10 @@ const MessageBox = ({
                             open={drawerOpen}
                             setOpen={setDrawerOpen}
                             className="max-w-5xl"
+                            onContactClick={() => {
+                              setDrawerOpen(false);
+                              setTimeout(() => setContactModalOpen(true), 300);
+                            }}
                           />
                         </>
                       )}
@@ -551,7 +579,7 @@ const MessageBox = ({
           </div>
 
           {/* Desktop: Sidebar content */}
-          <div className="hidden lg:flex lg:sticky lg:top-20 flex-col items-center space-y-3 w-full md:w-3/12 z-30 h-full pb-4">
+          <div className="hidden lg:flex lg:sticky lg:top-20 flex-col items-center space-y-3 w-full md:w-3/12 z-30 h-full pb-4 -mt-4">
             {message.sources && message.sources.length > 0 && (
               <div className="w-full">
                 <Source
@@ -576,6 +604,25 @@ const MessageBox = ({
             </div>
           </div>
       )}
+
+      {/* Expert Drawer */}
+      <ExpertDrawer
+        expert={selectedExpert}
+        open={drawerOpen}
+        setOpen={setDrawerOpen}
+        className="max-w-5xl"
+        onContactClick={() => {
+          setDrawerOpen(false);
+          setTimeout(() => setContactModalOpen(true), 300);
+        }}
+      />
+
+      {/* Contact Modal */}
+      <ContactModal
+        expert={selectedExpert}
+        open={contactModalOpen}
+        setOpen={setContactModalOpen}
+      />
     </div>
   );
 };

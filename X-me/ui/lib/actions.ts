@@ -27,105 +27,213 @@ export interface Expert {
   peut_venir_sur_site?: boolean;
 }
 
-export const getSuggestions = async (chatHisory: Message[]) => {
+export const getSuggestions = async (chatHisory: Message[], existingExperts?: Expert[]) => {
   const chatModel = localStorage.getItem('chatModel');
   const chatModelProvider = localStorage.getItem('chatModelProvider');
 
   const customOpenAIKey = localStorage.getItem('openAIApiKey');
   const customOpenAIBaseURL = localStorage.getItem('openAIBaseURL');
+  
+  // Vérifier l'URL de l'API
+  console.log("🌐 Actions - URL de l'API pour /suggestions:", process.env.NEXT_PUBLIC_API_URL);
 
   try {
-    // Faire les deux appels en parallèle
-    const [suggestionsResponse, expertsResponse] = await Promise.all([
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/suggestions`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chatHistory: chatHisory,
-          chatModel: {
-            provider: chatModelProvider,
-            model: chatModel,
-            ...(chatModelProvider === 'custom_openai' && {
-              customOpenAIKey,
-              customOpenAIBaseURL,
-            }),
-          },
-        }),
-      }),
-      fetch(`${process.env.NEXT_PUBLIC_API_URL}/experts/suggestionexperts`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          chatHistory: chatHisory,
-          chatModel: {
-            provider: chatModelProvider,
-            model: chatModel,
-            ...(chatModelProvider === 'custom_openai' && {
-              customOpenAIKey,
-              customOpenAIBaseURL,
-            }),
-          },
-        }),
-      })
-    ]);
+    console.log('getSuggestions appelé:', {
+      chatHistoryLength: chatHisory.length,
+      hasExistingExperts: !!existingExperts,
+      expertsCount: existingExperts?.length || 0
+    });
 
-    if (!suggestionsResponse.ok || !expertsResponse.ok) {
-      console.error('Error in responses:', {
-        suggestions: suggestionsResponse.status,
-        experts: expertsResponse.status
-      });
-      return { suggestions: [], suggestedExperts: [] };
+    // Si nous avons déjà des experts, faire seulement la requête pour les suggestions
+    if (existingExperts && existingExperts.length > 0) {
+      console.log('⚙️ Appel API /suggestions avec existingExperts:', existingExperts.length);
+      
+      try {
+        const suggestionsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/suggestions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            chatHistory: chatHisory,
+            chatModel: {
+              provider: chatModelProvider,
+              model: chatModel,
+              ...(chatModelProvider === 'custom_openai' && {
+                customOpenAIKey,
+                customOpenAIBaseURL,
+              }),
+            },
+            existingExperts: existingExperts
+          }),
+        });
+
+        if (!suggestionsResponse.ok) {
+          console.error('❌ Erreur dans suggestionsResponse:', 
+            suggestionsResponse.status, 
+            suggestionsResponse.statusText
+          );
+          
+          // Essayer de lire le corps de l'erreur
+          try {
+            const errorBody = await suggestionsResponse.text();
+            console.error('❌ Détails de l\'erreur:', errorBody);
+          } catch (e) {
+            console.error('❌ Impossible de lire le corps de l\'erreur');
+          }
+          
+          return { suggestions: [], suggestedExperts: existingExperts };
+        }
+
+        const suggestionsData = await suggestionsResponse.json();
+        
+        console.log('✅ Succès - Suggestions avec experts existants:', suggestionsData);
+        
+        const suggestions = Array.isArray(suggestionsData?.suggestions) 
+          ? suggestionsData.suggestions 
+          : (Array.isArray(suggestionsData?.data?.suggestions) 
+              ? suggestionsData.data.suggestions 
+              : []);
+
+        console.log('🔍 Suggestions extraites:', suggestions);
+
+        return {
+          suggestions,
+          suggestedExperts: existingExperts
+        };
+      } catch (fetchError) {
+        console.error('❌ Exception lors de l\'appel API /suggestions:', fetchError);
+        return { suggestions: [], suggestedExperts: existingExperts };
+      }
+    } 
+    // Sinon, faire les deux requêtes comme avant
+    else {
+      console.log('⚙️ Appels API parallèles à /suggestions et /experts/suggestionexperts');
+      
+      try {
+        const [suggestionsResponse, expertsResponse] = await Promise.all([
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/suggestions`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              chatHistory: chatHisory,
+              chatModel: {
+                provider: chatModelProvider,
+                model: chatModel,
+                ...(chatModelProvider === 'custom_openai' && {
+                  customOpenAIKey,
+                  customOpenAIBaseURL,
+                }),
+              },
+            }),
+          }),
+          fetch(`${process.env.NEXT_PUBLIC_API_URL}/experts/suggestionexperts`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              chatHistory: chatHisory,
+              chatModel: {
+                provider: chatModelProvider,
+                model: chatModel,
+                ...(chatModelProvider === 'custom_openai' && {
+                  customOpenAIKey,
+                  customOpenAIBaseURL,
+                }),
+              },
+            }),
+          })
+        ]);
+
+        // Vérification et logs détaillés pour chaque réponse
+        if (!suggestionsResponse.ok) {
+          console.error('❌ Erreur dans suggestionsResponse:', 
+            suggestionsResponse.status, 
+            suggestionsResponse.statusText
+          );
+          
+          try {
+            const errorBody = await suggestionsResponse.text();
+            console.error('❌ Détails de l\'erreur suggestions:', errorBody);
+          } catch (e) {
+            console.error('❌ Impossible de lire le corps de l\'erreur suggestions');
+          }
+        }
+        
+        if (!expertsResponse.ok) {
+          console.error('❌ Erreur dans expertsResponse:', 
+            expertsResponse.status, 
+            expertsResponse.statusText
+          );
+          
+          try {
+            const errorBody = await expertsResponse.text();
+            console.error('❌ Détails de l\'erreur experts:', errorBody);
+          } catch (e) {
+            console.error('❌ Impossible de lire le corps de l\'erreur experts');
+          }
+        }
+
+        if (!suggestionsResponse.ok || !expertsResponse.ok) {
+          return { suggestions: [], suggestedExperts: [] };
+        }
+
+        const [suggestionsData, expertsData] = await Promise.all([
+          suggestionsResponse.json(),
+          expertsResponse.json()
+        ]);
+
+        console.log('✅ Succès - Réponse suggestions:', suggestionsData);
+        console.log('✅ Succès - Réponse experts:', expertsData);
+        
+        const suggestions = Array.isArray(suggestionsData?.suggestions) 
+          ? suggestionsData.suggestions 
+          : (Array.isArray(suggestionsData?.data?.suggestions) 
+              ? suggestionsData.data.suggestions 
+              : []);
+
+        console.log('🔍 Suggestions extraites:', suggestions);
+
+        // Extraire et transformer les experts de la réponse API
+        const suggestedExperts = Array.isArray(expertsData?.suggestedExperts) 
+          ? expertsData.suggestedExperts.map((expert: any): Expert => ({
+              id: expert.id || 0,
+              id_expert: expert.id_expert || '',
+              nom: expert.nom || '',
+              prenom: expert.prenom || '',
+              adresse: expert.adresse || '',
+              telephone: expert.telephone || null,
+              pays: expert.pays || '',
+              ville: expert.ville || '',
+              expertises: expert.expertises || '',
+              biographie: expert.biographie || '',
+              tarif: expert.tarif || 0,
+              services: expert.services || {},
+              created_at: expert.created_at || '',
+              image_url: expert.image_url || '',
+              logo: expert.logo || '',
+              url: expert.url || '',
+              activité: expert.activité || '',
+              email: expert.email || '',
+              reseau: expert.reseau || '',
+              site_web: expert.site_web || ''
+            }))
+          : [];
+
+        return {
+          suggestions,
+          suggestedExperts
+        };
+      } catch (fetchError) {
+        console.error('❌ Exception lors des appels API parallèles:', fetchError);
+        return { suggestions: [], suggestedExperts: [] };
+      }
     }
-
-    const [suggestionsData, expertsData] = await Promise.all([
-      suggestionsResponse.json(),
-      expertsResponse.json()
-    ]);
-
-    console.log('Debug - Suggestions Response:', suggestionsData);
-    console.log('Debug - Experts Response:', expertsData);
-    
-    // Extraire les suggestions
-    const suggestions = Array.isArray(suggestionsData?.suggestions) 
-      ? suggestionsData.suggestions 
-      : [];
-
-    // Extraire et transformer les experts
-    const suggestedExperts = Array.isArray(expertsData?.suggestedExperts) 
-      ? expertsData.suggestedExperts.map((expert: any): Expert => ({
-          id: expert.id || 0,
-          id_expert: expert.id_expert || '',
-          nom: expert.nom || '',
-          prenom: expert.prenom || '',
-          adresse: expert.adresse || '',
-          telephone: expert.telephone || null,
-          pays: expert.pays || '',
-          ville: expert.ville || '',
-          expertises: expert.expertises || '',
-          biographie: expert.biographie || '',
-          tarif: expert.tarif || 0,
-          services: expert.services || {},
-          created_at: expert.created_at || '',
-          image_url: expert.image_url || '',
-          logo: expert.logo || '',
-          url: expert.url || '',
-          activité: expert.activité || '',
-          email: expert.email || '',
-          reseau: expert.reseau || '',
-          site_web: expert.site_web || ''
-        }))
-      : [];
-
-    return {
-      suggestions,
-      suggestedExperts
-    };
   } catch (error) {
-    console.error('Error fetching suggestions and experts:', error);
+    console.error('❌ Erreur générale dans getSuggestions:', error);
     return {
       suggestions: [],
       suggestedExperts: []

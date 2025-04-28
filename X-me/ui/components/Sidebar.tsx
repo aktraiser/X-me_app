@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, useEffect, type ReactNode } from 'react';
-import SettingsDialog from './SettingsDialog';
 import { createClient } from '@/utils/supabase/client';
 import {
   Tooltip,
@@ -174,8 +173,9 @@ const Sidebar = ({
                 "flex items-center w-full h-12 cursor-pointer rounded-lg mt-4",
                 isExpanded ? "px-3" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
               )}
+              onClick={() => window.location.href = '/'}
             >
-              <Link href="/" className="w-full">
+              <div className="w-full">
               {isExpanded ? (
                 <div className="flex items-center gap-3 w-full h-full px-4 py-3 border border-black/20 dark:border-white/20 rounded-full hover:border-[#c59d3f] transition-all">
                   <SquarePen className="w-5 h-5 shrink-0 text-black dark:text-white" />
@@ -195,7 +195,7 @@ const Sidebar = ({
                   </Tooltip>
                 </TooltipProvider>
               )}
-              </Link>
+              </div>
             </button>
           </div>
           <VerticalIconContainer>
@@ -304,42 +304,7 @@ const Sidebar = ({
                 )}
               </div>
             </Link>
-
-            <button
-              onClick={() => setIsSettingsOpen(!isSettingsOpen)}
-              className={cn(
-                "hidden lg:flex items-center w-full h-10 cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 rounded-lg",
-                isExpanded ? "px-3" : "justify-center"
-              )}
-            >
-              <div className="flex items-center justify-center h-full">
-                {isExpanded ? (
-                  <>
-                    <Settings className="w-5 h-5 shrink-0 text-black dark:text-white" />
-                    <span className="ml-3 text-sm font-medium text-black/70 dark:text-white/70 transition-all duration-300">Réglages</span>
-                  </>
-                ) : (
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="flex items-center justify-center h-full">
-                          <Settings className="w-5 h-5 shrink-0 text-black dark:text-white" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="right">
-                        Réglages
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-            </button>
           </div>
-
-          <SettingsDialog
-            isOpen={isSettingsOpen}
-            setIsOpen={setIsSettingsOpen}
-          />
         </div>
       </div>
 

@@ -2,7 +2,7 @@
 
 import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { Expert } from '@/lib/actions';
+import { Expert } from '@/types/index';
 import { X, Users, Globe, Linkedin, Image as ImageIcon, MapPin, Clock, Building } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -12,9 +12,10 @@ interface ExpertDrawerProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   className?: string;
+  onContactClick?: () => void;
 }
 
-const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-3xl" }: ExpertDrawerProps) => {
+const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-3xl", onContactClick }: ExpertDrawerProps) => {
   if (!expert) return null;
 
   // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
@@ -37,7 +38,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-3xl" }: Expert
 
         <div className="fixed inset-0 overflow-hidden">
           <div className="absolute inset-0 overflow-hidden">
-            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-0 sm:pl-10 md:pl-16">
               <Transition.Child
                 as={Fragment}
                 enter="transform transition ease-in-out duration-500 sm:duration-700"
@@ -49,15 +50,12 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-3xl" }: Expert
               >
                 <Dialog.Panel className={`pointer-events-auto w-screen ${className}`}>
                   <div className="flex h-full flex-col overflow-y-scroll bg-gray-50 dark:bg-gray-900 shadow-xl">
-                    <div className="px-4 py-6 sm:px-6 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-                      <div className="flex items-start justify-between">
-                        <Dialog.Title className="text-base font-semibold text-gray-900 dark:text-white">
-                          Profil de l&apos;expert
-                        </Dialog.Title>
-                        <div className="ml-3 flex h-7 items-center">
+                    <div className="sticky top-0 z-50 w-full border-b border-dark-200 bg-light-secondary dark:bg-dark-primary rounded-t-xl">
+                      <div className="flex items-center justify-between px-4 py-4 sm:px-6 sm:py-6">
+                        <div>
                           <button
                             type="button"
-                            className="relative rounded-md bg-white dark:bg-gray-800 text-gray-400 hover:text-gray-500 dark:text-gray-300 dark:hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-[#f15959]"
+                            className="relative text-black dark:text-gray-300 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
                             onClick={() => setOpen(false)}
                           >
                             <span className="absolute -inset-2.5" />
@@ -65,15 +63,24 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-3xl" }: Expert
                             <X className="h-6 w-6" aria-hidden="true" />
                           </button>
                         </div>
+                        <div>
+                          <button 
+                            onClick={onContactClick}
+                            className="px-6 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
+                            aria-label={`Contacter ${expert.prenom} ${expert.nom}`}
+                          >
+                            <span>Contacter l&apos;expert</span>
+                          </button>
+                        </div>
                       </div>
                     </div>
                     
                     {/* Contenu principal */}
-                    <div className="p-6 space-y-6">
+                    <div className="p-4 sm:p-6 space-y-4 sm:space-y-6 pb-20 sm:pb-16">
                       {/* Carte profil principal */}
                       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                         {/* Bannière avec image de couverture */}
-                        <div className="h-32 bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-900 dark:to-blue-800 relative">
+                        <div className="h-32 bg-gradient-to-r from-amber-500 to-amber-600 dark:from-amber-700 dark:to-amber-800 relative">
                           {/* Photo de profil */}
                           <div className="absolute -bottom-16 left-6 w-32 h-32 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-md">
                             {expert.image_url ? (
@@ -107,17 +114,6 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-3xl" }: Expert
                               <p className="text-xl font-medium text-gray-600 dark:text-gray-300 mt-1">
                                 {activité}
                               </p>
-                            </div>
-                            
-                            <div className="flex mt-4 sm:mt-0">
-                              <div className="flex space-x-2">
-                                <Link 
-                                  href="#" 
-                                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors flex items-center gap-2"
-                                >
-                                  <span>Contacter</span>
-                                </Link>
-                              </div>
                             </div>
                           </div>
                           
@@ -161,11 +157,11 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-3xl" }: Expert
 
                       {/* Carte À propos */}
                       <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-6">À propos</h3>
+
                         
                         {/* Introduction / Bio */}
                         <div className="mb-8">
-                          <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Introduction</h4>
+                          <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">À propos</h4>
                           {expert.biographie ? (
                             <div className="space-y-4">
                               <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">

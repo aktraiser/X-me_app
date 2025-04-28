@@ -1,6 +1,6 @@
 'use client';
 
-import { Expert } from '@/lib/actions';
+import { Expert } from '@/types/index';
 import { Fragment, useEffect, useState } from 'react';
 import { User, MapPin, Clock, Briefcase, Star } from 'lucide-react';
 import { getExpertById } from '@/lib/supabase';

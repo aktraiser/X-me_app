@@ -2,7 +2,7 @@
 import { useTheme } from 'next-themes';
 import { SunIcon, MoonIcon, MonitorIcon } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
-import { Select } from '../SettingsDialog';
+
 
 type Theme = 'sombre' | 'lumière' | 'system';
 
@@ -46,15 +46,15 @@ const ThemeSwitcher = ({ className }: { className?: string }) => {
   }
 
   return (
-    <Select
-      className={className}
+    <select
+      className={`${className} p-2 rounded bg-light-primary dark:bg-dark-primary text-black dark:text-white border border-black/10 dark:border-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500`}
       value={theme}
       onChange={(e) => handleThemeSwitch(e.target.value as Theme)}
-      options={[
-        { value: 'lumière', label: 'sombre' },
-        { value: 'lumière', label: 'Sombre' },
-      ]}
-    />
+    >
+      <option value="lumière">Lumière</option>
+      <option value="sombre">Sombre</option>
+      <option value="system">Système</option>
+    </select>
   );
 };
 

@@ -8,21 +8,24 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_KEY=${SUPABASE_KEY}
       - DATABASE_URL=${DATABASE_URL}
+      - REDIS_URL=redis://redis:6379
     ports:
       - 3001:3001
     volumes:
-      - backend-dbstore:/home/xme/data
-      - uploads:/home/xme/uploads
-      - ./config.toml:/home/perplexica/config.toml
+      - backend-dbstore:/home/Xandme/data
+      - uploads:/home/Xandme/uploads
+      - ./config.toml:/home/Xandme/config.toml
       - type: bind
         source: ./documentation
-        target: /home/xme/documentation
+        target: /home/Xandme/documentation
         read_only: true
     extra_hosts:
       - host.docker.internal:host-gateway
     networks:
       - xme-network
     restart: unless-stopped
+    depends_on:
+      - redis
 
   xme-frontend:
     build:
@@ -45,6 +48,17 @@ services:
     networks:
       - xme-network
     restart: unless-stopped
+    
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - xme-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
 
 networks:
   xme-network:
@@ -52,3 +66,4 @@ networks:
 volumes:
   backend-dbstore:
   uploads:
+  redis-data:

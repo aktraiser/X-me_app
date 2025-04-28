@@ -621,6 +621,8 @@ ${expert.biographie}`,
   ) {
     let fullAssistantResponse = '';
     let hasEmittedSuggestions = false;
+    let foundExperts: any[] = []; 
+    
     for await (const event of stream) {
       if (event.event === 'on_chain_stream' && event.name === 'FinalResponseGenerator') {
         fullAssistantResponse += event.data.chunk;
@@ -629,37 +631,18 @@ ${expert.biographie}`,
           JSON.stringify({ type: 'response', data: event.data.chunk })
         );
       } else if (event.event === 'on_chain_end') {
-        if (event.name === 'FinalResponseGenerator' && !hasEmittedSuggestions) {
-          try {
-            const suggestionsPrompt = `
-Based on this conversation and response, suggest 3 relevant follow-up questions:
-"${fullAssistantResponse}"
-Return only the questions, one per line.`;
-            const suggestionsResponse = await llm.invoke(suggestionsPrompt);
-            const suggestions = String(suggestionsResponse.content)
-              .split('\n')
-              .filter(s => s.trim())
-              .slice(0, 3);
-            emitter.emit(
-              'data',
-              JSON.stringify({
-                type: 'suggestions',
-                data: {
-                  suggestions,
-                  suggestedExperts: []
-                }
-              })
-            );
-            hasEmittedSuggestions = true;
-          } catch (error) {
-            console.error('❌ Erreur lors de la génération des suggestions:', error);
-          }
-          this.updateMemory(new AIMessage(fullAssistantResponse.trim()));
-          emitter.emit('end');
-        }
         if (event.name === 'FinalSourceRetriever') {
           const sources = event.data.output;
           const normalizedSources = sources?.map(this.normalizeSource) || [];
+          
+          // Filtrer les experts parmi les sources
+          foundExperts = normalizedSources
+            .filter(source => source.metadata?.type === 'expert')
+            .map(source => source.metadata?.expertData)
+            .filter(Boolean);
+          
+          console.log(`🔍 Experts trouvés pour suggestions: ${foundExperts.length}`);
+          
           emitter.emit(
             'data',
             JSON.stringify({
@@ -669,6 +652,142 @@ Return only the questions, one per line.`;
               imageTitle: normalizedSources[0]?.metadata?.imageTitle || null
             })
           );
+
+          // Génération immédiate des suggestions dès la réception des sources
+          if (!hasEmittedSuggestions) {
+            try {
+              console.log('🚀 Génération de suggestions IMMÉDIATE dès la réception des sources');
+              
+              // Amélioration du prompt de suggestions basé sur suggestionGeneratorAgent.ts
+              const suggestionPrompt = `
+Vous êtes un assistant spécialisé dans la génération de suggestions pour une intelligence artificielle d'entreprise.
+
+Voici la question initiale de l'utilisateur : "${originalQuery}"
+
+Votre tâche est de générer 4-5 suggestions de questions percutantes et pertinentes que l'utilisateur pourrait poser en complément de sa demande initiale.
+
+INSTRUCTIONS IMPORTANTES :
+- Les suggestions doivent être formulées à la première personne, comme si l'utilisateur les posait.
+- Chaque suggestion doit se terminer par un point d'interrogation.
+- Concentrez-vous sur des questions complémentaires et approfondies, qui poursuivent la conversation de manière naturelle.
+- Proposez des questions qui explorent différents aspects liés au sujet initial.
+- Adaptez les suggestions au domaine d'activité ou au contexte détecté dans la question initiale.
+- Privilégiez des suggestions précises et exploitables sur le plan professionnel.
+
+Listez seulement les questions, sans numérotation, chaque suggestion sur une ligne différente.
+
+Exemples de bonnes suggestions :
+- Si la question portait sur les CGV : "Quelles clauses spécifiques devrais-je inclure pour me protéger contre les impayés ?"
+- Si la question portait sur un business plan : "Comment puis-je calculer précisément mon seuil de rentabilité ?"
+- Si la question portait sur l'entrepreneuriat : "Quelles sont les aides financières disponibles pour mon projet dans ma région ?"`;
+
+              // Faire l'appel au modèle avec température basse pour des suggestions plus pertinentes
+              const tempModel = llm as any;
+              const originalTemp = tempModel.temperature || 0.7;
+              tempModel.temperature = 0.2;
+              
+              const suggestionsResponse = await llm.invoke(suggestionPrompt);
+              
+              // Restaurer la température originale
+              tempModel.temperature = originalTemp;
+              
+              const suggestions = String(suggestionsResponse.content)
+                .split('\n')
+                .filter(s => s.trim())
+                .filter(s => s.includes('?')) // S'assurer que ce sont des questions
+                .map(s => s.trim().replace(/^[•\-\s]+/, '')) // Enlever les puces ou tirets
+                .slice(0, 4); // Limiter à 4 suggestions
+              
+              console.log('✅ Suggestions générées améliorées:', suggestions);
+              
+              // Format correct pour les suggestions
+              emitter.emit(
+                'data',
+                JSON.stringify({
+                  type: 'suggestions',
+                  data: {
+                    suggestions: suggestions,
+                    suggestedExperts: foundExperts || []
+                  },
+                  messageId: ''  // Ce champ sera rempli côté client avec le bon messageId
+                })
+              );
+              hasEmittedSuggestions = true;
+              console.log('✅ Événement suggestions envoyé AVANT la fin de la réponse');
+            } catch (error) {
+              console.error('❌ Erreur lors de la génération des suggestions après sources:', error);
+            }
+          }
+        }
+        
+        if (event.name === 'FinalResponseGenerator') {
+          // Comme secours, générer des suggestions si elles n'ont pas été générées avant
+          if (!hasEmittedSuggestions) {
+            try {
+              console.log('🔄 Génération de suggestions de secours en fin de réponse');
+              
+              // Utiliser le même prompt amélioré mais avec la réponse complète pour plus de contexte
+              const backupSuggestionPrompt = `
+Vous êtes un assistant spécialisé dans la génération de suggestions pour une intelligence artificielle d'entreprise.
+
+Voici la question initiale de l'utilisateur : "${originalQuery}"
+
+Voici la réponse qui a été donnée : 
+"""
+${fullAssistantResponse.substring(0, 1000)}
+"""
+
+Votre tâche est de générer 4-5 suggestions de questions percutantes et pertinentes que l'utilisateur pourrait poser en complément, après avoir reçu cette réponse.
+
+INSTRUCTIONS IMPORTANTES :
+- Les suggestions doivent être formulées à la première personne, comme si l'utilisateur les posait.
+- Chaque suggestion doit se terminer par un point d'interrogation.
+- Concentrez-vous sur des questions complémentaires qui approfondissent les points abordés dans la réponse.
+- Adaptez les suggestions au domaine d'activité ou au contexte détecté.
+- Privilégiez des suggestions précises et exploitables sur le plan professionnel.
+- Évitez les questions trop générales ou évidentes.
+
+Listez seulement les questions, sans numérotation, chaque suggestion sur une ligne différente.`;
+              
+              // Faire l'appel au modèle avec température basse
+              const tempModel = llm as any;
+              const originalTemp = tempModel.temperature || 0.7;
+              tempModel.temperature = 0.2;
+              
+              const suggestionsResponse = await llm.invoke(backupSuggestionPrompt);
+              
+              // Restaurer la température originale
+              tempModel.temperature = originalTemp;
+              
+              const suggestions = String(suggestionsResponse.content)
+                .split('\n')
+                .filter(s => s.trim())
+                .filter(s => s.includes('?')) // S'assurer que ce sont des questions
+                .map(s => s.trim().replace(/^[•\-\s]+/, '')) // Enlever les puces ou tirets
+                .slice(0, 4); // Limiter à 4 suggestions
+              
+              console.log('✅ Suggestions de secours générées améliorées:', suggestions);
+              
+              // Format correct pour les suggestions
+              emitter.emit(
+                'data',
+                JSON.stringify({
+                  type: 'suggestions',
+                  data: {
+                    suggestions: suggestions,
+                    suggestedExperts: foundExperts || []
+                  },
+                  messageId: ''  // Ce champ sera rempli côté client
+                })
+              );
+              hasEmittedSuggestions = true;
+            } catch (error) {
+              console.error('❌ Erreur lors de la génération des suggestions de secours:', error);
+            }
+          }
+          
+          this.updateMemory(new AIMessage(fullAssistantResponse.trim()));
+          emitter.emit('end');
         }
       } else {
         emitter.emit(event.event, event.data);

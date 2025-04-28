@@ -44,6 +44,24 @@ const Navbar = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Effet pour masquer la navigation mobile de Sidebar lorsque la Navbar est présente
+  useEffect(() => {
+    // Sélectionnez l'élément de navigation mobile
+    const mobileNavElement = document.querySelector('.fixed.top-0.left-0.right-0.w-full.z-\\[100\\].lg\\:hidden');
+    
+    if (mobileNavElement) {
+      // Masquer l'élément de navigation mobile
+      mobileNavElement.classList.add('hidden');
+      
+      // Restaurer l'élément lorsque ce composant est démonté
+      return () => {
+        if (mobileNavElement) {
+          mobileNavElement.classList.remove('hidden');
+        }
+      };
+    }
+  }, []);
+
   return (
     <div className="sticky top-0 z-50 w-full border-b border-dark-200 bg-light-secondary dark:bg-dark-primary rounded-t-xl">
       <div className="w-full px-4 flex items-center justify-between py-4">

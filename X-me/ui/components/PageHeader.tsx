@@ -4,14 +4,16 @@ import { cn } from '@/lib/utils';
 interface PageHeaderProps {
   title?: string;
   icon?: React.ReactNode;
+  className?: string;
 }
 
 const PageHeader = ({
   title = 'X-me',
-  icon = <Users className="w-6 h-6" />,
+  icon = <Users className="w-6 h-6 text-black dark:text-white" />,
+  className,
 }: PageHeaderProps) => {
   return (
-    <div className="border-b border-light-100 dark:border-dark-200">
+    <div className={cn("border-b border-light-100 dark:border-dark-200", className)}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center h-16 gap-2">
           {icon}

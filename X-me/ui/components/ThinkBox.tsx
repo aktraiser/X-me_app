@@ -15,7 +15,7 @@ const ThinkBox = ({ content }: ThinkBoxProps) => {
     <div className="bg-light-secondary/50 dark:bg-dark-secondary/50 rounded-xl overflow-hidden">
       <button
         onClick={() => setIsExpanded(!isExpanded)}
-        className="w-full flex items-center justify-between px-4 py-1 text-black/90 dark:text-white/90 hover:bg-gray-800 dark:hover:bg-gray-800 transition duration-200"
+        className="w-full flex items-center justify-between px-4 py-1 text-black/90 dark:text-white/90 hover:bg-black/10 dark:hover:bg-gray-800 transition duration-200"
       >
         <div className="flex items-center space-x-2">
           <p className="font-normal text-lg">Processus d&apos;analyse</p>

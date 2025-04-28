@@ -1,6 +1,6 @@
 import { Settings } from 'lucide-react';
 import EmptyChatMessageInput from './EmptyChatMessageInput';
-import SettingsDialog from './SettingsDialog';
+
 import { useState } from 'react';
 import { File } from './ChatWindow';
 
@@ -25,16 +25,20 @@ const EmptyChat = ({
   files: File[];
   setFiles: (files: File[]) => void;
 }) => {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  // Suppression de la gestion d'état pour le dialogue de réglages
+  // const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <div className="relative h-screen flex flex-col">
-      <SettingsDialog isOpen={isSettingsOpen} setIsOpen={setIsSettingsOpen} />
+
       <div className="absolute w-full flex flex-row items-center justify-end p-5">
+        {/* Suppression du bouton de réglages */}
+        {/*
         <Settings
           className="cursor-pointer lg:hidden"
           onClick={() => setIsSettingsOpen(true)}
         />
+        */}
       </div>
       <div className="flex-1 flex items-center justify-center px-6 md:px-2">
         <div className="max-w-screen-sm w-full space-y-4 md:space-y-8 -mt-16">

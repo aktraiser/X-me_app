@@ -14,36 +14,62 @@ const Layout = ({ children }: LayoutProps) => {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAuthRoute, setIsAuthRoute] = useState(false);
+  const [isTextContentRoute, setIsTextContentRoute] = useState(false);
+  const [isPublicRoute, setIsPublicRoute] = useState(false);
 
-  // Vérifier si c'est une route d'authentification via les en-têtes
-  // ou fallback sur la vérification des chemins
+  // Vérifier si c'est une route d'authentification ou une route publique
   useEffect(() => {
-    // Vérification basée sur les chemins comme fallback
+    // Routes d'authentification strictes (formulaires de connexion/inscription)
     const isPathAuthRoute = [
       '/login',
       '/auth',
       '/register',
       '/forgot-password',
       '/sign-in',
-      '/sign-up'
+      '/sign-up',
+    ].some(route => pathname.startsWith(route));
+
+    // Routes avec contenu textuel plus large (conditions, vie privée)
+    const isPathTextContentRoute = [
+      '/terms',
+      '/privacy',
+      '/politique-confidentialite',
+      '/conditions-utilisation'
+    ].some(route => pathname.startsWith(route));
+
+    // Routes publiques accessibles sans connexion
+    const isPathPublicRoute = [
+
     ].some(route => pathname.startsWith(route));
 
     setIsAuthRoute(isPathAuthRoute);
-
-    // On pourrait ajouter ici une vérification d'en-tête avec fetch
-    // si nécessaire dans le futur
+    setIsTextContentRoute(isPathTextContentRoute);
+    setIsPublicRoute(isPathPublicRoute);
   }, [pathname]);
 
+  // Layout pour les routes d'authentification (modales étroites)
   if (isAuthRoute) {
     return (
-      <div className="min-h-screen bg-light-secondary dark:bg-dark-secondary">
-        <main className="max-w-[1200px] w-full mx-auto px-4">
+      <div className="min-h-screen bg-[#F5F5EC] dark:bg-[#0F172A] flex items-center justify-center">
+        <main className="flex flex-col items-center justify-center w-full max-w-md px-4">
           {children}
         </main>
       </div>
     );
   }
 
+  // Layout pour les pages de contenu textuel (plus larges)
+  if (isTextContentRoute) {
+    return (
+      <div className="min-h-screen bg-[#F5F5EC] dark:bg-[#0F172A] flex items-center justify-center">
+        <main className="flex flex-col w-full max-w-4xl px-4 py-8">
+          {children}
+        </main>
+      </div>
+    );
+  }
+
+  // Layout standard pour les routes protégées (avec sidebar complète)
   return (
     <div className="min-h-screen bg-light-secondary dark:bg-dark-secondary flex overflow-hidden relative">
       {/* Sidebar - visible on all screens */}
