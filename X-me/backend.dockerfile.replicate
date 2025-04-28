@@ -1,0 +1,26 @@
+FROM node:18-slim
+
+WORKDIR /home/Xandme
+
+COPY src /home/Xandme/src
+COPY tsconfig.json /home/Xandme/
+COPY drizzle.config.ts /home/Xandme/
+COPY package.json /home/Xandme/
+COPY yarn.lock /home/Xandme/
+# Au lieu de copier config.toml, nous allons le créer directement
+RUN echo '[API_KEYS]\nOPENAI = "sk-proj-your-key-here"\nGEMINI = "your-key-here"\nSUPABASE = "your-key-here"\nDEEPSEEK = "dummy-key-to-avoid-errors"\n\n[API_ENDPOINTS]\nOLLAMA = "http://ollama:11434"\nSEARXNG = "https://searx.your-instance.com"\nSEARXNG_ETUDE = "https://searx.your-instance.com"\nSUPABASE_URL = "https://your-project.supabase.co"\n\n[GENERAL]\nPORT = 3001\nSIMILARITY_MEASURE = "cosine"\nKEEP_ALIVE = "true"' > /home/Xandme/config.toml
+
+# Créer les dossiers nécessaires
+RUN mkdir -p /home/Xandme/data
+RUN mkdir -p /home/Xandme/uploads
+RUN mkdir -p /home/Xandme/src/db/migrations
+
+# S'assurer que les dossiers ont les bonnes permissions
+RUN chmod -R 777 /home/Xandme/data
+RUN chmod -R 777 /home/Xandme/uploads
+RUN chmod -R 777 /home/Xandme/src/db/migrations
+
+RUN yarn install --network-timeout 600000
+RUN yarn build
+
+CMD ["yarn", "start"] 
