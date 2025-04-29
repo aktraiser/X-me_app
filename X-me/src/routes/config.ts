@@ -4,9 +4,6 @@ import {
   getAvailableEmbeddingModelProviders,
 } from '../lib/providers';
 import {
-  getGroqApiKey,
-  getOllamaApiEndpoint,
-  getAnthropicApiKey,
   getGeminiApiKey,
   getOpenaiApiKey,
   updateConfig,
@@ -50,9 +47,6 @@ router.get('/', async (_, res) => {
     }
 
     config['openaiApiKey'] = getOpenaiApiKey();
-    config['ollamaApiUrl'] = getOllamaApiEndpoint();
-    config['anthropicApiKey'] = getAnthropicApiKey();
-    config['groqApiKey'] = getGroqApiKey();
     config['geminiApiKey'] = getGeminiApiKey();
 
     res.status(200).json(config);
@@ -68,12 +62,10 @@ router.post('/', async (req, res) => {
   const updatedConfig = {
     API_KEYS: {
       OPENAI: config.openaiApiKey,
-      GROQ: config.groqApiKey,
-      ANTHROPIC: config.anthropicApiKey,
       GEMINI: config.geminiApiKey,
     },
     API_ENDPOINTS: {
-      OLLAMA: config.ollamaApiUrl,
+      SUPABASE_URL: config.supabaseUrl,
     },
   };
 
