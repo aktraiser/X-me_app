@@ -1,9 +1,14 @@
 import { OllamaEmbeddings } from '@langchain/community/embeddings/ollama';
-import { getKeepAlive, getOllamaApiEndpoint } from '../../config';
+import { getKeepAlive, getOllamaApiEndpoint, isOllamaEnabled } from '../../config';
 import logger from '../../utils/logger';
 import { ChatOllama } from '@langchain/community/chat_models/ollama';
 
 export const loadOllamaChatModels = async () => {
+  if (!isOllamaEnabled()) {
+    logger.info('Ollama est désactivé dans la configuration. Ignoré.');
+    return {};
+  }
+
   const ollamaEndpoint = getOllamaApiEndpoint();
   const keepAlive = getKeepAlive();
 
@@ -40,6 +45,11 @@ export const loadOllamaChatModels = async () => {
 };
 
 export const loadOllamaEmbeddingsModels = async () => {
+  if (!isOllamaEnabled()) {
+    logger.info('Ollama est désactivé dans la configuration. Ignoré.');
+    return {};
+  }
+  
   const ollamaEndpoint = getOllamaApiEndpoint();
 
   if (!ollamaEndpoint) return {};

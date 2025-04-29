@@ -1,8 +1,15 @@
 import fs from 'fs';
 import path from 'path';
 import toml from '@iarna/toml';
+import dotenv from 'dotenv';
+
+// Charger les variables d'environnement depuis .env si existant
+dotenv.config();
 
 const configFileName = 'config.toml';
+
+// Vérifier si le fichier config.toml existe, sinon utiliser uniquement les variables d'environnement
+const configFileExists = fs.existsSync(path.join(__dirname, `../${configFileName}`));
 
 interface Config {
   GENERAL: {
@@ -12,65 +19,67 @@ interface Config {
   };
   API_KEYS: {
     OPENAI: string;
-    GROQ: string;
     ANTHROPIC: string;
     GEMINI: string;
     SUPABASE: string;
-    DEEPSEEK: string;
   };
   API_ENDPOINTS: {
-    SEARXNG: string;
-    SEARXNG_ETUDE: string;
-    OLLAMA: string;
     SUPABASE_URL: string;
   };
 }
 
+// Ajouter la définition du type manquant
 type RecursivePartial<T> = {
   [P in keyof T]?: RecursivePartial<T[P]>;
 };
 
-const loadConfig = () =>
-  toml.parse(
-    fs.readFileSync(path.join(__dirname, `../${configFileName}`), 'utf-8'),
-  ) as any as Config;
+// Fonction pour charger la configuration (depuis le fichier ou les variables d'environnement)
+const loadConfig = (): Config => {
+  if (configFileExists) {
+    try {
+      return toml.parse(
+        fs.readFileSync(path.join(__dirname, `../${configFileName}`), 'utf-8'),
+      ) as any as Config;
+    } catch (error) {
+      console.warn(`Erreur lors de la lecture du fichier config.toml: ${error.message}`);
+      console.warn('Utilisation des variables d\'environnement uniquement');
+    }
+  }
+
+  // Configuration par défaut basée sur les variables d'environnement
+  return {
+    GENERAL: {
+      PORT: parseInt(process.env.PORT || '3001'),
+      SIMILARITY_MEASURE: process.env.SIMILARITY_MEASURE || 'cosine',
+      KEEP_ALIVE: process.env.KEEP_ALIVE || 'true',
+    },
+    API_KEYS: {
+      OPENAI: process.env.OPENAI_API_KEY || '',
+      ANTHROPIC: process.env.ANTHROPIC_API_KEY || '',
+      GEMINI: process.env.GEMINI_API_KEY || '',
+      SUPABASE: process.env.SUPABASE_KEY || '',
+    },
+    API_ENDPOINTS: {
+      SUPABASE_URL: process.env.SUPABASE_URL || '',
+    },
+  };
+};
 
 export const getPort = () => loadConfig().GENERAL.PORT;
 
-export const getSimilarityMeasure = () =>
-  loadConfig().GENERAL.SIMILARITY_MEASURE;
+export const getSimilarityMeasure = () => loadConfig().GENERAL.SIMILARITY_MEASURE;
 
 export const getKeepAlive = () => loadConfig().GENERAL.KEEP_ALIVE;
 
-export const getOpenaiApiKey = () => loadConfig().API_KEYS.OPENAI;
+export const getOpenaiApiKey = () => process.env.OPENAI_API_KEY || loadConfig().API_KEYS.OPENAI;
 
-export const getGroqApiKey = () => loadConfig().API_KEYS.GROQ;
+export const getAnthropicApiKey = () => process.env.ANTHROPIC_API_KEY || loadConfig().API_KEYS.ANTHROPIC;
 
-export const getAnthropicApiKey = () => loadConfig().API_KEYS.ANTHROPIC;
+export const getGeminiApiKey = () => process.env.GEMINI_API_KEY || loadConfig().API_KEYS.GEMINI;
 
-export const getGeminiApiKey = () => loadConfig().API_KEYS.GEMINI;
+export const getSupabaseKey = () => process.env.SUPABASE_KEY || loadConfig().API_KEYS.SUPABASE;
 
-export const getSupabaseKey = () => 
-  process.env.SUPABASE_KEY || loadConfig().API_KEYS.SUPABASE;
-
-export const getSearxngApiEndpoint = () =>
-  process.env.SEARXNG_API_URL || loadConfig().API_ENDPOINTS.SEARXNG;
-
-export const getSearxngEtudeApiEndpoint = () =>
-  process.env.SEARXNG_ETUDE_API_URL || loadConfig().API_ENDPOINTS.SEARXNG_ETUDE;
-
-export const getSupabaseUrl = () => 
-  process.env.SUPABASE_URL || loadConfig().API_ENDPOINTS.SUPABASE_URL;
-
-export const getOllamaApiEndpoint = () => loadConfig().API_ENDPOINTS.OLLAMA;
-
-export const getDeepseekApiKey = () => {
-  const apiKey = process.env.DEEPSEEK_API_KEY || loadConfig().API_KEYS.DEEPSEEK;
-  if (!apiKey) {
-    throw new Error('DEEPSEEK_API_KEY is not set in environment variables or config.toml');
-  }
-  return apiKey;
-};
+export const getSupabaseUrl = () => process.env.SUPABASE_URL || loadConfig().API_ENDPOINTS.SUPABASE_URL;
 
 export const getOpenAIBaseURL = () => {
   return process.env.OPENAI_API_BASE_URL || 'https://api.openai.com/v1';
@@ -78,6 +87,11 @@ export const getOpenAIBaseURL = () => {
 
 export const isOpenAISearchEnabled = () => {
   const apiKey = getOpenaiApiKey();
+  return !!apiKey && apiKey.length > 0;
+};
+
+export const isGeminiEnabled = () => {
+  const apiKey = process.env.GEMINI_API_KEY || loadConfig().API_KEYS.GEMINI;
   return !!apiKey && apiKey.length > 0;
 };
 
@@ -93,6 +107,11 @@ export const isFirecrawlEnabled = () => {
 };
 
 export const updateConfig = (config: RecursivePartial<Config>) => {
+  if (!configFileExists) {
+    console.warn('Le fichier config.toml n\'existe pas, impossible de mettre à jour la configuration');
+    return;
+  }
+  
   const currentConfig = loadConfig();
 
   for (const key in currentConfig) {
