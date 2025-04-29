@@ -19,7 +19,6 @@ interface Config {
   };
   API_KEYS: {
     OPENAI: string;
-    ANTHROPIC: string;
     GEMINI: string;
     SUPABASE: string;
   };
@@ -55,7 +54,6 @@ const loadConfig = (): Config => {
     },
     API_KEYS: {
       OPENAI: process.env.OPENAI_API_KEY || '',
-      ANTHROPIC: process.env.ANTHROPIC_API_KEY || '',
       GEMINI: process.env.GEMINI_API_KEY || '',
       SUPABASE: process.env.SUPABASE_KEY || '',
     },
@@ -72,8 +70,6 @@ export const getSimilarityMeasure = () => loadConfig().GENERAL.SIMILARITY_MEASUR
 export const getKeepAlive = () => loadConfig().GENERAL.KEEP_ALIVE;
 
 export const getOpenaiApiKey = () => process.env.OPENAI_API_KEY || loadConfig().API_KEYS.OPENAI;
-
-export const getAnthropicApiKey = () => process.env.ANTHROPIC_API_KEY || loadConfig().API_KEYS.ANTHROPIC;
 
 export const getGeminiApiKey = () => process.env.GEMINI_API_KEY || loadConfig().API_KEYS.GEMINI;
 
