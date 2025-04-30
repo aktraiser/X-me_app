@@ -177,6 +177,14 @@ export class MetaSearchAgent implements MetaSearchAgentType {
     fileIds: string[],
     response: SearchResponse
   ): Document[] {
+    // Détecter si la réponse contient des tableaux
+    const containsTables = response.text.includes('|') && 
+                         (response.text.includes('|-') || response.text.includes('-|'));
+    
+    if (containsTables) {
+      console.log('📊 Tableaux détectés dans l\'analyse Gemini');
+    }
+    
     return fileIds.map((fileId, index) => {
       // Créer un document par fichier analysé
       return new Document({
@@ -187,6 +195,8 @@ export class MetaSearchAgent implements MetaSearchAgentType {
           type: 'uploaded',
           score: 0.9,
           searchText: response.text.substring(0, 100).replace(/[\n\r]+/g, ' ').trim(),
+          containsTables: containsTables,
+          analysisType: 'gemini_with_tables'
         },
       });
     });
@@ -256,9 +266,27 @@ export class MetaSearchAgent implements MetaSearchAgentType {
       console.log(`[GeminiAnalysis] 🚀 Appel API Gemini pour analyse...`);
       
       // Utiliser l'API Gemini pour analyser les fichiers
+      const analysisPrompt = `
+Analyse ce document en détail et extrais les informations pertinentes pour répondre à: ${query}
+
+INSTRUCTIONS IMPORTANTES:
+1. Lorsque tu présentes des données chiffrées, des comparaisons ou des listes structurées, UTILISE DES TABLEAUX MARKDOWN pour améliorer la lisibilité.
+2. Crée des tableaux pour:
+   - Présenter des données statistiques
+   - Comparer différentes options ou caractéristiques
+   - Afficher des séries temporelles
+   - Structurer des informations catégorisées
+   - Toute autre situation où un format tabulaire améliorerait la compréhension
+3. Format des tableaux Markdown à utiliser:
+   | Colonne 1 | Colonne 2 | Colonne 3 |
+   |-----------|-----------|-----------|
+   | Donnée 1  | Donnée 2  | Donnée 3  |
+4. Assure-toi que les tableaux sont bien formatés et alignés pour une meilleure lisibilité.
+5. N'utilise les tableaux que lorsqu'ils apportent une réelle plus-value à la présentation de l'information.`;
+      
       const response = await (llm as any).geminiFileAnalysis({
         files: filePaths,
-        query: `Analyse ce document en détail et extrais les informations pertinentes pour répondre à: ${query}`,
+        query: analysisPrompt,
         temperature: 0.2
       });
       
@@ -508,9 +536,76 @@ ${expert.biographie}`,
    */
   private formatContent(content: string): string {
     const maxLength = 1500;
+    
+    // Détecter les tableaux Markdown
+    const tablePattern = /\|[\s\S]*?\|[\s\S]*?\|/g;
+    const tables = content.match(tablePattern) || [];
+    
+    // Si des tableaux sont détectés, préservons-les
+    if (tables.length > 0) {
+      console.log(`📊 ${tables.length} tableaux détectés dans le contenu`);
+      
+      // Séparer le contenu en parties (tableaux et texte)
+      let parts = [];
+      let lastIndex = 0;
+      
+      // Extraire chaque tableau et le texte qui le précède
+      for (const table of tables) {
+        const tableIndex = content.indexOf(table, lastIndex);
+        if (tableIndex > lastIndex) {
+          // Ajouter le texte avant le tableau
+          parts.push(content.substring(lastIndex, tableIndex));
+        }
+        // Ajouter le tableau complet
+        parts.push(table);
+        lastIndex = tableIndex + table.length;
+      }
+      
+      // Ajouter le texte restant après le dernier tableau
+      if (lastIndex < content.length) {
+        parts.push(content.substring(lastIndex));
+      }
+      
+      // Limiter la taille totale en préservant les tableaux
+      let result = '';
+      let currentLength = 0;
+      
+      for (const part of parts) {
+        // Si c'est un tableau, on le préserve en entier
+        if (part.match(tablePattern)) {
+          if (currentLength + part.length <= maxLength) {
+            result += part + '\n\n';
+            currentLength += part.length + 2;
+          } else {
+            // Si on n'a plus de place pour tout le tableau, on ajoute une indication
+            result += '... [tableau tronqué] ...\n\n';
+            break;
+          }
+        } else {
+          // Pour le texte, on peut le tronquer
+          const remainingLength = maxLength - currentLength;
+          if (remainingLength <= 0) break;
+          
+          const truncatedText = part.length > remainingLength 
+            ? part.substring(0, remainingLength) + '...'
+            : part;
+          
+          result += truncatedText;
+          currentLength += truncatedText.length;
+        }
+      }
+      
+      return result
+        .replace(/\n{3,}/g, '\n\n')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    }
+    
+    // Traitement standard si aucun tableau n'est détecté
     const truncated = content.length > maxLength 
       ? content.substring(0, maxLength) + '...'
       : content;
+    
     return truncated
       .replace(/\n{3,}/g, '\n\n')
       .replace(/\s{2,}/g, ' ')
@@ -617,11 +712,14 @@ ${expert.biographie}`,
     stream: IterableReadableStream<StreamEvent>,
     emitter: EventEmitter,
     llm: BaseChatModel,
-    originalQuery: string
+    originalQuery: string,
+    fileIds: string[] = []
   ) {
     let fullAssistantResponse = '';
     let hasEmittedSuggestions = false;
     let foundExperts: any[] = []; 
+    let documentSubject = '';
+    let documentMetadata: any[] = [];
     
     // Vérifier si la requête est d'ordre professionnel ou entrepreneurial
     const isBusinessRelatedQuery = await this.isBusinessOrProfessionalQuery(originalQuery, llm);
@@ -644,7 +742,23 @@ ${expert.biographie}`,
             .map(source => source.metadata?.expertData)
             .filter(Boolean);
           
+          // Extraire les métadonnées des documents pour les suggestions
+          documentMetadata = normalizedSources
+            .filter(source => source.metadata?.type === 'uploaded' || source.metadata?.isFile)
+            .map(source => ({
+              title: source.metadata?.title || '',
+              content: source.pageContent || '',
+              type: source.metadata?.type || ''
+            }));
+            
+          if (documentMetadata.length > 0) {
+            documentSubject = await this.extractDocumentSubject(documentMetadata, originalQuery, llm);
+          }
+          
           console.log(`🔍 Experts trouvés pour suggestions: ${foundExperts.length}`);
+          if (documentSubject) {
+            console.log(`📄 Sujet du document identifié: ${documentSubject}`);
+          }
           
           emitter.emit(
             'data',
@@ -663,13 +777,27 @@ ${expert.biographie}`,
               console.log('🚀 Génération de suggestions IMMÉDIATE dès la réception des sources');
               
               // Amélioration du prompt de suggestions basé sur suggestionGeneratorAgent.ts
-              const suggestionPrompt = `
+              // et prise en compte du sujet du document si disponible
+              let suggestionPrompt = `
 Vous êtes un assistant spécialisé dans la génération de suggestions pour une intelligence artificielle d'entreprise.
 
 Voici la question initiale de l'utilisateur : "${originalQuery}"
+`;
 
+              // Ajouter le contexte du document si disponible
+              if (documentSubject) {
+                suggestionPrompt += `
+Le document analysé porte sur le sujet suivant : "${documentSubject}"
+
+Votre tâche est de générer 4-5 suggestions de questions percutantes et pertinentes que l'utilisateur pourrait poser en complément de sa demande initiale, EN LIEN DIRECT avec le sujet du document.
+`;
+              } else {
+                suggestionPrompt += `
 Votre tâche est de générer 4-5 suggestions de questions percutantes et pertinentes que l'utilisateur pourrait poser en complément de sa demande initiale.
+`;
+              }
 
+              suggestionPrompt += `
 INSTRUCTIONS IMPORTANTES :
 - Les suggestions doivent être formulées à la première personne, comme si l'utilisateur les posait.
 - Chaque suggestion doit se terminer par un point d'interrogation.
@@ -677,6 +805,7 @@ INSTRUCTIONS IMPORTANTES :
 - Proposez des questions qui explorent différents aspects liés au sujet initial.
 - Adaptez les suggestions au domaine d'activité ou au contexte détecté dans la question initiale.
 - Privilégiez des suggestions précises et exploitables sur le plan professionnel.
+${documentSubject ? '- Assurez-vous que les suggestions sont directement liées au contenu du document analysé.' : ''}
 
 Listez seulement les questions, sans numérotation, chaque suggestion sur une ligne différente.
 
@@ -734,7 +863,7 @@ Exemples de bonnes suggestions :
               console.log('🔄 Génération de suggestions de secours en fin de réponse');
               
               // Utiliser le même prompt amélioré mais avec la réponse complète pour plus de contexte
-              const backupSuggestionPrompt = `
+              let backupSuggestionPrompt = `
 Vous êtes un assistant spécialisé dans la génération de suggestions pour une intelligence artificielle d'entreprise.
 
 Voici la question initiale de l'utilisateur : "${originalQuery}"
@@ -743,9 +872,22 @@ Voici la réponse qui a été donnée :
 """
 ${fullAssistantResponse.substring(0, 1000)}
 """
+`;
 
+              // Ajouter le contexte du document si disponible
+              if (documentSubject) {
+                backupSuggestionPrompt += `
+Le document analysé porte sur le sujet suivant : "${documentSubject}"
+
+Votre tâche est de générer 4-5 suggestions de questions percutantes et pertinentes que l'utilisateur pourrait poser en complément, après avoir reçu cette réponse, EN LIEN DIRECT avec le sujet du document.
+`;
+              } else {
+                backupSuggestionPrompt += `
 Votre tâche est de générer 4-5 suggestions de questions percutantes et pertinentes que l'utilisateur pourrait poser en complément, après avoir reçu cette réponse.
+`;
+              }
 
+              backupSuggestionPrompt += `
 INSTRUCTIONS IMPORTANTES :
 - Les suggestions doivent être formulées à la première personne, comme si l'utilisateur les posait.
 - Chaque suggestion doit se terminer par un point d'interrogation.
@@ -753,6 +895,7 @@ INSTRUCTIONS IMPORTANTES :
 - Adaptez les suggestions au domaine d'activité ou au contexte détecté.
 - Privilégiez des suggestions précises et exploitables sur le plan professionnel.
 - Évitez les questions trop générales ou évidentes.
+${documentSubject ? '- Assurez-vous que les suggestions sont directement liées au contenu du document analysé.' : ''}
 
 Listez seulement les questions, sans numérotation, chaque suggestion sur une ligne différente.`;
               
@@ -799,6 +942,73 @@ Listez seulement les questions, sans numérotation, chaque suggestion sur une li
       } else {
         emitter.emit(event.event, event.data);
       }
+    }
+  }
+
+  /**
+   * Extrait le sujet principal d'un document à partir de ses métadonnées
+   */
+  private async extractDocumentSubject(
+    documentMetadata: any[],
+    userQuery: string,
+    llm: BaseChatModel
+  ): Promise<string> {
+    try {
+      if (!documentMetadata || documentMetadata.length === 0) {
+        return '';
+      }
+
+      // Extraire le texte et les titres des documents
+      const titles = documentMetadata.map(doc => doc.title).filter(Boolean);
+      const contents = documentMetadata
+        .map(doc => doc.content)
+        .filter(Boolean)
+        .slice(0, 2); // Limiter à 2 extraits pour éviter les prompts trop longs
+      
+      // Vérifier si le contenu contient des tableaux ou des données structurées
+      const hasTabularData = contents.some(content => 
+        content.includes('|') && content.includes('-|-') || // Détection rudimentaire de tableaux markdown
+        /\d+%|\d+€|\d+\s*euros|\b\d{4}\b|\b\d+[.,]\d+\b/.test(content) // Détecter des données chiffrées
+      );
+      
+      const extractionPrompt = `
+Je vais vous fournir les titres et extraits d'un document analysé. Votre tâche est d'identifier le sujet principal du document de manière concise.
+
+Titres du document : ${titles.join(' | ')}
+
+${contents.length > 0 ? `Extraits du document :
+${contents.join('\n\n').substring(0, 500)}` : ''}
+
+Question initiale de l'utilisateur : "${userQuery}"
+
+${hasTabularData ? 'Remarque: Le document semble contenir des données tabulaires ou chiffrées importantes.' : ''}
+
+En vous basant sur ces éléments, identifiez et résumez en une phrase courte (10-15 mots maximum) le sujet principal du document.
+Exemple : "Business plan d'une startup tech" ou "Stratégie marketing digital pour PME"
+Répondez uniquement avec le sujet, sans autres explications.
+`;
+
+      // Utiliser une température basse pour plus de précision
+      const tempModel = llm as any;
+      const originalTemp = tempModel.temperature || 0.7;
+      tempModel.temperature = 0.1;
+      
+      const response = await llm.invoke(extractionPrompt);
+      
+      // Restaurer la température originale
+      tempModel.temperature = originalTemp;
+      
+      // Nettoyer la réponse pour obtenir uniquement le sujet
+      let subject = String(response.content)
+        .trim()
+        .replace(/^["']|["']$/g, '') // Enlever les guillemets au début et à la fin
+        .replace(/^le sujet (principal |)est /i, '') // Enlever les formules comme "Le sujet principal est"
+        .replace(/^\s*-\s*/, ''); // Enlever les tirets au début
+      
+      return subject;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'extraction du sujet du document:', error);
+      return '';
     }
   }
 
@@ -1277,7 +1487,7 @@ ${expert.biographie}`,
               { version: 'v1' }
             );
             
-            this.handleStreamWithMemory(stream, emitter, llm, message);
+            this.handleStreamWithMemory(stream, emitter, llm, message, fileIds);
             return emitter; // Sortir car l'analyse directe a fonctionné
           } else {
             console.log(`[MetaSearch] Analyse directe Gemini n'a retourné aucun document, passage au fallback.`);
@@ -1308,7 +1518,7 @@ ${expert.biographie}`,
         },
         { version: 'v1' }
       );
-      this.handleStreamWithMemory(stream, emitter, llm, message);
+      this.handleStreamWithMemory(stream, emitter, llm, message, fileIds);
 
     } catch (error) {
       console.error('[MetaSearch] ❌ ERREUR MAJEURE searchAndAnswer:', error);
@@ -1352,7 +1562,7 @@ ${expert.biographie}`,
         },
         { version: 'v1' }
       );
-      this.handleStreamWithMemory(stream, emitter, llm, message);
+      this.handleStreamWithMemory(stream, emitter, llm, message, fileIds);
     } catch (fallbackError) {
       console.error('[MetaSearch] ❌ ERREUR dans handleFallback:', fallbackError);
       emitter.emit('error', JSON.stringify({ type: 'error', data: 'Erreur interne (fallback) du serveur.' }));
