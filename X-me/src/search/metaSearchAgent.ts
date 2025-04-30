@@ -623,6 +623,9 @@ ${expert.biographie}`,
     let hasEmittedSuggestions = false;
     let foundExperts: any[] = []; 
     
+    // Vérifier si la requête est d'ordre professionnel ou entrepreneurial
+    const isBusinessRelatedQuery = await this.isBusinessOrProfessionalQuery(originalQuery, llm);
+    
     for await (const event of stream) {
       if (event.event === 'on_chain_stream' && event.name === 'FinalResponseGenerator') {
         fullAssistantResponse += event.data.chunk;
@@ -654,7 +657,8 @@ ${expert.biographie}`,
           );
 
           // Génération immédiate des suggestions dès la réception des sources
-          if (!hasEmittedSuggestions) {
+          // UNIQUEMENT si la requête est d'ordre professionnel/entrepreneurial
+          if (!hasEmittedSuggestions && isBusinessRelatedQuery) {
             try {
               console.log('🚀 Génération de suggestions IMMÉDIATE dès la réception des sources');
               
@@ -717,12 +721,15 @@ Exemples de bonnes suggestions :
             } catch (error) {
               console.error('❌ Erreur lors de la génération des suggestions après sources:', error);
             }
+          } else if (!isBusinessRelatedQuery) {
+            console.log('ℹ️ Pas de suggestions générées car la requête n\'est pas d\'ordre professionnel/entrepreneurial');
           }
         }
         
         if (event.name === 'FinalResponseGenerator') {
           // Comme secours, générer des suggestions si elles n'ont pas été générées avant
-          if (!hasEmittedSuggestions) {
+          // UNIQUEMENT si la requête est d'ordre professionnel/entrepreneurial
+          if (!hasEmittedSuggestions && isBusinessRelatedQuery) {
             try {
               console.log('🔄 Génération de suggestions de secours en fin de réponse');
               
@@ -792,6 +799,55 @@ Listez seulement les questions, sans numérotation, chaque suggestion sur une li
       } else {
         emitter.emit(event.event, event.data);
       }
+    }
+  }
+
+  /**
+   * Vérifie si la requête est liée à un contexte professionnel ou entrepreneurial
+   */
+  private async isBusinessOrProfessionalQuery(query: string, llm: BaseChatModel): Promise<boolean> {
+    try {
+      console.log('🔍 Vérification si la requête est d\'ordre professionnel:', query);
+      
+      // Prompt pour analyser si la requête est liée au monde professionnel ou des affaires
+      const analysisPrompt = `
+Analysez cette question et déterminez si elle est liée à un contexte professionnel, entrepreneurial ou d'aide à l'entreprise.
+
+Question: "${query}"
+
+Évaluez si la question concerne l'un des domaines suivants :
+- Business, entrepreneuriat, création d'entreprise
+- Gestion, management, ressources humaines
+- Finance, comptabilité, fiscalité
+- Marketing, vente, développement commercial
+- Droit des affaires, réglementation professionnelle
+- Conseils professionnels ou carrière
+- Plans d'affaires, levées de fonds
+- Organisation du travail, productivité professionnelle
+- Formation professionnelle, développement de compétences en entreprise
+
+Répondez strictement par "OUI" ou "NON".
+`;
+      
+      // Utiliser une température basse pour plus de précision
+      const tempModel = llm as any;
+      const originalTemp = tempModel.temperature || 0.7;
+      tempModel.temperature = 0;
+      
+      const response = await llm.invoke(analysisPrompt);
+      
+      // Restaurer la température originale
+      tempModel.temperature = originalTemp;
+      
+      const answer = String(response.content).trim().toUpperCase();
+      const isBusinessRelated = answer.includes('OUI');
+      
+      console.log(`🔍 Résultat analyse requête: ${isBusinessRelated ? 'Contexte professionnel' : 'Contexte non-professionnel'}`);
+      return isBusinessRelated;
+    } catch (error) {
+      console.error('❌ Erreur lors de l\'analyse de la requête:', error);
+      // En cas d'erreur, par défaut, on considère que c'est professionnel pour ne pas bloquer les suggestions
+      return true;
     }
   }
 
