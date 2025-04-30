@@ -8,6 +8,7 @@ import './globals.css';
 import { ClerkProvider } from '@clerk/nextjs';
 // Importation de la localisation française
 import { frFR } from '@clerk/localizations';
+import KeepAliveProvider from '../components/KeepAliveProvider';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -54,8 +55,10 @@ export default function RootLayout({
           localization={customLocalization}
         >
           <ThemeProviderComponent>
-            <Layout>{children}</Layout>
-            <Toaster position="top-right" />
+            <KeepAliveProvider>
+              <Layout>{children}</Layout>
+              <Toaster position="top-right" />
+            </KeepAliveProvider>
           </ThemeProviderComponent>
         </ClerkProvider>
       </body>

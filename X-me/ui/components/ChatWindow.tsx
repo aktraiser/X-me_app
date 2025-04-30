@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Document } from '@langchain/core/documents';
 import Navbar from './Navbar';
 import Chat from './Chat';
@@ -83,205 +83,286 @@ const useSocket = (
   setError: (error: boolean) => void,
 ) => {
   const [ws, setWs] = useState<WebSocket | null>(null);
+  const reconnectAttempts = useRef(0);
+  const maxReconnectAttempts = 10;
+  const reconnectTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
-    if (!ws) {
-      const connectWs = async () => {
-        console.log('[DEBUG WebSocket] Tentative de connexion à:', url);
-        let chatModel = localStorage.getItem('chatModel');
-        let chatModelProvider = localStorage.getItem('chatModelProvider');
-        let embeddingModel = localStorage.getItem('embeddingModel');
-        let embeddingModelProvider = localStorage.getItem(
-          'embeddingModelProvider',
-        );
+  const connectWs = useCallback(async () => {
+    console.log('[DEBUG WebSocket] Tentative de connexion à:', url);
+    let chatModel = localStorage.getItem('chatModel');
+    let chatModelProvider = localStorage.getItem('chatModelProvider');
+    let embeddingModel = localStorage.getItem('embeddingModel');
+    let embeddingModelProvider = localStorage.getItem(
+      'embeddingModelProvider',
+    );
 
-        try {
-          console.log('[DEBUG WebSocket] Récupération des modèles depuis:', `${process.env.NEXT_PUBLIC_API_URL}/models`);
-          const providers = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/models`,
-            {
-              headers: {
-                'Content-Type': 'application/json',
-              },
-            },
-          ).then(async (res) => await res.json());
+    try {
+      console.log('[DEBUG WebSocket] Récupération des modèles depuis:', `${process.env.NEXT_PUBLIC_API_URL}/models`);
+      const providers = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/models`,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        },
+      ).then(async (res) => await res.json());
+      
+      console.log('[DEBUG WebSocket] Modèles récupérés:', providers);
+
+      if (
+        !chatModel ||
+        !chatModelProvider ||
+        !embeddingModel ||
+        !embeddingModelProvider
+      ) {
+        if (!chatModel || !chatModelProvider) {
+          const chatModelProviders = providers.chatModelProviders;
+
+          // Forcer l'utilisation de 'openai' au lieu de custom_openai
+          chatModelProvider = 'openai';
+          console.log('[DEBUG WebSocket] Fournisseur forcé à:', chatModelProvider);
+
+          // Sélectionner un modèle disponible
+          chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+          console.log('[DEBUG WebSocket] Modèle forcé à:', chatModel);
           
-          console.log('[DEBUG WebSocket] Modèles récupérés:', providers);
+          if (
+            !chatModelProviders ||
+            Object.keys(chatModelProviders).length === 0
+          )
+            return toast.error('No chat models available');
+        }
+
+        if (!embeddingModel || !embeddingModelProvider) {
+          const embeddingModelProviders = providers.embeddingModelProviders;
 
           if (
-            !chatModel ||
-            !chatModelProvider ||
-            !embeddingModel ||
-            !embeddingModelProvider
-          ) {
-            if (!chatModel || !chatModelProvider) {
-              const chatModelProviders = providers.chatModelProviders;
+            !embeddingModelProviders ||
+            Object.keys(embeddingModelProviders).length === 0
+          )
+            return toast.error('No embedding models available');
 
-              // Forcer l'utilisation de 'openai' au lieu de custom_openai
-              chatModelProvider = 'openai';
-              console.log('[DEBUG WebSocket] Fournisseur forcé à:', chatModelProvider);
+          embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+          embeddingModel = Object.keys(
+            embeddingModelProviders[embeddingModelProvider],
+          )[0];
+        }
 
-              // Sélectionner un modèle disponible
-              chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-              console.log('[DEBUG WebSocket] Modèle forcé à:', chatModel);
-              
-              if (
-                !chatModelProviders ||
-                Object.keys(chatModelProviders).length === 0
-              )
-                return toast.error('No chat models available');
+        localStorage.setItem('chatModel', chatModel!);
+        localStorage.setItem('chatModelProvider', chatModelProvider);
+        localStorage.setItem('embeddingModel', embeddingModel!);
+        localStorage.setItem(
+          'embeddingModelProvider',
+          embeddingModelProvider,
+        );
+      } else {
+        const chatModelProviders = providers.chatModelProviders;
+        const embeddingModelProviders = providers.embeddingModelProviders;
+
+        if (
+          Object.keys(chatModelProviders).length > 0 &&
+          !chatModelProviders[chatModelProvider]
+        ) {
+          chatModelProvider = Object.keys(chatModelProviders)[0];
+          localStorage.setItem('chatModelProvider', chatModelProvider);
+        }
+
+        if (
+          chatModelProvider &&
+          chatModelProvider != 'custom_openai' &&
+          !chatModelProviders[chatModelProvider][chatModel]
+        ) {
+          chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
+          localStorage.setItem('chatModel', chatModel);
+        }
+
+        if (
+          Object.keys(embeddingModelProviders).length > 0 &&
+          !embeddingModelProviders[embeddingModelProvider]
+        ) {
+          embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
+          localStorage.setItem(
+            'embeddingModelProvider',
+            embeddingModelProvider,
+          );
+        }
+
+        if (
+          embeddingModelProvider &&
+          !embeddingModelProviders[embeddingModelProvider][embeddingModel]
+        ) {
+          embeddingModel = Object.keys(
+            embeddingModelProviders[embeddingModelProvider],
+          )[0];
+          localStorage.setItem('embeddingModel', embeddingModel);
+        }
+      }
+
+      const wsURL = new URL(url);
+      const searchParams = new URLSearchParams({});
+
+      searchParams.append('chatModel', chatModel!);
+      searchParams.append('chatModelProvider', chatModelProvider);
+
+      if (chatModelProvider === 'custom_openai') {
+        searchParams.append(
+          'openAIApiKey',
+          localStorage.getItem('openAIApiKey')!,
+        );
+        searchParams.append(
+          'openAIBaseURL',
+          localStorage.getItem('openAIBaseURL')!,
+        );
+      }
+
+      searchParams.append('embeddingModel', embeddingModel!);
+      searchParams.append('embeddingModelProvider', embeddingModelProvider);
+
+      wsURL.search = searchParams.toString();
+      
+      console.log('[DEBUG WebSocket] URL finale:', wsURL.toString());
+
+      const ws = new WebSocket(wsURL.toString());
+
+      // Augmentation du timeout à 30 secondes
+      const timeoutId = setTimeout(() => {
+        if (ws.readyState !== 1) {
+          console.error('[DEBUG WebSocket] Échec de connexion après 30 secondes');
+          toast.error(
+            'Impossible de se connecter au serveur. Veuillez réessayer plus tard.',
+          );
+        }
+      }, 30000);
+
+      ws.addEventListener('message', (e) => {
+        const data = JSON.parse(e.data);
+        console.log('[DEBUG WebSocket] Message reçu:', data);
+        if (data.type === 'signal' && data.data === 'open') {
+          const interval = setInterval(() => {
+            if (ws.readyState === 1) {
+              console.log('[DEBUG WebSocket] Connexion établie avec succès');
+              setIsWSReady(true);
+              clearInterval(interval);
+              // Réinitialiser le compteur de tentatives de reconnexion lorsque la connexion est établie
+              reconnectAttempts.current = 0;
             }
+          }, 5);
+          clearTimeout(timeoutId);
+          console.log('[DEBUG] opened');
+        }
+        if (data.type === 'error') {
+          console.error('[DEBUG WebSocket] Erreur reçue:', data.data);
+          toast.error(data.data);
+        }
+      });
 
-            if (!embeddingModel || !embeddingModelProvider) {
-              const embeddingModelProviders = providers.embeddingModelProviders;
+      ws.onerror = (event) => {
+        console.error('[DEBUG WebSocket] Erreur de connexion:', event);
+        clearTimeout(timeoutId);
+        // Ne pas définir setError(true) immédiatement pour permettre les tentatives de reconnexion
+      };
 
-              if (
-                !embeddingModelProviders ||
-                Object.keys(embeddingModelProviders).length === 0
-              )
-                return toast.error('No embedding models available');
+      ws.onopen = () => {
+        console.log('[DEBUG WebSocket] Connexion ouverte');
+      };
 
-              embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-              embeddingModel = Object.keys(
-                embeddingModelProviders[embeddingModelProvider],
-              )[0];
-            }
-
-            localStorage.setItem('chatModel', chatModel!);
-            localStorage.setItem('chatModelProvider', chatModelProvider);
-            localStorage.setItem('embeddingModel', embeddingModel!);
-            localStorage.setItem(
-              'embeddingModelProvider',
-              embeddingModelProvider,
-            );
-          } else {
-            const chatModelProviders = providers.chatModelProviders;
-            const embeddingModelProviders = providers.embeddingModelProviders;
-
-            if (
-              Object.keys(chatModelProviders).length > 0 &&
-              !chatModelProviders[chatModelProvider]
-            ) {
-              chatModelProvider = Object.keys(chatModelProviders)[0];
-              localStorage.setItem('chatModelProvider', chatModelProvider);
-            }
-
-            if (
-              chatModelProvider &&
-              chatModelProvider != 'custom_openai' &&
-              !chatModelProviders[chatModelProvider][chatModel]
-            ) {
-              chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-              localStorage.setItem('chatModel', chatModel);
-            }
-
-            if (
-              Object.keys(embeddingModelProviders).length > 0 &&
-              !embeddingModelProviders[embeddingModelProvider]
-            ) {
-              embeddingModelProvider = Object.keys(embeddingModelProviders)[0];
-              localStorage.setItem(
-                'embeddingModelProvider',
-                embeddingModelProvider,
-              );
-            }
-
-            if (
-              embeddingModelProvider &&
-              !embeddingModelProviders[embeddingModelProvider][embeddingModel]
-            ) {
-              embeddingModel = Object.keys(
-                embeddingModelProviders[embeddingModelProvider],
-              )[0];
-              localStorage.setItem('embeddingModel', embeddingModel);
-            }
-          }
-
-          const wsURL = new URL(url);
-          const searchParams = new URLSearchParams({});
-
-          searchParams.append('chatModel', chatModel!);
-          searchParams.append('chatModelProvider', chatModelProvider);
-
-          if (chatModelProvider === 'custom_openai') {
-            searchParams.append(
-              'openAIApiKey',
-              localStorage.getItem('openAIApiKey')!,
-            );
-            searchParams.append(
-              'openAIBaseURL',
-              localStorage.getItem('openAIBaseURL')!,
-            );
-          }
-
-          searchParams.append('embeddingModel', embeddingModel!);
-          searchParams.append('embeddingModelProvider', embeddingModelProvider);
-
-          wsURL.search = searchParams.toString();
+      ws.onclose = (event) => {
+        console.error('[DEBUG WebSocket] Connexion fermée:', event.code, event.reason);
+        clearTimeout(timeoutId);
+        setIsWSReady(false);
+        
+        // Si la connexion a été fermée après une période d'inactivité (typique sur Render),
+        // essayons de nous reconnecter automatiquement
+        if (reconnectAttempts.current < maxReconnectAttempts) {
+          console.log(`[DEBUG WebSocket] Tentative de reconnexion ${reconnectAttempts.current + 1}/${maxReconnectAttempts} dans ${Math.min(30, Math.pow(2, reconnectAttempts.current))} secondes`);
           
-          console.log('[DEBUG WebSocket] URL finale:', wsURL.toString());
-
-          const ws = new WebSocket(wsURL.toString());
-
-          // Augmentation du timeout à 30 secondes
-          const timeoutId = setTimeout(() => {
-            if (ws.readyState !== 1) {
-              console.error('[DEBUG WebSocket] Échec de connexion après 30 secondes');
-              toast.error(
-                'Failed to connect to the server. Please try again later.',
-              );
+          // Nettoyage du timeout précédent s'il existe
+          if (reconnectTimeoutId.current) {
+            clearTimeout(reconnectTimeoutId.current);
+          }
+          
+          // Délai exponentiel avec un maximum de 30 secondes
+          const delay = Math.min(30000, Math.pow(2, reconnectAttempts.current) * 1000);
+          
+          reconnectTimeoutId.current = setTimeout(() => {
+            reconnectAttempts.current += 1;
+            
+            // Toast discret pour informer l'utilisateur
+            if (reconnectAttempts.current > 2) {
+              toast.info("Tentative de reconnexion au serveur...");
             }
-          }, 30000);
-
-          ws.addEventListener('message', (e) => {
-            const data = JSON.parse(e.data);
-            console.log('[DEBUG WebSocket] Message reçu:', data);
-            if (data.type === 'signal' && data.data === 'open') {
-              const interval = setInterval(() => {
-                if (ws.readyState === 1) {
-                  console.log('[DEBUG WebSocket] Connexion établie avec succès');
-                  setIsWSReady(true);
-                  clearInterval(interval);
-                }
-              }, 5);
-              clearTimeout(timeoutId);
-              console.log('[DEBUG] opened');
+            
+            // Vérifie si le navigateur est en ligne avant de tenter la reconnexion
+            if (navigator.onLine) {
+              // Nettoyer l'ancien websocket
+              setWs(null);
+              
+              // Attendre un court délai puis tenter la reconnexion
+              setTimeout(() => {
+                connectWs();
+              }, 500);
+            } else {
+              console.log('[DEBUG WebSocket] Navigateur hors ligne, attente de connexion réseau');
+              toast.error("Votre appareil semble hors ligne. Veuillez vérifier votre connexion internet.");
             }
-            if (data.type === 'error') {
-              console.error('[DEBUG WebSocket] Erreur reçue:', data.data);
-              toast.error(data.data);
-            }
-          });
-
-          ws.onerror = (event) => {
-            console.error('[DEBUG WebSocket] Erreur de connexion:', event);
-            clearTimeout(timeoutId);
-            setError(true);
-            toast.error('WebSocket connection error.');
-          };
-
-          ws.onopen = () => {
-            console.log('[DEBUG WebSocket] Connexion ouverte');
-          };
-
-          ws.onclose = (event) => {
-            console.error('[DEBUG WebSocket] Connexion fermée:', event.code, event.reason);
-            clearTimeout(timeoutId);
-            setError(true);
-            console.log('[DEBUG] closed');
-          };
-
-          setWs(ws);
-        } catch (error: any) {
-          console.error('[DEBUG WebSocket] Erreur lors de la configuration:', error);
+          }, delay);
+        } else {
+          console.error('[DEBUG WebSocket] Nombre maximal de tentatives de reconnexion atteint');
           setError(true);
-          toast.error(`Error setting up WebSocket: ${error.message}`);
+          toast.error('Impossible de se connecter au serveur après plusieurs tentatives. Veuillez rafraîchir la page.');
         }
       };
 
+      setWs(ws);
+    } catch (error: any) {
+      console.error('[DEBUG WebSocket] Erreur lors de la configuration:', error);
+      setError(true);
+      toast.error(`Erreur lors de la configuration du WebSocket: ${error.message}`);
+    }
+  }, [url, setIsWSReady, setError]);
+
+  useEffect(() => {
+    if (!ws) {
       connectWs();
     }
-  }, [ws, url, setIsWSReady, setError]);
+    
+    // Ajouter un ping périodique pour maintenir la connexion active
+    const pingInterval = setInterval(() => {
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        try {
+          // Envoyer un message ping simple pour garder la connexion active
+          ws.send(JSON.stringify({ type: 'ping' }));
+          console.log('[DEBUG WebSocket] Ping envoyé pour maintenir la connexion');
+        } catch (error) {
+          console.error('[DEBUG WebSocket] Erreur lors de l\'envoi du ping:', error);
+        }
+      }
+    }, 4 * 60 * 1000); // Ping toutes les 4 minutes (avant la déconnexion de 5 minutes)
+    
+    // Écouter les événements online/offline du navigateur
+    const handleOnline = () => {
+      console.log('[DEBUG WebSocket] Navigateur en ligne, tentative de reconnexion');
+      if (!ws || ws.readyState !== WebSocket.OPEN) {
+        connectWs();
+      }
+    };
+    
+    window.addEventListener('online', handleOnline);
+    
+    // Nettoyage
+    return () => {
+      clearInterval(pingInterval);
+      window.removeEventListener('online', handleOnline);
+      
+      if (reconnectTimeoutId.current) {
+        clearTimeout(reconnectTimeoutId.current);
+      }
+      
+      if (ws) {
+        ws.close();
+      }
+    };
+  }, [ws, connectWs]);
 
   return ws;
 };
@@ -933,8 +1014,14 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
         <p className="dark:text-white/70 text-black/70 text-sm">
-          Failed to connect to the server. Please try again later.
+          Impossible de se connecter au serveur. Veuillez rafraîchir la page ou réessayer ultérieurement.
         </p>
+        <button 
+          onClick={() => window.location.reload()} 
+          className="mt-4 px-4 py-2 bg-light-primary dark:bg-dark-primary text-white rounded-md hover:opacity-90 transition-opacity"
+        >
+          Rafraîchir la page
+        </button>
       </div>
     );
   }
