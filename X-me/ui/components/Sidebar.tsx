@@ -48,10 +48,12 @@ const IconWithTooltip = ({ icon: Icon, label, isExpanded }: { icon: any, label: 
 
 const Sidebar = ({ 
   children,
-  onExpandChange
+  onExpandChange,
+  isNavVisible = true
 }: { 
   children?: React.ReactNode;
   onExpandChange?: (expanded: boolean) => void;
+  isNavVisible?: boolean;
 }) => {
   const segments = useSelectedLayoutSegments();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -59,8 +61,6 @@ const Sidebar = ({
   const [chatHistory, setChatHistory] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
-  const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const supabase = createClient();
 
   useEffect(() => {
@@ -129,29 +129,6 @@ const Sidebar = ({
       console.log('Historique disponible:', chatHistory);
     }
   }, [chatHistory]);
-
-  // Gestion du scroll pour la navigation mobile
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentScrollY = window.scrollY;
-      
-      if (currentScrollY > lastScrollY) {
-        // Défilement vers le bas
-        setIsVisible(false);
-      } else {
-        // Défilement vers le haut
-        setIsVisible(true);
-      }
-      
-      setLastScrollY(currentScrollY);
-    };
-    
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, [lastScrollY]);
 
   const navLinks = [
     {
@@ -355,7 +332,7 @@ const Sidebar = ({
 
       <div className={cn(
         "fixed bottom-0 left-0 right-0 w-full z-[100] flex flex-row items-center justify-between bg-dark-secondary px-4 py-4 shadow-t-sm lg:hidden transition-transform duration-300",
-        isVisible ? "translate-y-0" : "translate-y-full"
+        isNavVisible ? "translate-y-0" : "translate-y-full"
       )}>
         {navLinks.map((link, i) => (
           <Link

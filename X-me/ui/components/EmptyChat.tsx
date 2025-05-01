@@ -48,7 +48,7 @@ const EmptyChat = ({
             {user?.firstName ? `${user.firstName}` : ''}{user?.firstName && <br />}Ici, c&apos;est vous le <strong><span className="text-blue-500">pa</span><span className="dark:text-white text-black">tr</span><span className="text-red-500">on</span></strong>.
           </h2>
           <h3 className="text-black/70 dark:text-white/70 font-medium text-center">
-            Posez des questions, recherchez un expert, je suis là pour répondre à vos besoins entrepreneuriaux
+            Posez vos questions, trouvez votre expert : je suis là pour vous aider des vos ambitions entrepreneuriales.
           </h3>
           <EmptyChatMessageInput
             sendMessage={sendMessage}

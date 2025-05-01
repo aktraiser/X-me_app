@@ -16,6 +16,8 @@ const Layout = ({ children }: LayoutProps) => {
   const [isAuthRoute, setIsAuthRoute] = useState(false);
   const [isTextContentRoute, setIsTextContentRoute] = useState(false);
   const [isPublicRoute, setIsPublicRoute] = useState(false);
+  const [isNavVisible, setIsNavVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
   // Vérifier si c'est une route d'authentification ou une route publique
   useEffect(() => {
@@ -47,6 +49,36 @@ const Layout = ({ children }: LayoutProps) => {
     setIsPublicRoute(isPathPublicRoute);
   }, [pathname]);
 
+  // Gestion du scroll pour la navigation mobile
+  useEffect(() => {
+    const handleScroll = () => {
+      // Récupérer l'élément de défilement principal
+      const scrollContainer = document.getElementById('main-scroll-container');
+      if (!scrollContainer) return;
+      
+      const currentScrollY = scrollContainer.scrollTop;
+      
+      if (currentScrollY > lastScrollY && currentScrollY > 20) {
+        // Défilement vers le bas - masquer la navigation
+        setIsNavVisible(false);
+      } else if (currentScrollY < lastScrollY) {
+        // Défilement vers le haut - afficher la navigation
+        setIsNavVisible(true);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+    
+    const scrollContainer = document.getElementById('main-scroll-container');
+    if (scrollContainer) {
+      scrollContainer.addEventListener('scroll', handleScroll, { passive: true });
+      
+      return () => {
+        scrollContainer.removeEventListener('scroll', handleScroll);
+      };
+    }
+  }, [lastScrollY]);
+
   // Layout pour les routes d'authentification (modales étroites)
   if (isAuthRoute) {
     return (
@@ -73,7 +105,7 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-light-secondary dark:bg-dark-secondary flex overflow-hidden relative">
       {/* Sidebar - visible on all screens */}
-      <Sidebar onExpandChange={setIsExpanded} />
+      <Sidebar onExpandChange={setIsExpanded} isNavVisible={isNavVisible} />
 
       {/* Main content area */}
       <div className={cn(
