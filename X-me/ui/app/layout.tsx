@@ -31,13 +31,13 @@ const customLocalization = {
   signIn: {
     ...frFR.signIn,
     termsAndPrivacyNotice: {
-      title: 'En vous inscrivant ou en vous connectant, vous acceptez les Conditions d\'utilisation et la Politique de confidentialité de DeepSeek.',
+      title: 'En vous inscrivant ou en vous connectant, vous acceptez les Conditions d\'utilisation et la Politique de confidentialité de X-me.',
     },
   },
   signUp: {
     ...frFR.signUp,
     termsAndPrivacyNotice: {
-      title: 'En vous inscrivant ou en vous connectant, vous acceptez les Conditions d\'utilisation et la Politique de confidentialité de DeepSeek.',
+      title: 'En vous inscrivant ou en vous connectant, vous acceptez les Conditions d\'utilisation et la Politique de confidentialité de X-me.',
     },
   },
   // Messages d'erreur personnalisés
