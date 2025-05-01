@@ -26,7 +26,7 @@ export default function LoginPage() {
           baseTheme: isDarkTheme ? dark : undefined,
           elements: {
             formButtonPrimary: 
-              'bg-blue-600 hover:bg-blue-700 text-white',
+              'bg-amber-600 hover:bg-amber-700 text-white rounded-md text-sm font-medium transition-colors w-full py-2.5',
             card: 'bg-white dark:bg-[#1E293B] shadow-lg w-full',
             headerTitle: 'text-black dark:text-white text-2xl font-bold',
             headerSubtitle: 'text-gray-600 dark:text-gray-400',
