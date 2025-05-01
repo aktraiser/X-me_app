@@ -39,6 +39,19 @@ const customLocalization = {
     termsAndPrivacyNotice: {
       title: 'En vous inscrivant ou en vous connectant, vous acceptez les Conditions d\'utilisation et la Politique de confidentialité de DeepSeek.',
     },
+  },
+  // Messages d'erreur personnalisés
+  unstable__errors: {
+    ...frFR.unstable__errors,
+    form_identifier_exists__email_address: "Cette adresse email est déjà utilisée par un autre compte.",
+    form_identifier_exists__username: "Ce nom d'utilisateur est déjà pris.",
+    form_identifier_exists__phone_number: "Ce numéro de téléphone est déjà associé à un compte.",
+    form_param_format_invalid__phone_number: "Le numéro de téléphone doit être au format international valide.",
+    form_password_length_too_short: "Le mot de passe doit contenir au moins 8 caractères.",
+    form_password_no_match: "Les mots de passe ne correspondent pas.",
+    form_param_invalid: "Certaines informations saisies ne sont pas valides.",
+    form_param_missing: "Veuillez remplir tous les champs obligatoires.",
+    network_error: "Erreur de connexion réseau. Veuillez vérifier votre connexion internet."
   }
 };
 

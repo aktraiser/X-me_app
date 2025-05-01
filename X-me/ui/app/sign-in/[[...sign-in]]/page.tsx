@@ -36,6 +36,8 @@ export default function SignInPage() {
             footerAction: 'hidden',
             developmentModeTag: 'hidden',
             powerButton: 'hidden',
+            formFieldError: 'text-red-500 text-sm mt-1 font-medium',
+            alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm',
           },
         }}
         path="/sign-in"

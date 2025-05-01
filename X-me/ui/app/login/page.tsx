@@ -34,6 +34,8 @@ export default function LoginPage() {
             formFieldInput: 'bg-gray-50 dark:bg-[#374151] border border-gray-300 dark:border-gray-600 text-black dark:text-white',
             footer: 'text-gray-600 dark:text-gray-400',
             footerActionLink: 'text-blue-500 hover:text-blue-400',
+            formFieldError: 'text-red-500 text-sm mt-1 font-medium',
+            alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm',
           },
         }}
         path="/login"
