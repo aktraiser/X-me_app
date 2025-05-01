@@ -76,7 +76,7 @@ const EmptyChatMessageInput = ({
             onChange={(e) => setMessage(e.target.value)}
             minRows={2}
             className="bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-sm sm:text-sm text-black dark:text-white resize-none focus:outline-none w-full max-h-20 sm:max-h-24 lg:max-h-36 xl:max-h-48"
-            placeholder="Message à X&me..."
+            placeholder="Message à Xandme..."
           />
 
           <div className="flex flex-row items-center justify-between mt-2 sm:mt-4">
