@@ -69,22 +69,6 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
     },
   ];
 
-  // Récupérer le numéro de téléphone de l'utilisateur depuis Clerk
-  useEffect(() => {
-    if (user && open) {
-      // Récupérer le numéro de téléphone depuis Clerk
-      const primaryPhoneNumber = user.primaryPhoneNumber?.phoneNumber || '';
-      if (primaryPhoneNumber) {
-        setPhoneNumber(primaryPhoneNumber);
-        console.log('Numéro de téléphone récupéré depuis Clerk:', primaryPhoneNumber);
-      } else {
-        console.log('Aucun numéro de téléphone trouvé dans Clerk');
-        // Récupérer le numéro depuis Supabase en fallback
-        fetchPhoneNumberFromSupabase();
-      }
-    }
-  }, [user, open]);
-
   // Récupérer le numéro de téléphone depuis Supabase (fallback)
   const fetchPhoneNumberFromSupabase = async () => {
     try {
@@ -104,6 +88,22 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
       console.error("Erreur lors de la récupération du numéro de téléphone:", error);
     }
   };
+
+  // Récupérer le numéro de téléphone de l'utilisateur depuis Clerk
+  useEffect(() => {
+    if (user && open) {
+      // Récupérer le numéro de téléphone depuis Clerk
+      const primaryPhoneNumber = user.primaryPhoneNumber?.phoneNumber || '';
+      if (primaryPhoneNumber) {
+        setPhoneNumber(primaryPhoneNumber);
+        console.log('Numéro de téléphone récupéré depuis Clerk:', primaryPhoneNumber);
+      } else {
+        console.log('Aucun numéro de téléphone trouvé dans Clerk');
+        // Récupérer le numéro depuis Supabase en fallback
+        fetchPhoneNumberFromSupabase();
+      }
+    }
+  }, [user, open, fetchPhoneNumberFromSupabase]);
 
   useEffect(() => {
     // Log l'état isSuccess chaque fois qu'il change
