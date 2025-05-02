@@ -143,7 +143,7 @@ const Sidebar = ({
       icon: Search,
       href: '/discover',
       active: segments.includes('discover'),
-      label: 'Recherche',
+      label: 'Nos experts',
     },
     {
       icon: Library,
@@ -217,7 +217,7 @@ const Sidebar = ({
                       : 'text-black/70 dark:text-white/70',
                   )}
                 >
-                  <div className="flex items-center justify-center h-full">
+                  <div className="flex items-center justify-center h-full w-6">
                     <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
                   </div>
                   {isExpanded && (
