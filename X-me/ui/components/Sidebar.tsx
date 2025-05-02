@@ -218,29 +218,11 @@ const Sidebar = ({
                   )}
                 >
                   <div className="flex items-center justify-center h-full">
-                    {!isExpanded ? (
-                      <TooltipProvider delayDuration={0}>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div>
-                              <link.icon className="shrink-0 w-4 h-4 text-black dark:text-white" />
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent side="right" className="flex items-center gap-2">
-                            {link.label}
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    ) : (
-                      <link.icon className="shrink-0 w-4 h-4 text-black dark:text-white" />
-                    )}
+                    <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
                   </div>
-                  <span className={cn(
-                    "ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300",
-                    isExpanded ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
-                  )}>
-                    {link.label}
-                  </span>
+                  {isExpanded && (
+                    <span className="ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300">{link.label}</span>
+                  )}
                   {link.active && (
                     <div className="absolute right-0 -mr-2 h-full w-1 rounded-l-lg bg-black dark:bg-white" />
                   )}
@@ -272,11 +254,16 @@ const Sidebar = ({
               )}
             >
               <div className="flex items-center justify-center h-full">
-                {!isExpanded ? (
+                {isExpanded ? (
+                  <>
+                    <ArrowLeftToLine className="w-4 h-4 shrink-0 text-black dark:text-white" />
+                    <span className="ml-3 text-base font-medium text-black/70 dark:text-white/70 whitespace-nowrap transition-all duration-300">Réduire</span>
+                  </>
+                ) : (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div>
+                        <div className="flex items-center justify-center h-full">
                           <ArrowRightToLine className="w-4 h-4 shrink-0 text-black dark:text-white" />
                         </div>
                       </TooltipTrigger>
@@ -285,15 +272,7 @@ const Sidebar = ({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                ) : (
-                  <ArrowLeftToLine className="w-4 h-4 shrink-0 text-black dark:text-white" />
                 )}
-                <span className={cn(
-                  "ml-3 text-base font-medium text-black/70 dark:text-white/70 whitespace-nowrap transition-all duration-300",
-                  isExpanded ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
-                )}>
-                  Réduire
-                </span>
               </div>
             </button>
 
@@ -308,7 +287,14 @@ const Sidebar = ({
               )}
             >
               <div className="flex items-center justify-center h-full">
-                {!isExpanded ? (
+                {isExpanded ? (
+                  <>
+                    <div className="w-8 h-8 relative shrink-0 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+                      <User className="w-4 h-4 text-black dark:text-white" />
+                    </div>
+                    <span className="ml-3 text-base whitespace-nowrap font-medium transition-all duration-300 text-black/70 dark:text-white/70">Mon Profil</span>
+                  </>
+                ) : (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -321,17 +307,7 @@ const Sidebar = ({
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                ) : (
-                  <div className="w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-                    <User className="w-4 h-4 text-black dark:text-white" />
-                  </div>
                 )}
-                <span className={cn(
-                  "ml-3 text-base whitespace-nowrap font-medium transition-all duration-300 text-black/70 dark:text-white/70",
-                  isExpanded ? "opacity-100 max-w-[200px]" : "opacity-0 max-w-0"
-                )}>
-                  Mon Profil
-                </span>
               </div>
             </Link>
           </div>

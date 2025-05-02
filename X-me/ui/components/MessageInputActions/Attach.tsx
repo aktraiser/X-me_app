@@ -191,10 +191,7 @@ const Attach = ({
           <button
             type="button"
             onClick={() => fileInputRef.current.click()}
-            className={cn(
-              'flex flex-row items-center space-x-1 text-black/50 dark:text-white/50 rounded-xl hover:bg-light-secondary dark:hover:bg-dark-secondary transition duration-200 hover:text-black dark:hover:text-white',
-              showText ? '' : 'p-2',
-            )}
+            className="flex items-center justify-center"
           >
             <input
               type="file"
@@ -204,8 +201,9 @@ const Attach = ({
               multiple
               hidden
             />
-            <Paperclip size={showText ? 18 : undefined} />
-            {showText && <p className="text-xs font-medium pl-[1px]">Attacher</p>}
+            <div className="w-8 h-8 flex items-center justify-center rounded-full border border-light-700/30 dark:border-white/10 bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition duration-200">
+              <Paperclip size={18} />
+            </div>
           </button>
         </TooltipTrigger>
         <TooltipContent side="top" sideOffset={4}>
