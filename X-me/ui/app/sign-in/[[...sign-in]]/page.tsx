@@ -44,6 +44,8 @@ export default function SignInPage() {
         routing="path"
         signUpUrl="/sign-up"
         redirectUrl="/"
+        afterSignInUrl="/"
+        signInUrl="/sign-in"
       />
       
       <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">

@@ -4,7 +4,6 @@ import { SignUp } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function RegisterPage() {
@@ -20,7 +19,7 @@ export default function RegisterPage() {
   const isDarkTheme = mounted && theme === 'dark';
 
   return (
-    <>
+    <>      
       <SignUp 
         appearance={{
           baseTheme: isDarkTheme ? dark : undefined,
@@ -42,6 +41,7 @@ export default function RegisterPage() {
         routing="path"
         signInUrl="/login"
         redirectUrl="/"
+        afterSignUpUrl="/"
         initialValues={{
           phoneNumber: '+33'
         }}

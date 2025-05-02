@@ -28,14 +28,14 @@ const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
 };
 
 const IconWithTooltip = ({ icon: Icon, label, isExpanded }: { icon: any, label: string, isExpanded: boolean }) => {
-  if (isExpanded) return <Icon className="shrink-0 w-3 h-3 text-black dark:text-white" />;
+  if (isExpanded) return <Icon className="shrink-0 w-4 h-4 text-black dark:text-white" />;
   
   return (
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
           <div>
-            <Icon className="shrink-0 w-3 h-3 text-black dark:text-white" />
+            <Icon className="shrink-0 w-4 h-4 text-black dark:text-white" />
           </div>
         </TooltipTrigger>
         <TooltipContent side="right" className="flex items-center gap-2">
@@ -256,7 +256,7 @@ const Sidebar = ({
               <div className="flex items-center justify-center h-full">
                 {isExpanded ? (
                   <>
-                    <ArrowLeftToLine className="w-3 h-3 shrink-0 text-black dark:text-white" />
+                    <ArrowLeftToLine className="w-4 h-4 shrink-0 text-black dark:text-white" />
                     <span className="ml-3 text-base font-medium text-black/70 dark:text-white/70 transition-all duration-300">Réduire</span>
                   </>
                 ) : (
@@ -290,9 +290,9 @@ const Sidebar = ({
                 {isExpanded ? (
                   <>
                     <div className="w-8 h-8 relative shrink-0 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-                      <User className="w-3 h-3 text-black dark:text-white" />
+                      <User className="w-4 h-4 text-black dark:text-white" />
                     </div>
-                    <span className="ml-3 text-sm font-medium transition-all duration-300 text-black/70 dark:text-white/70">Mon Profil</span>
+                    <span className="ml-3 text-base whitespace-nowrap font-medium transition-all duration-300 text-black/70 dark:text-white/70">Mon Profil</span>
                   </>
                 ) : (
                   <TooltipProvider delayDuration={0}>
@@ -328,7 +328,7 @@ const Sidebar = ({
           </div>
           <Link href="/settings">
             <div className="w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-              <User className="w-3 h-3 text-black dark:text-white" />
+              <User className="w-4 h-4 text-black dark:text-white" />
             </div>
           </Link>
         </div>
@@ -352,7 +352,7 @@ const Sidebar = ({
             {link.active && (
               <div className="absolute top-0 -mt-4 h-1 w-full rounded-b-lg bg-white" />
             )}
-            <link.icon className="w-3 h-3 text-white" />
+            <link.icon className="w-4 h-4 text-white" />
             <p className="text-xs">{link.label}</p>
           </Link>
         ))}

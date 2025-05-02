@@ -51,7 +51,15 @@ const customLocalization = {
     form_password_no_match: "Les mots de passe ne correspondent pas.",
     form_param_invalid: "Certaines informations saisies ne sont pas valides.",
     form_param_missing: "Veuillez remplir tous les champs obligatoires.",
-    network_error: "Erreur de connexion réseau. Veuillez vérifier votre connexion internet."
+    network_error: "Erreur de connexion réseau. Veuillez vérifier votre connexion internet.",
+    form_identifier_not_found: "Aucun compte trouvé avec ces identifiants.",
+    form_password_incorrect: "Le mot de passe est incorrect.",
+    form_code_incorrect: "Le code est incorrect.",
+    form_expired_code: "Le code a expiré, veuillez en demander un nouveau.",
+    form_password_validation_failed: "Votre mot de passe doit contenir au moins 8 caractères, un chiffre et une lettre majuscule.",
+    not_allowed_access: "Accès non autorisé. Veuillez vous connecter avec un compte valide.",
+    session_exists: "Vous êtes déjà connecté. Veuillez vous déconnecter avant de créer un nouveau compte.",
+    form_email_invalid: "L'adresse email n'est pas valide. Veuillez vérifier et réessayer."
   }
 };
 

@@ -4,7 +4,6 @@ import { SignIn } from '@clerk/nextjs';
 import { dark } from '@clerk/themes';
 import { useTheme } from 'next-themes';
 import { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -42,6 +41,8 @@ export default function LoginPage() {
         routing="path"
         signUpUrl="/register"
         redirectUrl="/"
+        afterSignInUrl="/"
+        signInUrl="/login"
       />
       
       <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
