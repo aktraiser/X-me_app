@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { getApiUrl } from '@/lib/config';
 
 interface Chat {
   id: string;
@@ -79,7 +80,8 @@ const Sidebar = ({
 
     const fetchChats = async () => {
       try {
-        const res = await fetch('http://localhost:3001/api/chats', {
+        const apiUrl = getApiUrl();
+        const res = await fetch(`${apiUrl}/chats`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
@@ -104,7 +106,7 @@ const Sidebar = ({
         if (error instanceof Error && error.name === 'AbortError') {
           console.log('Fetch aborted');
         } else {
-          console.error('Erreur:', error);
+          console.error('Erreur lors de la récupération des chats:', error);
         }
       }
     };
@@ -180,9 +182,7 @@ const Sidebar = ({
               <div className="w-full">
               {isExpanded ? (
                 <div className="flex items-center gap-3 w-full h-full px-4 py-3 border border-black/20 dark:border-white/20 rounded-full hover:border-[#c59d3f] transition-all">
-                  <div className="w-6 h-6 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-                    <Plus className="w-4 h-4 shrink-0 text-black dark:text-white" />
-                  </div>
+                  <Plus className="w-4 h-4 shrink-0 text-black dark:text-white" />
                   <span className="text-base font-medium text-black dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">Nouvelle Discussion</span>
                 </div>
               ) : (
