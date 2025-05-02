@@ -180,15 +180,19 @@ const Sidebar = ({
               <div className="w-full">
               {isExpanded ? (
                 <div className="flex items-center gap-3 w-full h-full px-4 py-3 border border-black/20 dark:border-white/20 rounded-full hover:border-[#c59d3f] transition-all">
-                  <Plus className="w-3 h-3 shrink-0 text-black dark:text-white" />
-                  <span className="text-base font-medium text-black dark:text-white">Nouvelle Discussion</span>
+                  <div className="w-6 h-6 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+                    <Plus className="w-4 h-4 shrink-0 text-black dark:text-white" />
+                  </div>
+                  <span className="text-base font-medium text-black dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">Nouvelle Discussion</span>
                 </div>
               ) : (
                 <TooltipProvider delayDuration={0}>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center justify-center h-full">
-                        <Plus className="w-3 h-3 shrink-0 text-black dark:text-white" />
+                        <div className="w-6 h-6 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+                          <Plus className="w-4 h-4 shrink-0 text-black dark:text-white" />
+                        </div>
                       </div>
                     </TooltipTrigger>
                     <TooltipContent side="right">
@@ -260,7 +264,7 @@ const Sidebar = ({
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="flex items-center justify-center h-full">
-                          <ArrowRightToLine className="w-3 h-3 shrink-0 text-black dark:text-white" />
+                          <ArrowRightToLine className="w-4 h-4 shrink-0 text-black dark:text-white" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
@@ -288,14 +292,14 @@ const Sidebar = ({
                     <div className="w-8 h-8 relative shrink-0 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
                       <User className="w-3 h-3 text-black dark:text-white" />
                     </div>
-                    <span className="ml-3 text-base font-medium transition-all duration-300 text-black/70 dark:text-white/70">Mon Profil</span>
+                    <span className="ml-3 text-sm font-medium transition-all duration-300 text-black/70 dark:text-white/70">Mon Profil</span>
                   </>
                 ) : (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <div className="w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-                          <User className="w-3 h-3 text-black dark:text-white" />
+                          <User className="w-4 h-4 text-black dark:text-white" />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
