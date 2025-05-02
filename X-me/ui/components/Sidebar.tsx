@@ -190,7 +190,7 @@ const Sidebar = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center justify-center h-full">
-                        <div className="w-6 h-6 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+                        <div className="w-8 h-8 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
                           <Plus className="w-4 h-4 shrink-0 text-black dark:text-white" />
                         </div>
                       </div>
@@ -221,7 +221,7 @@ const Sidebar = ({
                     <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
                   </div>
                   {isExpanded && (
-                    <span className="ml-3 text-base font-medium transition-all duration-300">{link.label}</span>
+                    <span className="ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300">{link.label}</span>
                   )}
                   {link.active && (
                     <div className="absolute right-0 -mr-2 h-full w-1 rounded-l-lg bg-black dark:bg-white" />
@@ -257,7 +257,7 @@ const Sidebar = ({
                 {isExpanded ? (
                   <>
                     <ArrowLeftToLine className="w-4 h-4 shrink-0 text-black dark:text-white" />
-                    <span className="ml-3 text-base font-medium text-black/70 dark:text-white/70 transition-all duration-300">Réduire</span>
+                    <span className="ml-3 text-base font-medium text-black/70 dark:text-white/70 whitespace-nowrap transition-all duration-300">Réduire</span>
                   </>
                 ) : (
                   <TooltipProvider delayDuration={0}>

@@ -48,7 +48,7 @@ const EmptyChat = ({
             Ici, c&apos;est vous le <strong className="bg-gradient-to-r from-blue-500 via-black dark:via-white to-red-500 text-transparent bg-clip-text">patron</strong>.
           </h2>
           <h3 className="text-black/70 dark:text-white/70 font-medium text-center">
-            Posez vos questions, trouvez votre expert : je suis là pour vous aider des vos ambitions entrepreneuriales.
+            Posez vos questions, trouvez votre expert : je suis là pour vous aider dans vos ambitions entrepreneuriales.
           </h3>
           <EmptyChatMessageInput
             sendMessage={sendMessage}
