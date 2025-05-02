@@ -45,7 +45,7 @@ const EmptyChat = ({
       <div className="flex-1 flex items-center justify-center px-6 md:px-2">
         <div className="max-w-screen-sm w-full space-y-4 md:space-y-8 -mt-16">
           <h2 className="text-black/90 dark:text-white text-3xl font-medium text-center">
-            {user?.firstName ? `${user.firstName}` : ''}{user?.firstName && <br />}Ici, c&apos;est vous le <strong><span className="text-blue-500">pa</span><span className="dark:text-white text-black">tr</span><span className="text-red-500">on</span></strong>.
+            Ici, c&apos;est vous le <strong className="bg-gradient-to-r from-blue-500 via-slate-600 dark:via-white to-red-500 text-transparent bg-clip-text">patron</strong>.
           </h2>
           <h3 className="text-black/70 dark:text-white/70 font-medium text-center">
             Posez vos questions, trouvez votre expert : je suis là pour vous aider des vos ambitions entrepreneuriales.
