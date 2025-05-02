@@ -159,7 +159,7 @@ const Sidebar = ({
         "hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300",
         isExpanded ? "lg:w-56" : "lg:w-20"
       )}>
-        <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-secondary dark:bg-dark-secondary px-2 py-8">
+        <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-secondary dark:bg-dark-secondary px-2 py-8 hide-scrollbar">
           <div className="flex flex-col items-start gap-y-4 w-full">
             <div className="flex items-center pl-2 w-full">
               <div className="w-10 h-10">
@@ -181,7 +181,7 @@ const Sidebar = ({
             >
               <div className="w-full">
               {isExpanded ? (
-                <div className="flex items-center gap-3 w-full h-full px-4 py-3 border border-black/20 dark:border-white/20 rounded-full hover:border-[#c59d3f] transition-all">
+                <div className="flex items-center gap-3 w-full h-full px-4 py-3 border border-black/20 dark:border-white/20 rounded-full hover:border-[#c49c48] transition-all">
                   <Plus className="w-4 h-4 shrink-0 text-black dark:text-white" />
                   <span className="text-base font-medium text-black dark:text-white whitespace-nowrap overflow-hidden text-ellipsis">Nouvelle Discussion</span>
                 </div>
@@ -190,7 +190,7 @@ const Sidebar = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <div className="flex items-center justify-center h-full">
-                        <div className="w-8 h-8 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
+                        <div className="w-8 h-8 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full hover:bg-[#c49c48]/20 transition-colors">
                           <Plus className="w-4 h-4 shrink-0 text-black dark:text-white" />
                         </div>
                       </div>
@@ -289,17 +289,32 @@ const Sidebar = ({
               <div className="flex items-center justify-center h-full">
                 {isExpanded ? (
                   <>
-                    <div className="w-8 h-8 relative shrink-0 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-                      <User className="w-4 h-4 text-black dark:text-white" />
+                    <div className={cn(
+                      "w-8 h-8 relative shrink-0 flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full",
+                      segments.includes('settings') && "bg-[#c49c48]/20"
+                    )}>
+                      <User className={cn(
+                        "w-4 h-4 text-black dark:text-white",
+                        segments.includes('settings') && "text-[#c49c48]"
+                      )} />
                     </div>
-                    <span className="ml-3 text-base whitespace-nowrap font-medium transition-all duration-300 text-black/70 dark:text-white/70">Mon Profil</span>
+                    <span className={cn(
+                      "ml-3 text-base whitespace-nowrap font-medium transition-all duration-300",
+                      segments.includes('settings') ? "text-[#c49c48]" : "text-black/70 dark:text-white/70"
+                    )}>Mon Profil</span>
                   </>
                 ) : (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <div className="w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-                          <User className="w-4 h-4 text-black dark:text-white" />
+                        <div className={cn(
+                          "w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full",
+                          segments.includes('settings') && "bg-[#c49c48]/20"
+                        )}>
+                          <User className={cn(
+                            "w-4 h-4 text-black dark:text-white",
+                            segments.includes('settings') && "text-[#c49c48]"
+                          )} />
                         </div>
                       </TooltipTrigger>
                       <TooltipContent side="right">
@@ -327,8 +342,14 @@ const Sidebar = ({
             />
           </div>
           <Link href="/settings">
-            <div className="w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full">
-              <User className="w-4 h-4 text-black dark:text-white" />
+            <div className={cn(
+              "w-8 h-8 relative flex items-center justify-center bg-light-primary dark:bg-dark-primary rounded-full",
+              segments.includes('settings') && "bg-[#c49c48]/20"
+            )}>
+              <User className={cn(
+                "w-4 h-4 text-black dark:text-white",
+                segments.includes('settings') && "text-[#c49c48]"
+              )} />
             </div>
           </Link>
         </div>
@@ -359,6 +380,19 @@ const Sidebar = ({
       </div>
 
       {children}
+
+      <style jsx global>{`
+        .hide-scrollbar {
+          -ms-overflow-style: none;  /* IE and Edge */
+          scrollbar-width: none;     /* Firefox */
+          padding-right: 17px;       /* Compense la largeur de la scrollbar */
+          margin-right: -17px;       /* Annule le padding pour maintenir la largeur totale */
+        }
+        
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;             /* Chrome, Safari and Opera */
+        }
+      `}</style>
     </div>
   );
 };
