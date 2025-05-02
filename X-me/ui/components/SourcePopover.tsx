@@ -1,7 +1,6 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { File } from 'lucide-react';
 import { Document } from '@langchain/core/documents';
-import Image from 'next/image';
 
 // Define SourceMetadata interface
 interface SourceMetadata {
@@ -109,15 +108,12 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
                 <div className="flex items-center mb-3 w-full">
                   {expertImage ? (
                     <div className="w-8 h-8 rounded-full overflow-hidden mr-3 flex-shrink-0 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
-                      <Image 
+                      <img 
                         src={expertImage} 
                         alt={expertFullName}
                         className="w-full h-full object-cover object-center"
-                        width={32}
-                        height={32}
                         onError={(e) => {
-                          // @ts-ignore - next/image gère les erreurs différemment
-                          e.target.style.display = 'none';
+                          (e.target as HTMLImageElement).style.display = 'none';
                         }}
                       />
                     </div>
@@ -160,15 +156,14 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
                     <File size={10} className="text-black dark:text-white" />
                   </div>
                 ) : faviconUrl ? (
-                  <Image
+                  <img
                     src={faviconUrl}
                     width={16}
                     height={16}
                     alt="favicon"
                     className="flex-shrink-0 rounded-sm h-4 w-4 object-cover mr-2"
                     onError={(e) => {
-                      // @ts-ignore - next/image gère les erreurs différemment
-                      e.target.style.display = 'none';
+                      (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
                 ) : (
@@ -197,15 +192,12 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
                 <div className="flex items-center mb-3 w-full">
                   {expertImage ? (
                     <div className="w-8 h-8 rounded-full overflow-hidden mr-3 flex-shrink-0 border border-gray-200 dark:border-gray-600 flex items-center justify-center">
-                      <Image 
+                      <img 
                         src={expertImage} 
                         alt={expertFullName}
                         className="w-full h-full object-cover object-center"
-                        width={32}
-                        height={32}
                         onError={(e) => {
-                          // @ts-ignore - next/image gère les erreurs différemment
-                          e.target.style.display = 'none';
+                          (e.target as HTMLImageElement).style.display = 'none';
                         }}
                       />
                     </div>
@@ -251,15 +243,14 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
                     <File size={10} className="text-black dark:text-white" />
                   </div>
                 ) : faviconUrl ? (
-                  <Image
+                  <img
                     src={faviconUrl}
                     width={16}
                     height={16}
                     alt="favicon"
                     className="flex-shrink-0 rounded-sm h-4 w-4 object-cover mr-2"
                     onError={(e) => {
-                      // @ts-ignore - next/image gère les erreurs différemment
-                      e.target.style.display = 'none';
+                      (e.target as HTMLImageElement).style.display = 'none';
                     }}
                   />
                 ) : (

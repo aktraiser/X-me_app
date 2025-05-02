@@ -10,26 +10,13 @@ ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
 ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
 
-# Installer les dépendances nécessaires pour canvas
-RUN apk add --no-cache \
-    build-base \
-    g++ \
-    cairo-dev \
-    jpeg-dev \
-    pango-dev \
-    giflib-dev \
-    pixman-dev \
-    pangomm-dev \
-    libjpeg-turbo-dev \
-    freetype-dev
-
 WORKDIR /home/Xandme
 
 # Copier d'abord package.json et yarn.lock
 COPY ui/package.json ui/yarn.lock ./
 
 # Installer les dépendances
-RUN yarn install --network-timeout 600000
+RUN yarn install
 
 # Installer les dépendances supplémentaires nécessaires
 RUN yarn add @radix-ui/react-switch @clerk/nextjs @clerk/themes next-themes react-hot-toast lucide-react --legacy-peer-deps
@@ -37,10 +24,10 @@ RUN yarn add @radix-ui/react-switch @clerk/nextjs @clerk/themes next-themes reac
 # Copier le reste des fichiers
 COPY ui/ ./
 
-# Mise à jour de browserslist
-RUN npx update-browserslist-db@latest
+# Mise à jour de browserslist avec --legacy-peer-deps pour éviter les conflits
+RUN npx update-browserslist-db@latest --legacy-peer-deps
 
 # Build avec la gestion des erreurs ESLint
-RUN yarn build || (echo "Build failed but continuing..." && exit 0)
+RUN yarn build
 
 CMD ["yarn", "start"] 

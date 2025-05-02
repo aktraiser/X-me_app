@@ -707,7 +707,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
         focusMode: focusMode
       });
     }
-  }, [messages, chatId, focusMode, saveConversationToSupabase]);
+  }, [messages, chatId, focusMode]);
 
   useEffect(() => {
     return () => {

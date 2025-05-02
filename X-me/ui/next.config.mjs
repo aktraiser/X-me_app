@@ -23,14 +23,7 @@ const nextConfig = {
         hostname: '**.supabase.in',
         pathname: '**',
       },
-      {
-        protocol: 'https',
-        hostname: '**',
-        pathname: '**',
-      },
     ],
-    dangerouslyAllowSVG: true,
-    unoptimized: process.env.NODE_ENV !== 'production',
   },
   async rewrites() {
     const backendUrl = process.env.NODE_ENV === 'production' 
@@ -43,10 +36,6 @@ const nextConfig = {
         destination: `${backendUrl}/api/:path*`,
       },
     ];
-  },
-  eslint: {
-    // Avertissement au lieu d'erreur pendant le build
-    ignoreDuringBuilds: true,
   },
 };
 
