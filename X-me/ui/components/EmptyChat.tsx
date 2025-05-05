@@ -45,7 +45,7 @@ const EmptyChat = ({
       <div className="flex-1 flex items-center justify-center px-6 md:px-2">
         <div className="max-w-screen-sm w-full space-y-4 md:space-y-8 -mt-16">
           <h2 className="text-black/90 dark:text-white text-3xl font-medium text-center">
-            {user?.firstName ? `${user.firstName}` : ''}{user?.firstName && <br />}Ici, c&apos;est vous le <strong>patron</strong> !
+            {user?.firstName ? `${user.firstName.charAt(0).toUpperCase()}${user.firstName.slice(1)}` : ''}{user?.firstName && <br />}Ici, c&apos;est vous le <strong>patron</strong> !
           </h2>
           <h3 className="text-black/70 dark:text-white/70 font-medium text-center">
             Posez vos questions, trouvez votre expert : je suis là pour vous aider dans vos ambitions entrepreneuriales.

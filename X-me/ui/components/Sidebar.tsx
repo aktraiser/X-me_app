@@ -92,13 +92,13 @@ const Sidebar = ({
         if (data && data.chats) {
           // Utiliser le chatHistory via une fonction de mise à jour
           setChatHistory((prevChatHistory: Chat[]) => {
-            // Garder seulement les deux dernières discussions existantes
-            const existingChats = prevChatHistory.slice(-2);
+            // Garder seulement les trois dernières discussions existantes
+            const existingChats = prevChatHistory.slice(-3);
             // Ajouter les nouvelles discussions au début
             const newChats = data.chats.filter(
               (newChat: Chat) => !existingChats.some((chat) => chat.id === newChat.id)
             );
-            // Combiner les nouvelles discussions avec les deux dernières existantes
+            // Combiner les nouvelles discussions avec les trois dernières existantes
             return [...newChats, ...existingChats].slice(-3);
           });
         }
