@@ -35,6 +35,16 @@ const customLocalization = {
       title: "Connexion à X-me",
       subtitle: "Tous les champs sont obligatoires",
     },
+    emailCode: {
+      ...(frFR.signIn?.emailCode || {}),
+      title: "Vérifiez votre email",
+      subtitle: "Un code de vérification a été envoyé à {identifier}",
+    },
+    password: {
+      ...(frFR.signIn?.password || {}),
+      title: "Entrez votre mot de passe",
+      subtitle: "Pour vous connecter avec {identifier}",
+    },
   },
   signUp: {
     ...(frFR.signUp || {}),
@@ -42,6 +52,16 @@ const customLocalization = {
       ...(frFR.signUp?.start || {}),
       title: "Créer un compte X-me",
       subtitle: "Tous les champs sont obligatoires",
+    },
+    emailCode: {
+      ...(frFR.signUp?.emailCode || {}),
+      title: "Vérifiez votre email",
+      subtitle: "Un code de vérification a été envoyé à {identifier}",
+    },
+    phoneCode: {
+      ...(frFR.signUp?.phoneCode || {}),
+      title: "Vérifiez votre téléphone",
+      subtitle: "Un code de vérification a été envoyé au {identifier}",
     },
   },
   unstable__errors: {
@@ -82,6 +102,18 @@ export default function RootLayout({
         <ClerkProvider 
           publishableKey={clerkPublishableKey}
           localization={customLocalization}
+          appearance={{
+            elements: {
+              formFieldErrorText: 'text-red-500 text-sm mt-1 font-medium',
+              formFieldError: 'border-red-500 focus:ring-red-500',
+              formFieldInput: 'bg-gray-50 dark:bg-[#374151] border border-gray-300 dark:border-gray-600 text-black dark:text-white rounded-md p-2.5',
+              formFieldLabel: 'block text-black dark:text-white font-medium mb-1.5',
+              card: 'bg-white dark:bg-[#1E293B] shadow-lg',
+              formFieldInputShowPasswordButton: 'text-gray-600 hover:text-gray-800',
+              identityPreview: 'bg-gray-100 dark:bg-gray-800',
+              alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm mb-4'
+            }
+          }}
         >
           <ThemeProviderComponent>
             <KeepAliveProvider>
