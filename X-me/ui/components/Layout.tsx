@@ -5,19 +5,21 @@ import Sidebar from './Sidebar';
 import InfoBubble from './InfoBubble';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
+import { NavVisibilityProvider, useNavVisibility } from '@/hooks/useNavVisibility';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-const Layout = ({ children }: LayoutProps) => {
+// Composant interne qui utilise le hook useNavVisibility
+const LayoutContent = ({ children }: LayoutProps) => {
   const pathname = usePathname();
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAuthRoute, setIsAuthRoute] = useState(false);
   const [isTextContentRoute, setIsTextContentRoute] = useState(false);
   const [isPublicRoute, setIsPublicRoute] = useState(false);
-  const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const { isNavVisible, setNavVisible } = useNavVisibility();
 
   // Vérifier si c'est une route d'authentification ou une route publique
   useEffect(() => {
@@ -58,10 +60,10 @@ const Layout = ({ children }: LayoutProps) => {
       
       if (currentScrollY > lastScrollY && currentScrollY > 20) {
         // Défilement vers le bas - masquer la navigation
-        setIsNavVisible(false);
+        setNavVisible(false);
       } else if (currentScrollY < lastScrollY) {
         // Défilement vers le haut - afficher la navigation
-        setIsNavVisible(true);
+        setNavVisible(true);
       }
       
       setLastScrollY(currentScrollY);
@@ -75,7 +77,7 @@ const Layout = ({ children }: LayoutProps) => {
         scrollContainer.removeEventListener('scroll', handleScroll);
       };
     }
-  }, [lastScrollY]);
+  }, [lastScrollY, setNavVisible]);
 
   // Layout pour les routes d'authentification (modales étroites)
   if (isAuthRoute) {
@@ -103,7 +105,7 @@ const Layout = ({ children }: LayoutProps) => {
   return (
     <div className="min-h-screen bg-light-secondary dark:bg-dark-secondary flex overflow-hidden relative">
       {/* Sidebar - visible on all screens */}
-      <Sidebar onExpandChange={setIsExpanded} isNavVisible={isNavVisible} />
+      <Sidebar onExpandChange={setIsExpanded} />
 
       {/* Main content area */}
       <div className={cn(
@@ -146,6 +148,15 @@ const Layout = ({ children }: LayoutProps) => {
         <InfoBubble />
       </div>
     </div>
+  );
+};
+
+// Composant Layout qui encapsule le contenu avec NavVisibilityProvider
+const Layout = ({ children }: LayoutProps) => {
+  return (
+    <NavVisibilityProvider>
+      <LayoutContent>{children}</LayoutContent>
+    </NavVisibilityProvider>
   );
 };
 

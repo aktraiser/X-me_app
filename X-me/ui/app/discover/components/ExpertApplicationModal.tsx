@@ -1,7 +1,8 @@
-import { Fragment } from 'react';
+import { Fragment, useEffect } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { X } from 'lucide-react';
 import ExpertApplicationForm from './ExpertApplicationForm';
+import { useNavVisibility } from '@/hooks/useNavVisibility';
 
 interface ExpertApplicationModalProps {
   isOpen: boolean;
@@ -9,6 +10,17 @@ interface ExpertApplicationModalProps {
 }
 
 export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplicationModalProps) {
+  const { setNavVisible } = useNavVisibility();
+  
+  // Masquer la navigation mobile lorsque la modale est ouverte
+  useEffect(() => {
+    if (isOpen) {
+      setNavVisible(false);
+    } else {
+      setNavVisible(true);
+    }
+  }, [isOpen, setNavVisible]);
+  
   const handleSuccess = () => {
     onClose();
   };

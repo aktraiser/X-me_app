@@ -6,6 +6,7 @@ import Attach from './MessageInputActions/Attach';
 import CopilotToggle from './MessageInputActions/Copilot';
 import { File } from './ChatWindow';
 import AttachSmall from './MessageInputActions/AttachSmall';
+import { useNavVisibility } from '@/hooks/useNavVisibility';
 
 const MessageInput = ({
   sendMessage,
@@ -26,6 +27,7 @@ const MessageInput = ({
   const [message, setMessage] = useState('');
   const [textareaRows, setTextareaRows] = useState(1);
   const [mode, setMode] = useState<'multi' | 'single'>('single');
+  const { isNavVisible } = useNavVisibility();
 
   useEffect(() => {
     if (textareaRows >= 2 && message && mode === 'single') {
@@ -75,8 +77,10 @@ const MessageInput = ({
         }
       }}
       className={cn(
-        'bg-light-secondary dark:bg-dark-secondary p-4 flex items-center overflow-hidden border-[0.5px] border-light-700 dark:border-dark-700',
+        'bg-light-secondary dark:bg-dark-secondary p-4 flex items-center overflow-hidden border-[0.5px] border-light-700 dark:border-dark-700 transition-transform duration-300',
         mode === 'multi' ? 'flex-col rounded-lg' : 'flex-row rounded-full',
+        'lg:transform-none',
+        !isNavVisible ? 'transform translate-y-16' : 'transform translate-y-0'
       )}
     >
       {mode === 'single' && (

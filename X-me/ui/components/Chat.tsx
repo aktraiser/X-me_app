@@ -95,7 +95,7 @@ const Chat = ({
         <div ref={messageEnd} />
         {dividerWidth > 0 && (
           <div
-            className="fixed z-40 bottom-24 lg:bottom-10 w-full left-0 lg:left-auto lg:w-[calc(66.5%-2rem)] px-4 lg:px-0"
+            className="fixed z-40 bottom-24 lg:bottom-10 w-full left-0 lg:left-auto lg:w-[calc(66.5%-2rem)] px-4 lg:px-0 transition-transform duration-300"
             style={{ 
               maxWidth: '840px',
               margin: '0 auto',

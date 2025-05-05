@@ -110,7 +110,7 @@ export default function ExpertApplicationForm({ onSuccess, onCancel }: ExpertApp
 
   if (submitted) {
     return (
-      <div className="text-center py-10 pb-28 md:pb-10">
+      <div className="text-center py-10 pb-16 md:pb-10">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
           <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -134,7 +134,7 @@ export default function ExpertApplicationForm({ onSuccess, onCancel }: ExpertApp
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-10 pb-28 md:pb-0">
+    <form onSubmit={handleSubmit} className="space-y-10 pb-16 md:pb-0">
       <div className="border-b border-gray-200 dark:border-gray-700/30 pb-8">
         <div className="mt-8 flex items-center gap-x-5">
           <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0">

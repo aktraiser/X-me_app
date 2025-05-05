@@ -14,6 +14,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { getApiUrl } from '@/lib/config';
+import { useNavVisibility } from '@/hooks/useNavVisibility';
 
 interface Chat {
   id: string;
@@ -49,12 +50,10 @@ const IconWithTooltip = ({ icon: Icon, label, isExpanded }: { icon: any, label: 
 
 const Sidebar = ({ 
   children,
-  onExpandChange,
-  isNavVisible = true
+  onExpandChange
 }: { 
   children?: React.ReactNode;
   onExpandChange?: (expanded: boolean) => void;
-  isNavVisible?: boolean;
 }) => {
   const segments = useSelectedLayoutSegments();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -63,6 +62,7 @@ const Sidebar = ({
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const supabase = createClient();
+  const { isNavVisible } = useNavVisibility();
 
   useEffect(() => {
     const getUser = async () => {
@@ -157,7 +157,7 @@ const Sidebar = ({
     <div>
       <div className={cn(
         "hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300",
-        isExpanded ? "lg:w-56" : "lg:w-20"
+        isExpanded ? "lg:w-52" : "lg:w-16"
       )}>
         <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-secondary dark:bg-dark-secondary px-2 py-8 hide-scrollbar">
           <div className="flex flex-col items-start gap-y-4 w-full">
@@ -224,7 +224,7 @@ const Sidebar = ({
                     <span className="ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300">{link.label}</span>
                   )}
                   {link.active && (
-                    <div className="absolute right-0 -mr-2 h-full w-1 rounded-l-lg bg-black dark:bg-white" />
+                    <div className="absolute right-0 -mr-1 h-full w-1 rounded-l-lg bg-[#c49c48]" />
                   )}
                 </Link>
                 {isExpanded && link.label === "Historique" && !loading && chatHistory && chatHistory.length > 0 && (
@@ -371,7 +371,7 @@ const Sidebar = ({
             )}
           >
             {link.active && (
-              <div className="absolute top-0 -mt-4 h-1 w-full rounded-b-lg bg-white" />
+              <div className="absolute top-0 -mt-4 h-1 w-8 mx-auto rounded-b-lg bg-[#c49c48]" />
             )}
             <link.icon className="w-4 h-4 text-white" />
             <p className="text-xs">{link.label}</p>

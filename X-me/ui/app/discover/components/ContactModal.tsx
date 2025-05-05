@@ -8,6 +8,7 @@ import { Expert } from '@/types/index';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
 import { useUser } from '@clerk/nextjs';
+import { useNavVisibility } from '@/hooks/useNavVisibility';
 
 interface CallbackOption {
   id: string;
@@ -35,6 +36,7 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [userProfile, setUserProfile] = useState<any>(null);
   const { user } = useUser();
+  const { setNavVisible } = useNavVisibility();
 
   const requestTypeOptions: RequestTypeOption[] = [
     { 
@@ -109,6 +111,15 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
     // Log l'état isSuccess chaque fois qu'il change
     console.log('État isSuccess:', isSuccess);
   }, [isSuccess]);
+
+  // Masquer la navigation mobile lorsque la modale est ouverte
+  useEffect(() => {
+    if (open) {
+      setNavVisible(false);
+    } else {
+      setNavVisible(true);
+    }
+  }, [open, setNavVisible]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
