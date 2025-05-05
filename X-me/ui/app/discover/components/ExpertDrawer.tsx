@@ -124,7 +124,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                                     alt={`Logo de ${expert.prenom} ${expert.nom}`}
                                     fill
                                     style={{ objectFit: 'contain' }}
-                                    className=""
+                                    className="dark:bg-white rounded-sm"
                                     unoptimized={true}
                                   />
                                 </div>

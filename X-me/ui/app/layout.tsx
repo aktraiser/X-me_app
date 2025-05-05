@@ -32,7 +32,7 @@ const customLocalization = {
     ...(frFR.signIn || {}),
     start: {
       ...(frFR.signIn?.start || {}),
-      title: "Connexion à X-me",
+      title: "Connexion à Xandme",
       subtitle: "Tous les champs sont obligatoires",
     },
     emailCode: {
@@ -50,7 +50,7 @@ const customLocalization = {
     ...(frFR.signUp || {}),
     start: {
       ...(frFR.signUp?.start || {}),
-      title: "Créer un compte X-me",
+      title: "Créer un compte Xandme",
       subtitle: "Tous les champs sont obligatoires",
     },
     emailCode: {
@@ -111,7 +111,8 @@ export default function RootLayout({
               card: 'bg-white dark:bg-[#1E293B] shadow-lg',
               formFieldInputShowPasswordButton: 'text-gray-600 hover:text-gray-800',
               identityPreview: 'bg-gray-100 dark:bg-gray-800',
-              alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm mb-4'
+              alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm mb-4',
+              logoImage: 'w-32 h-32',
             }
           }}
         >

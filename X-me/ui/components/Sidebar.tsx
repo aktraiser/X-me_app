@@ -25,9 +25,7 @@ interface Chat {
 
 const VerticalIconContainer = ({ children }: { children: ReactNode }) => {
   return (
-    <div className="flex flex-col items-center gap-y-3 w-full px-2">{/* Ajout de px-2 ici */}
-      {children}
-    </div>
+    <div className="flex flex-col items-center gap-y-3 w-full">{children}</div>
   );
 };
 
@@ -161,8 +159,8 @@ const Sidebar = ({
         "hidden lg:fixed lg:inset-y-0 lg:z-50 lg:flex lg:flex-col transition-all duration-300",
         isExpanded ? "lg:w-52" : "lg:w-16"
       )}>
-        <div className="flex grow flex-col items-center justify-start gap-y-5 overflow-y-auto bg-light-secondary dark:bg-dark-secondary py-8 hide-scrollbar">
-          <div className="flex flex-col items-start gap-y-4 w-full px-2">{/* Ajout de px-2 ici */}
+        <div className="flex grow flex-col items-center justify-between gap-y-5 overflow-y-auto bg-light-secondary dark:bg-dark-secondary px-2 py-8 hide-scrollbar">
+          <div className="flex flex-col items-start gap-y-4 w-full">
             <div className="flex items-center pl-2 w-full">
               <div className="w-10 h-10">
                 <Image
@@ -174,12 +172,12 @@ const Sidebar = ({
                 />
               </div>
             </div>
-            <Link
-              href="/"
+            <button
               className={cn(
                 "flex items-center w-full h-12 cursor-pointer rounded-lg mt-4",
                 isExpanded ? "px-3" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
               )}
+              onClick={() => window.location.href = '/'}
             >
               <div className="w-full">
               {isExpanded ? (
@@ -204,15 +202,15 @@ const Sidebar = ({
                 </TooltipProvider>
               )}
               </div>
-            </Link>
+            </button>
           </div>
-          <VerticalIconContainer>{/* Contient maintenant px-2 */}
+          <VerticalIconContainer>
             {navLinks.map((link, i) => (
               <div key={i} className="w-full">
                 <Link
                   href={link.href}
                   className={cn(
-                    'relative flex flex-row items-center cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 duration-150 transition w-full h-10 rounded-lg',
+                    'relative flex flex-row items-center cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 duration-150 transition w-full h-10 rounded-lg overflow-hidden',
                     isExpanded ? '' : 'justify-center',
                     link.active
                       ? 'text-black dark:text-white'
@@ -220,8 +218,8 @@ const Sidebar = ({
                   )}
                 >
                   <div className={cn(
-                    "flex items-center h-full",
-                    isExpanded ? "px-3 w-full" : "justify-center w-6"
+                    "flex items-center h-full z-10",
+                    isExpanded ? "px-3 w-full" : "justify-center w-6" 
                   )}>
                     <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
                     {isExpanded && (
@@ -229,19 +227,23 @@ const Sidebar = ({
                     )}
                   </div>
                   {link.active && (
-                    <div className="absolute right-0 top-0 h-full w-1 rounded-l-lg bg-[#c49c48]" />
+                    isExpanded ? (
+                      <div className="absolute right-0 top-0 h-full w-2 rounded-l-lg bg-[#c49c48] z-20" />
+                    ) : (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-[#c49c48] z-20" />
+                    )
                   )}
                 </Link>
                 {isExpanded && link.label === "Historique" && !loading && chatHistory && chatHistory.length > 0 && (
-                  <div className="relative pl-[calc(0.75rem+1rem)] mt-1 space-y-0.5"> {/* 0.75rem = px-3; 1rem = espace supplémentaire */}
-                    <div className="absolute left-[calc(0.75rem+0.5rem)] top-0 bottom-0 w-[1px] bg-black/10 dark:bg-white/10" /> {/* Ajustement position ligne */}
+                  <div className="relative pl-8 mt-1 space-y-0.5">
+                    <div className="absolute left-6 top-0 bottom-0 w-[1px] bg-black/10 dark:bg-white/10" />
                     {chatHistory.map((chat) => (
                       <Link
                         key={chat.id}
                         href={`/c/${chat.id}`}
                         className="flex items-center py-1.5 text-base text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors duration-200"
                       >
-                        <span className="truncate max-w-[calc(100%-1rem)]">{chat.title}</span>
+                        <span className="truncate max-w-[160px]">{chat.title}</span>
                       </Link>
                     ))}
                   </div>
@@ -250,7 +252,7 @@ const Sidebar = ({
             ))}
           </VerticalIconContainer>
 
-          <div className="flex flex-col items-center gap-y-4 w-full mt-auto px-2">
+          <div className="flex flex-col items-center gap-y-4 w-full ">
             <button 
               onClick={() => setIsExpanded(!isExpanded)}
               className={cn(
@@ -376,7 +378,7 @@ const Sidebar = ({
             )}
           >
             {link.active && (
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-4 h-1 w-8 rounded-b-lg bg-[#c49c48]" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-2 h-2 w-2 rounded-full bg-[#c49c48]" />
             )}
             <link.icon className="w-4 h-4 text-white" />
             <p className="text-xs">{link.label}</p>
@@ -390,7 +392,8 @@ const Sidebar = ({
         .hide-scrollbar {
           -ms-overflow-style: none;  /* IE and Edge */
           scrollbar-width: none;     /* Firefox */
-          /* Retrait de padding-right et margin-right qui pourraient interférer */
+          padding-right: 17px;       /* Compense la largeur de la scrollbar */
+          margin-right: -17px;       /* Annule le padding pour maintenir la largeur totale */
         }
         
         .hide-scrollbar::-webkit-scrollbar {
