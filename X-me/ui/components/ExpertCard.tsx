@@ -70,19 +70,19 @@ const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick
       {/* Ligne 2: Informations avec icônes (tarif, localisation, disponibilité) */}
       <div className="flex flex-wrap items-center gap-2 sm:gap-3 p-4 border-gray-100 dark:border-gray-700">
         {/* Tarif */}
-        <div className="flex items-center gap-2 border rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border-gray-200 dark:border-gray-600 group-hover:border-white">
+        <div className="flex items-center gap-2 border rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border-gray-200 dark:border-gray-600 group-hover:border-amber-500 dark:group-hover:border-white">
           <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 dark:text-gray-400" />
           <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300"><span className="text-xs">À partir de </span>{expert.tarif}€ </span>
         </div>
         
         {/* Localisation */}
-        <div className="flex items-center gap-2 border rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border-gray-200 dark:border-gray-600 group-hover:border-white">
+        <div className="flex items-center gap-2 border rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border-gray-200 dark:border-gray-600 group-hover:border-amber-500 dark:group-hover:border-white">
           <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 dark:text-gray-400" />
           <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{expert.ville}, {expert.pays}</span>
         </div>
         
         {/* Disponibilité */}
-        <div className="flex items-center gap-2 border rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border-gray-200 dark:border-gray-600 group-hover:border-white">
+        <div className="flex items-center gap-2 border rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border-gray-200 dark:border-gray-600 group-hover:border-amber-500 dark:group-hover:border-white">
           <div className="w-2 h-2 rounded-full bg-green-500"></div>
           <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">Disponible</span>
         </div>
@@ -93,7 +93,7 @@ const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick
         <h3 className="text-xs sm:text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Expertises</h3>
         <div className="flex flex-wrap gap-1.5 sm:gap-2">
           {expert.expertises?.split(',').slice(0, 5).map((expertise, index) => (
-            <span key={index} className="inline-flex items-center text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 group-hover:bg-white">
+            <span key={index} className="inline-flex items-center text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200">
               {expertise.trim()}
             </span>
           ))}
