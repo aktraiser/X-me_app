@@ -377,29 +377,15 @@ const loadMessages = async (
   setFiles: (files: File[]) => void,
   setFileIds: (fileIds: string[]) => void,
 ) => {
-  const res = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    },
-  );
-
-  if (res.status === 404) {
-    setNotFound(true);
-    setIsMessagesLoaded(true);
-    return;
-  }
-
-  const data = await res.json();
-
+  console.log('[DEBUG] Tentative de chargement de la conversation:', chatId);
+  
   // Obtenir un jeton JWT pour Supabase
   const authToken = await getSupabaseSession();
-
-  // Vérifier si une version complète de la conversation existe dans Supabase
+  
+  // Essayer d'abord de récupérer depuis Supabase directement
   try {
+    console.log('[DEBUG] Tentative de récupération directe depuis Supabase');
+    
     // Créer un client Supabase
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -425,101 +411,246 @@ const loadMessages = async (
       .eq('id', chatId)
       .single();
 
-    if (!error && supabaseData && supabaseData.metadata?.complete_conversation) {
-      console.log('[DEBUG] Conversation complète récupérée depuis Supabase');
+    if (!error && supabaseData) {
+      console.log('[DEBUG] Conversation récupérée depuis Supabase:', supabaseData.id);
       
-      // Utiliser la conversation complète depuis Supabase
-      const completeMessages = supabaseData.metadata.complete_conversation.map((msg: any) => {
-        // S'assurer que les propriétés cruciales sont présentes
-        const message = {
-          ...msg,
+      // Si la conversation existe dans Supabase mais n'a pas de messages complets,
+      // on initialise quand même avec un minimum pour éviter la 404
+      if (!supabaseData.metadata?.complete_conversation || 
+          !Array.isArray(supabaseData.metadata.complete_conversation) ||
+          supabaseData.metadata.complete_conversation.length === 0) {
+        
+        console.log('[DEBUG] Conversation sans messages complets, création d\'une structure minimale');
+        
+        // Créer un message utilisateur minimal basé sur le titre
+        const minimalUserMessage = {
+          messageId: uuidv4(),
           chatId: chatId,
-          createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
-          // Garantir que les sources sont correctement formatées
-          sources: Array.isArray(msg.sources) ? msg.sources.map((source: any) => {
-            // Assurer la structure correcte de chaque source
-            if (typeof source === 'object') {
-              return {
-                pageContent: source.pageContent || '',
-                metadata: source.metadata || {}
-              };
-            }
-            return source;
-          }) : undefined,
-          // Ne pas initialiser les suggestions avec un tableau vide, laisser undefined si pas de valeur
-          suggestions: msg.suggestions && msg.suggestions.length > 0 ? msg.suggestions : undefined,
-          // Ne pas initialiser les experts suggérés avec un tableau vide, laisser undefined si pas de valeur
-          suggestedExperts: msg.suggestedExperts && msg.suggestedExperts.length > 0 ? msg.suggestedExperts : undefined
+          createdAt: new Date(),
+          content: supabaseData.title || "Nouvelle conversation",
+          role: 'user'
         };
         
-        console.log("[DEBUG] Message restauré avec sources:", message);
-        return message as Message;
-      });
-
-      setMessages(completeMessages);
-
-      const history = completeMessages.map((msg: Message) => {
-        return [msg.role === 'user' ? 'human' : 'assistant', msg.content];
-      }) as [string, string][];
-
-      setChatHistory(history);
-      setFocusMode(supabaseData.metadata?.focus_mode || 'webSearch');
-      document.title = completeMessages[0]?.content?.slice(0, 100) || 'Conversation';
-      setIsMessagesLoaded(true);
-      
-      // Charger les fichiers s'ils existent
-      if (data.chat && data.chat.files) {
-        const files = data.chat.files.map((file: any) => {
-          return {
-            fileName: file.name,
-            fileExtension: file.name.split('.').pop(),
-            fileId: file.fileId,
-          };
-        });
-
-        setFiles(files);
-        setFileIds(files.map((file: File) => file.fileId));
+        // Créer un message assistant minimal
+        const minimalAssistantMessage = {
+          messageId: uuidv4(),
+          chatId: chatId,
+          createdAt: new Date(),
+          content: supabaseData.content || "Conversation en cours de restauration...",
+          role: 'assistant'
+        };
+        
+        setMessages([minimalUserMessage, minimalAssistantMessage] as Message[]);
+        
+        const history = [
+          ['human', minimalUserMessage.content],
+          ['assistant', minimalAssistantMessage.content]
+        ] as [string, string][];
+        
+        setChatHistory(history);
+        setFocusMode(supabaseData.metadata?.focus_mode || 'webSearch');
+        document.title = supabaseData.title || 'Conversation';
+        setIsMessagesLoaded(true);
+        return;
       }
       
-      return;
+      // Utiliser la conversation complète depuis Supabase si elle existe
+      if (supabaseData.metadata?.complete_conversation) {
+        console.log('[DEBUG] Conversation complète récupérée depuis Supabase');
+        
+        // Utiliser la conversation complète depuis Supabase
+        const completeMessages = supabaseData.metadata.complete_conversation.map((msg: any) => {
+          // S'assurer que les propriétés cruciales sont présentes
+          const message = {
+            ...msg,
+            chatId: chatId,
+            createdAt: msg.createdAt ? new Date(msg.createdAt) : new Date(),
+            // Garantir que les sources sont correctement formatées
+            sources: Array.isArray(msg.sources) ? msg.sources.map((source: any) => {
+              // Assurer la structure correcte de chaque source
+              if (typeof source === 'object') {
+                return {
+                  pageContent: source.pageContent || '',
+                  metadata: source.metadata || {}
+                };
+              }
+              return source;
+            }) : undefined,
+            // Ne pas initialiser les suggestions avec un tableau vide, laisser undefined si pas de valeur
+            suggestions: msg.suggestions && msg.suggestions.length > 0 ? msg.suggestions : undefined,
+            // Ne pas initialiser les experts suggérés avec un tableau vide, laisser undefined si pas de valeur
+            suggestedExperts: msg.suggestedExperts && msg.suggestedExperts.length > 0 ? msg.suggestedExperts : undefined
+          };
+          
+          return message as Message;
+        });
+
+        setMessages(completeMessages);
+
+        const history = completeMessages.map((msg: Message) => {
+          return [msg.role === 'user' ? 'human' : 'assistant', msg.content];
+        }) as [string, string][];
+
+        setChatHistory(history);
+        setFocusMode(supabaseData.metadata?.focus_mode || 'webSearch');
+        document.title = completeMessages[0]?.content?.slice(0, 100) || 'Conversation';
+        setIsMessagesLoaded(true);
+        return;
+      }
     }
   } catch (error) {
-    console.error('[DEBUG] Erreur lors de la récupération depuis Supabase:', error);
-    // Continuer avec l'approche standard si la récupération depuis Supabase échoue
+    console.error('[DEBUG] Erreur lors de la récupération directe depuis Supabase:', error);
   }
 
-  // Fallback à l'approche standard si les données Supabase ne sont pas disponibles
-  const messages = data.messages.map((msg: any) => {
-    return {
-      ...msg,
-      ...JSON.parse(msg.metadata),
-    };
-  }) as Message[];
+  // Si Supabase a échoué, essayer l'API backend
+  try {
+    console.log('[DEBUG] Tentative de récupération via l\'API backend');
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      },
+    );
 
-  setMessages(messages);
+    if (res.status === 404) {
+      console.log('[DEBUG] La conversation n\'existe pas dans l\'API backend');
+      // Au lieu de marquer comme non trouvée, créer une conversation vide
+      // ou essayer à nouveau de récupérer depuis Supabase
+      
+      // Vérifier si nous avons déjà vérifié Supabase
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '',
+        {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false,
+          },
+          global: {
+            headers: authToken ? {
+              Authorization: `Bearer ${authToken}`
+            } : {},
+          },
+        }
+      );
 
-  const history = messages.map((msg) => {
-    return [msg.role, msg.content];
-  }) as [string, string][];
+      // Récupérer la conversation depuis Supabase en dernier recours
+      const { data: supabaseData, error } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('id', chatId)
+        .single();
+        
+      if (!error && supabaseData) {
+        // Créer une conversation minimale basée sur les données Supabase
+        const minimalMessages = [
+          {
+            messageId: uuidv4(),
+            chatId: chatId,
+            createdAt: new Date(),
+            content: supabaseData.title || "Conversation récupérée",
+            role: 'user' as const
+          },
+          {
+            messageId: uuidv4(),
+            chatId: chatId,
+            createdAt: new Date(),
+            content: "Cette conversation a été récupérée de la base de données, mais les détails complets ne sont pas disponibles.",
+            role: 'assistant' as const
+          }
+        ];
+        
+        setMessages(minimalMessages);
+        
+        const history = minimalMessages.map((msg) => {
+          return [msg.role === 'user' ? 'human' : 'assistant', msg.content];
+        }) as [string, string][];
+        
+        setChatHistory(history);
+        setFocusMode(supabaseData.metadata?.focus_mode || 'webSearch');
+        document.title = supabaseData.title || 'Conversation récupérée';
+        setIsMessagesLoaded(true);
+        return;
+      }
+      
+      // Si rien n'a fonctionné, marquer comme non trouvée
+      setNotFound(true);
+      setIsMessagesLoaded(true);
+      return;
+    }
 
-  console.log('[DEBUG] messages loaded');
+    const data = await res.json();
+    
+    console.log('[DEBUG] Données récupérées de l\'API backend:', data);
 
-  document.title = messages[0].content;
+    // Traitement des données comme avant
+    const messages = data.messages.map((msg: any) => {
+      return {
+        ...msg,
+        ...JSON.parse(msg.metadata),
+      };
+    }) as Message[];
 
-  const files = data.chat.files.map((file: any) => {
-    return {
-      fileName: file.name,
-      fileExtension: file.name.split('.').pop(),
-      fileId: file.fileId,
-    };
-  });
+    setMessages(messages);
 
-  setFiles(files);
-  setFileIds(files.map((file: File) => file.fileId));
+    const history = messages.map((msg) => {
+      return [msg.role, msg.content];
+    }) as [string, string][];
 
-  setChatHistory(history);
-  setFocusMode(data.chat.focusMode);
-  setIsMessagesLoaded(true);
+    console.log('[DEBUG] messages loaded');
+
+    document.title = messages[0].content;
+
+    const files = data.chat.files.map((file: any) => {
+      return {
+        fileName: file.name,
+        fileExtension: file.name.split('.').pop(),
+        fileId: file.fileId,
+      };
+    });
+
+    setFiles(files);
+    setFileIds(files.map((file: File) => file.fileId));
+
+    setChatHistory(history);
+    setFocusMode(data.chat.focusMode);
+    setIsMessagesLoaded(true);
+  } catch (error) {
+    console.error('[DEBUG] Erreur lors de la récupération via l\'API backend:', error);
+    
+    // En cas d'erreur avec l'API backend, créer une conversation vide
+    const minimalMessages = [
+      {
+        messageId: uuidv4(),
+        chatId: chatId,
+        createdAt: new Date(),
+        content: "Conversation",
+        role: 'user' as const
+      },
+      {
+        messageId: uuidv4(),
+        chatId: chatId,
+        createdAt: new Date(),
+        content: "Désolé, il y a eu une erreur lors de la récupération des détails de cette conversation.",
+        role: 'assistant' as const
+      }
+    ];
+    
+    setMessages(minimalMessages);
+    
+    const history = minimalMessages.map((msg) => {
+      return [msg.role === 'user' ? 'human' : 'assistant', msg.content];
+    }) as [string, string][];
+    
+    setChatHistory(history);
+    setFocusMode('webSearch');
+    document.title = 'Conversation non disponible';
+    setIsMessagesLoaded(true);
+  }
 };
 
 const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: string }) => {

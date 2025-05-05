@@ -56,22 +56,32 @@ const DeleteChat = ({
   const handleDelete = async () => {
     setLoading(true);
     try {
-      // Supprimer de l'API
-      const res = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
-        {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
+      let apiDeleteSuccessful = false;
+      
+      // Tentative de suppression de l'API (mais ne pas bloquer si ça échoue)
+      try {
+        const res = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
+          {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
           },
-        },
-      );
+        );
 
-      if (res.status != 200) {
-        throw new Error('Échec de la suppression depuis l\'API');
+        if (res.status === 200) {
+          apiDeleteSuccessful = true;
+          console.log('[DEBUG] Conversation supprimée avec succès de l\'API');
+        } else {
+          console.log(`[DEBUG] L'API a retourné le statut ${res.status} lors de la suppression`);
+        }
+      } catch (apiError) {
+        console.error('[DEBUG] Erreur lors de la suppression depuis l\'API:', apiError);
+        // Continuer avec Supabase même si l'API échoue
       }
 
-      // Supprimer également de Supabase avec JWT auth
+      // Supprimer de Supabase (partie principale de la suppression)
       try {
         // Obtenir un jeton JWT de Clerk pour l'utilisateur actuel avec le template spécifique pour Supabase
         const authToken = await session?.getToken({ template: "supabase" });
@@ -103,24 +113,34 @@ const DeleteChat = ({
           .eq('id', chatId);
 
         if (error) {
-          console.error('Erreur lors de la suppression dans Supabase:', error);
-          // Ne pas bloquer le processus si la suppression dans Supabase échoue
+          console.error('[DEBUG] Erreur lors de la suppression dans Supabase:', error);
+          // Si l'API a également échoué, lancer une erreur pour informer l'utilisateur
+          if (!apiDeleteSuccessful) {
+            throw new Error('Échec de la suppression de la conversation');
+          }
         } else {
-          console.log('Conversation supprimée avec succès de Supabase');
+          console.log('[DEBUG] Conversation supprimée avec succès de Supabase');
         }
       } catch (supabaseError) {
-        console.error('Exception lors de la suppression dans Supabase:', supabaseError);
-        // Ne pas bloquer le processus si la suppression dans Supabase échoue
+        console.error('[DEBUG] Exception lors de la suppression dans Supabase:', supabaseError);
+        // Si l'API a également échoué, lancer une erreur pour informer l'utilisateur
+        if (!apiDeleteSuccessful) {
+          throw new Error('Échec de la suppression de la conversation');
+        }
       }
 
+      // Mettre à jour l'UI
       const newChats = chats.filter((chat) => chat.id !== chatId);
       setChats(newChats);
+      
+      // Notification de succès
+      toast.success('Conversation supprimée avec succès');
 
       if (redirect) {
         window.location.href = '/';
       }
     } catch (err: any) {
-      toast.error(err.message);
+      toast.error(err.message || 'Une erreur est survenue lors de la suppression');
     } finally {
       setConfirmationDialogOpen(false);
       setLoading(false);

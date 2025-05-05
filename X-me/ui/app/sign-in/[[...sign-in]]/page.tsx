@@ -20,10 +20,6 @@ export default function SignInPage() {
 
   return (
     <div className="w-full max-w-md mx-auto px-4 py-8">
-      <div className="mb-4 text-center text-sm font-medium text-gray-600 dark:text-gray-300">
-        Tous les champs sont obligatoires
-      </div>
-      
       <SignIn 
         appearance={{
           baseTheme: isDarkTheme ? dark : undefined,

@@ -188,6 +188,25 @@ const Page = () => {
                       <Link
                         href={`/c/${chat.id}`}
                         className="text-black dark:text-white lg:text-xl font-medium truncate transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer"
+                        onClick={(e) => {
+                          // Vérifier si le chat a des métadonnées complètes
+                          if (!chat.metadata?.complete_conversation) {
+                            console.log('[DEBUG] Conversation potentiellement incomplète, sauvegarde préventive');
+                            
+                            // Empêcher temporairement la navigation
+                            if (typeof localStorage !== 'undefined') {
+                              const lastAccessed = localStorage.getItem(`chat_${chat.id}_accessed`);
+                              
+                              // Ne pas retarder si la chat a déjà été accédé dans les 5 dernières minutes
+                              if (lastAccessed && (Date.now() - parseInt(lastAccessed)) < 5 * 60 * 1000) {
+                                return; // Continuer la navigation normalement
+                              }
+                              
+                              // Enregistrer l'accès
+                              localStorage.setItem(`chat_${chat.id}_accessed`, Date.now().toString());
+                            }
+                          }
+                        }}
                       >
                         {chat.title}
                       </Link>
