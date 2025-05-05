@@ -7,14 +7,14 @@ export default function NotFound() {
           Page introuvable
         </h1>
         <p className="mt-6 text-pretty text-lg font-medium text-gray-500 sm:text-xl/8">
-          Désolé, nous n'avons pas pu trouver la page que vous recherchez.
+          Désolé, nous n&apos;avons pas pu trouver la page que vous recherchez.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <a
             href="/"
             className="rounded-md bg-indigo-600 px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
           >
-            Retourner à l'accueil
+            Retourner à l&apos;accueil
           </a>
           <a href="/contact" className="text-sm font-semibold text-gray-900">
             Contacter le support <span aria-hidden="true">&rarr;</span>
