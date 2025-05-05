@@ -115,7 +115,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                 <button
                   type="button"
                   onClick={resetFilters}
-                  className="mr-2 text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+                  className="mr-2 text-sm text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300"
                 >
                   Réinitialiser
                 </button>
@@ -159,7 +159,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                                     type="radio"
                                     checked={selectedVille === option.value}
                                     onChange={() => handleVilleChange(option.value)}
-                                    className="col-start-1 row-start-1 h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-800"
+                                    className="col-start-1 row-start-1 h-4 w-4 border-gray-300 text-orange-500 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-800"
                                   />
                                 ) : (
                                   <input
@@ -169,7 +169,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                                     type="radio"
                                     checked={selectedActivite === option.value}
                                     onChange={() => handleActiviteChange(option.value)}
-                                    className="col-start-1 row-start-1 h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600 dark:border-gray-600 dark:bg-gray-800"
+                                    className="col-start-1 row-start-1 h-4 w-4 border-gray-300 text-orange-500 focus:ring-orange-500 dark:border-gray-600 dark:bg-gray-800"
                                   />
                                 )}
                               </div>
@@ -194,7 +194,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                   resetFilters();
                   setOpen(false);
                 }}
-                className="w-full py-2.5 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-md font-medium transition-colors dark:bg-indigo-700 dark:hover:bg-indigo-800"
+                className="w-full py-2.5 px-4 bg-orange-500 hover:bg-orange-600 text-white rounded-md font-medium transition-colors dark:bg-orange-600 dark:hover:bg-orange-700"
               >
                 Réinitialiser les filtres
               </button>
@@ -212,7 +212,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
             <button
               type="button"
               onClick={resetFilters}
-              className="text-sm text-indigo-600 dark:text-indigo-400 hover:text-indigo-500 dark:hover:text-indigo-300"
+              className="text-sm text-orange-500 dark:text-orange-400 hover:text-orange-600 dark:hover:text-orange-300"
             >
               Réinitialiser
             </button>
@@ -236,7 +236,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                                 type="radio"
                                 checked={selectedVille === option.value}
                                 onChange={() => handleVilleChange(option.value)}
-                                className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                className="h-4 w-4 border-gray-300 text-orange-500 focus:ring-orange-500"
                               />
                             ) : (
                               <input
@@ -246,7 +246,7 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
                                 type="radio"
                                 checked={selectedActivite === option.value}
                                 onChange={() => handleActiviteChange(option.value)}
-                                className="h-4 w-4 border-gray-300 text-indigo-600 focus:ring-indigo-600"
+                                className="h-4 w-4 border-gray-300 text-orange-500 focus:ring-orange-500"
                               />
                             )}
                           </div>

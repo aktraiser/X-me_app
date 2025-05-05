@@ -211,18 +211,21 @@ const Sidebar = ({
                   href={link.href}
                   className={cn(
                     'relative flex flex-row items-center cursor-pointer hover:bg-black/10 dark:hover:bg-white/10 duration-150 transition w-full h-10 rounded-lg',
-                    isExpanded ? 'px-3' : 'justify-center',
+                    isExpanded ? '' : 'justify-center',
                     link.active
                       ? 'text-black dark:text-white'
                       : 'text-black/70 dark:text-white/70',
                   )}
                 >
-                  <div className="flex items-center justify-center h-full w-6">
+                  <div className={cn(
+                    "flex items-center h-full",
+                    isExpanded ? "px-3 w-full" : "justify-center w-6" 
+                  )}>
                     <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
+                    {isExpanded && (
+                      <span className="ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300">{link.label}</span>
+                    )}
                   </div>
-                  {isExpanded && (
-                    <span className="ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300">{link.label}</span>
-                  )}
                   {link.active && (
                     <div className="absolute right-0 top-0 h-full w-1 rounded-l-lg bg-[#c49c48]" />
                   )}
