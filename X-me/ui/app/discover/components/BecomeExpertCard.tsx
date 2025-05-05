@@ -41,7 +41,7 @@ export default function BecomeExpertCard() {
         {/* Ligne 2: Description */}
         <div className="p-4">
           <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-            Proposez vos services en tant qu&apos;expert et développez votre activité avec X-me.
+            Proposez vos services en tant qu&apos;expert et développez votre activité avec Xandme.
           </p>
         </div>
         

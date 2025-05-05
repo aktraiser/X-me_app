@@ -40,12 +40,12 @@ export default function APropos() {
               entrepreneurs et experts doivent se rencontrer plus naturellement, plus intelligemment.
             </p>
 
-            <p className="font-semibold mb-8">De cette conviction est né X&ME.</p>
+            <p className="font-semibold mb-8">De cette conviction est né Xandme.</p>
           </section>
 
           <section>
-            <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Pourquoi X&ME ?</h2>
-            <p className="mb-4">Chaque élément du nom X&ME a une signification profonde, reflet de notre mission :</p>
+            <h2 className="text-2xl font-semibold mb-6 text-gray-900 dark:text-gray-100">Pourquoi Xandme ?</h2>
+            <p className="mb-4">Chaque élément du nom Xandme a une signification profonde, reflet de notre mission :</p>
 
             <div className="space-y-6">
               <div>
@@ -85,7 +85,7 @@ export default function APropos() {
             <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Notre mission : connecter intelligemment entrepreneurs et experts</h2>
             <div className="space-y-4">
               <p>
-                Chez X&ME, nous voulons combler le fossé entre ceux qui entreprennent et ceux qui peuvent les aider, 
+                Chez Xandme, nous voulons combler le fossé entre ceux qui entreprennent et ceux qui peuvent les aider, 
                 en rendant accessibles les bonnes informations au bon moment. Car s&apos;il semble irréel de payer pour 
                 de l&apos;information, certaines informactions – des informations-action – ont une valeur réelle : elles 
                 permettent de prendre des décisions, d&apos;avancer et d&apos;éviter des erreurs coûteuses.
@@ -97,7 +97,7 @@ export default function APropos() {
                 besoin est déjà exprimé.
               </p>
               <p>
-                Mais X&ME ne s&apos;arrête pas là. Nous avons imaginé tout un ensemble d&apos;évolutions, toujours plus 
+                Mais Xandme ne s&apos;arrête pas là. Nous avons imaginé tout un ensemble d&apos;évolutions, toujours plus 
                 innovantes, conçues pour simplifier l&apos;entrepreneuriat, permettre de gagner du temps et sécuriser 
                 chaque étape du parcours. Les entrepreneurs et les experts sont partie prenante de ces évolutions, car 
                 ce projet grandit avec eux, pour eux.
@@ -112,14 +112,14 @@ export default function APropos() {
           <section>
             <h2 className="text-2xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Un logo qui incarne notre mission</h2>
             <p className="mb-6">
-              Le logo de X&ME est l&apos;expression même de cette connexion et de ce trait d&apos;union intelligent entre 
+              Le logo de Xandme est l&apos;expression même de cette connexion et de ce trait d&apos;union intelligent entre 
               entrepreneurs et experts. Il intègre une bulle de message, symbole de communication et d&apos;échange, car 
               nous sommes convaincus que la bonne information, transmise au bon moment, peut tout changer. Plus qu&apos;un 
               simple design, il incarne notre volonté d&apos;être le facilitateur de rencontres et d&apos;opportunités, où 
               chaque talent trouve sa place et chaque projet peut se concrétiser avec le bon accompagnement.
             </p>
             <p className="mb-6">
-              X&ME, c&apos;est une nouvelle manière de penser l&apos;accompagnement entrepreneurial : fluide, intuitif et 
+              Xandme, c&apos;est une nouvelle manière de penser l&apos;accompagnement entrepreneurial : fluide, intuitif et 
               profondément humain, où tous les talents ont leur place.
             </p>
           </section>

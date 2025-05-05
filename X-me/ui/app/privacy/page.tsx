@@ -91,6 +91,7 @@ export default function PrivacyPage() {
           </ul>
           <p className="mb-4">
             Pour exercer ces droits, veuillez nous contacter à l&apos;adresse email indiquée ci-dessous.
+            <a href="mailto:support@xandme.fr">support@xandme.fr</a>
           </p>
         </section>
 
@@ -120,12 +121,12 @@ export default function PrivacyPage() {
           <h2 className="text-2xl font-semibold mb-4">8. Contact</h2>
           <p className="mb-4">
             Si vous avez des questions concernant cette politique de confidentialité, les pratiques de ce site, ou 
-            vos relations avec ce site, veuillez nous contacter à : support@xandme.fr
+            vos relations avec ce site, veuillez nous contacter à : <a href="mailto:support@xandme.fr">support@xandme.fr</a>
           </p>
         </section>
 
         <p className="mt-8 text-sm text-gray-600 dark:text-gray-400">
-          Dernière mise à jour: 1 novembre 2023
+          Dernière mise à jour: 5 mai 2025
         </p>
       </div>
     </>

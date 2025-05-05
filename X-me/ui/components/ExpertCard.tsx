@@ -72,7 +72,7 @@ const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick
         {/* Tarif */}
         <div className="flex items-center gap-2 border rounded-full px-2 sm:px-3 py-1 sm:py-1.5 border-gray-200 dark:border-gray-600">
           <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500 dark:text-gray-400" />
-          <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">{expert.tarif}€ <span className="text-xs">/jour</span></span>
+          <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300"><span className="text-xs">À partir de</span>{expert.tarif}€ </span>
         </div>
         
         {/* Localisation */}

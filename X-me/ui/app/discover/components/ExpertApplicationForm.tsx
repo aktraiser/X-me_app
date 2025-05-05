@@ -143,7 +143,7 @@ export default function ExpertApplicationForm({ onSuccess, onCancel }: ExpertApp
             </div>
           </div>
           <div>
-            <h3 className="text-base font-medium text-gray-900 dark:text-white">Devenez Expert X-me</h3>
+            <h3 className="text-base font-medium text-gray-900 dark:text-white">Devenez Expert Xandme</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               Rejoignez notre réseau d&apos;experts et partagez votre expertise avec notre communauté.
             </p>

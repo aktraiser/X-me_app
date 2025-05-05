@@ -12,7 +12,7 @@ export default function ConditionsUtilisation() {
     <div className="min-h-screen bg-light-primary dark:bg-dark-primary p-8">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-8 text-gray-800 dark:text-gray-200">
-          Conditions Générales d&apos;Utilisation et de Vente (CGU/CGV) de X&ME
+          Conditions Générales d&apos;Utilisation et de Vente (CGU/CGV) de Xandme
         </h1>
         <p className="text-sm mb-8 text-gray-800 dark:text-gray-200">
           Version en vigueur au 17 février 2025
@@ -22,7 +22,7 @@ export default function ConditionsUtilisation() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">1. Objet</h2>
             <p className="mb-4">
-              Les présentes Conditions Générales d&apos;Utilisation (CGU) régissent l&apos;accès et l&apos;utilisation de la plateforme X&ME, 
+              Les présentes Conditions Générales d&apos;Utilisation (CGU) régissent l&apos;accès et l&apos;utilisation de la plateforme Xandme, 
               qui vise à fournir aux entrepreneurs des informations précises et actionnables (« informaction ») ainsi qu&apos;une mise en relation 
               avec des experts qualifiés pour répondre à leurs besoins. Ces CGU s&apos;appliquent à tous les utilisateurs de la plateforme. 
               Les modules payants disponibles sur la plateforme sont soumis à des CGU/CGV spécifiques.
@@ -50,34 +50,34 @@ export default function ConditionsUtilisation() {
                 <h3 className="text-xl font-semibold mb-2">3.1 Nature des informations</h3>
                 <p>
                   Les informations fournies par la plateforme sont à titre indicatif et font l&apos;objet de mises à jour régulières 
-                  pour garantir leur pertinence et leur enrichissement. X&ME ne garantit ni leur exhaustivité ni leur exactitude.
+                  pour garantir leur pertinence et leur enrichissement. Xandme ne garantit ni leur exhaustivité ni leur exactitude.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">3.2 Rôle de facilitateur</h3>
                 <p>
-                  X&ME agit en tant que facilitateur pour aider les entrepreneurs à prendre des décisions à partir des informations fournies. 
+                  Xandme agit en tant que facilitateur pour aider les entrepreneurs à prendre des décisions à partir des informations fournies. 
                   La responsabilité finale de l&apos;utilisation des informations ou des mises en relation incombe aux utilisateurs.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">3.3 Absence de garantie</h3>
                 <p>
-                  X&ME ne peut être tenu responsable des pertes financières, pertes de profit ou autres dommages 
+                  Xandme ne peut être tenu responsable des pertes financières, pertes de profit ou autres dommages 
                   indirects découlant de l&apos;utilisation de la plateforme.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">3.4 Responsabilité des experts</h3>
                 <p>
-                  X&ME ne peut être tenu responsable des actes ou omissions des experts recommandés, ces derniers 
+                  Xandme ne peut être tenu responsable des actes ou omissions des experts recommandés, ces derniers 
                   exerçant leur activité de manière indépendante et sous leur propre responsabilité.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">3.5 Fausse déclaration des utilisateurs</h3>
                 <p>
-                  X&ME décline toute responsabilité en cas de préjudice causé par des informations incorrectes ou 
+                  Xandme décline toute responsabilité en cas de préjudice causé par des informations incorrectes ou 
                   trompeuses fournies par les utilisateurs de la plateforme.
                 </p>
               </div>
@@ -99,7 +99,7 @@ export default function ConditionsUtilisation() {
                 <h3 className="text-xl font-semibold mb-2">3.8 Obligations des experts partenaires</h3>
                 <p>
                   Les experts partenaires s&apos;engagent à fournir des services conformes aux normes professionnelles 
-                  et légales applicables. X&ME ne pourra être tenu responsable de tout manquement des experts à leurs obligations.
+                  et légales applicables. Xandme ne pourra être tenu responsable de tout manquement des experts à leurs obligations.
                 </p>
               </div>
             </div>
@@ -113,13 +113,13 @@ export default function ConditionsUtilisation() {
                 <p>
                   Tous les éléments présents sur la plateforme (textes, images, vidéos, codes, bases de données) sont 
                   protégés par le droit de la propriété intellectuelle. Toute reproduction, représentation ou exploitation, 
-                  totale ou partielle, sans autorisation préalable écrite de X&ME, est strictement interdite.
+                  totale ou partielle, sans autorisation préalable écrite de Xandme, est strictement interdite.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">4.2 Licence limitée</h3>
                 <p>
-                  X&ME accorde aux utilisateurs une licence d&apos;utilisation non exclusive, non transférable et 
+                  Xandme accorde aux utilisateurs une licence d&apos;utilisation non exclusive, non transférable et 
                   strictement personnelle pour accéder aux contenus de la plateforme conformément aux présentes CGU.
                 </p>
               </div>
@@ -127,14 +127,14 @@ export default function ConditionsUtilisation() {
                 <h3 className="text-xl font-semibold mb-2">4.3 Interdiction de contournement des services</h3>
                 <p>
                   Il est interdit de contourner les services de mise en relation proposés par la plateforme, notamment 
-                  en contactant directement les experts recommandés sans passer par X&ME.
+                  en contactant directement les experts recommandés sans passer par Xandme.
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-2">4.4 Responsabilité des utilisateurs</h3>
                 <p>
                   Les utilisateurs sont responsables de tout usage non autorisé ou illégal des contenus de la plateforme. 
-                  X&ME se réserve le droit d&apos;engager des poursuites judiciaires pour toute atteinte à ses droits 
+                  Xandme se réserve le droit d&apos;engager des poursuites judiciaires pour toute atteinte à ses droits 
                   de propriété intellectuelle.
                 </p>
               </div>
@@ -148,7 +148,7 @@ export default function ConditionsUtilisation() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">4.6 Audit de l&apos;utilisation</h3>
                 <p>
-                  X&ME se réserve le droit de réaliser des audits périodiques sur l&apos;utilisation des contenus et 
+                  Xandme se réserve le droit de réaliser des audits périodiques sur l&apos;utilisation des contenus et 
                   services de la plateforme afin de détecter tout usage non conforme aux présentes CGU.
                 </p>
               </div>
@@ -161,7 +161,7 @@ export default function ConditionsUtilisation() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">5.1 Conformité au RGPD</h3>
                 <p>
-                  X&ME s&apos;engage à respecter la réglementation en vigueur en matière de protection des données 
+                  Xandme s&apos;engage à respecter la réglementation en vigueur en matière de protection des données 
                   personnelles (RGPD). Les données collectées sont utilisées uniquement pour fournir les services et 
                   améliorer l&apos;expérience utilisateur.
                 </p>
@@ -183,7 +183,7 @@ export default function ConditionsUtilisation() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">5.4 Mesures de sécurité</h3>
                 <p>
-                  X&ME met en place des mesures techniques et organisationnelles appropriées pour protéger les données 
+                  Xandme met en place des mesures techniques et organisationnelles appropriées pour protéger les données 
                   personnelles contre toute destruction, perte, altération ou divulgation non autorisée.
                 </p>
               </div>
@@ -210,14 +210,14 @@ export default function ConditionsUtilisation() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">6.1 Par l&apos;utilisateur</h3>
                 <p>
-                  Les utilisateurs peuvent résilier leur compte à tout moment en contactant support@xandme.fr. Les 
+                  Les utilisateurs peuvent résilier leur compte à tout moment en contactant <a href="mailto:support@xandme.fr">support@xandme.fr</a>. Les 
                   modules ou services payants liés à leur compte seront soumis à leurs propres conditions.
                 </p>
               </div>
               <div>
-                <h3 className="text-xl font-semibold mb-2">6.2 Par X&ME</h3>
+                <h3 className="text-xl font-semibold mb-2">6.2 Par Xandme</h3>
                 <p>
-                  X&ME se réserve le droit de suspendre ou de résilier un compte en cas de non-respect des présentes 
+                  Xandme se réserve le droit de suspendre ou de résilier un compte en cas de non-respect des présentes 
                   CGU, d&apos;abus ou d&apos;utilisation frauduleuse de la plateforme.
                 </p>
               </div>
@@ -239,7 +239,7 @@ export default function ConditionsUtilisation() {
                 <h3 className="text-xl font-semibold mb-2">6.5 Modalités de contestation</h3>
                 <p>
                   En cas de résiliation, l&apos;utilisateur dispose d&apos;un délai de 30 jours pour contester la 
-                  décision en contactant le support à l&apos;adresse support@xandme.fr.
+                  décision en contactant le support à l&apos;adresse <a href="mailto:support@xandme.fr">support@xandme.fr</a>.
                 </p>
               </div>
             </div>
@@ -249,7 +249,7 @@ export default function ConditionsUtilisation() {
             <h2 className="text-2xl font-semibold mb-4">7. Mécanisme de signalement</h2>
             <p className="mb-4">
               Les utilisateurs peuvent signaler tout contenu ou comportement inapproprié sur la plateforme en envoyant 
-              un email détaillé à support@xandme.fr. La plateforme s&apos;engage à examiner les signalements dans les 
+              un email détaillé à <a href="mailto:support@xandme.fr">support@xandme.fr</a>. La plateforme s&apos;engage à examiner les signalements dans les 
               plus brefs délais et à prendre les mesures appropriées si nécessaire.
             </p>
           </section>
@@ -257,7 +257,7 @@ export default function ConditionsUtilisation() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">8. Modification des CGU</h2>
             <p className="mb-4">
-              X&ME peut modifier les présentes CGU à tout moment. Les utilisateurs seront informés des modifications 
+              Xandme peut modifier les présentes CGU à tout moment. Les utilisateurs seront informés des modifications 
               via une notification sur la plateforme ou par email, au moins 15 jours avant leur application. Les 
               utilisateurs auront la possibilité de contester ou de refuser les modifications en résiliant leur compte 
               sans pénalité avant l&apos;entrée en vigueur des nouvelles conditions. En continuant à utiliser la 
@@ -285,7 +285,7 @@ export default function ConditionsUtilisation() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">9.3 Sanctions</h3>
                 <p>
-                  X&ME se réserve le droit d&apos;appliquer des sanctions, telles que la suspension temporaire ou 
+                  Xandme se réserve le droit d&apos;appliquer des sanctions, telles que la suspension temporaire ou 
                   définitive d&apos;un compte utilisateur, en cas de violation des présentes CGU.
                 </p>
               </div>
@@ -302,7 +302,7 @@ export default function ConditionsUtilisation() {
           <section>
             <h2 className="text-2xl font-semibold mb-4">10. Force majeure</h2>
             <p className="mb-4">
-              X&ME ne pourra être tenu responsable des retards ou de l&apos;inexécution de ses obligations en raison 
+              Xandme ne pourra être tenu responsable des retards ou de l&apos;inexécution de ses obligations en raison 
               de circonstances imprévisibles ou indépendantes de sa volonté (force majeure), telles que des pandémies, 
               des grèves générales, des interruptions majeures d&apos;Internet, ou des catastrophes naturelles.
             </p>
@@ -322,7 +322,7 @@ export default function ConditionsUtilisation() {
             <h2 className="text-2xl font-semibold mb-4">12. Politique d&apos;utilisation acceptable (PUA)</h2>
             <p className="mb-4">
               Les utilisateurs s&apos;engagent à utiliser la plateforme de manière conforme à la loi et aux objectifs 
-              de X&ME. Toute activité illicite, nuisible ou concurrentielle est interdite, notamment :
+              de Xandme. Toute activité illicite, nuisible ou concurrentielle est interdite, notamment :
             </p>
             <ul className="list-disc pl-8 mb-4">
               <li>La diffusion de contenus diffamatoires ou illégaux.</li>
@@ -333,7 +333,7 @@ export default function ConditionsUtilisation() {
               <div>
                 <h3 className="text-xl font-semibold mb-2">12.1 Interdiction de sollicitation</h3>
                 <p>
-                  Les utilisateurs ne peuvent pas solliciter directement les employés ou partenaires de X&ME à des 
+                  Les utilisateurs ne peuvent pas solliciter directement les employés ou partenaires de Xandme à des 
                   fins commerciales ou concurrentielles sans accord préalable écrit.
                 </p>
               </div>

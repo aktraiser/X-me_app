@@ -1,7 +1,7 @@
 import { Settings } from 'lucide-react';
 import EmptyChatMessageInput from './EmptyChatMessageInput';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { File } from './ChatWindow';
 import { useUser } from '@clerk/nextjs';
 
@@ -45,7 +45,7 @@ const EmptyChat = ({
       <div className="flex-1 flex items-center justify-center px-6 md:px-2">
         <div className="max-w-screen-sm w-full space-y-4 md:space-y-8 -mt-16">
           <h2 className="text-black/90 dark:text-white text-3xl font-medium text-center">
-            Ici, c&apos;est vous le <strong className="animate-gradient-x bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 dark:from-white dark:via-gray-800 dark:to-gray-200 text-transparent bg-clip-text">patron</strong>.
+            {user?.firstName ? `${user.firstName}` : ''}{user?.firstName && <br />}Ici, c&apos;est vous le <strong>patron</strong> !
           </h2>
           <h3 className="text-black/70 dark:text-white/70 font-medium text-center">
             Posez vos questions, trouvez votre expert : je suis là pour vous aider dans vos ambitions entrepreneuriales.
@@ -63,23 +63,6 @@ const EmptyChat = ({
           />
         </div>
       </div>
-      <style jsx global>{`
-        @keyframes gradient-x {
-          0% {
-            background-position: 0% 50%;
-          }
-          50% {
-            background-position: 100% 50%;
-          }
-          100% {
-            background-position: 0% 50%;
-          }
-        }
-        .animate-gradient-x {
-          background-size: 200% 100%;
-          animation: gradient-x 3s ease infinite;
-        }
-      `}</style>
     </div>
   );
 };

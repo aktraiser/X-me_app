@@ -42,9 +42,6 @@ export default function RegisterPage() {
         signInUrl="/login"
         redirectUrl="/"
         afterSignUpUrl="/"
-        initialValues={{
-          phoneNumber: '+33'
-        }}
       />
       
       <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
