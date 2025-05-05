@@ -226,11 +226,12 @@ const Sidebar = ({
                       <span className="ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300">{link.label}</span>
                     )}
                   </div>
+                  {/* Indicateur pour l'élément actif - trait de 1px ou cercle */}
                   {link.active && (
                     isExpanded ? (
-                      <div className="absolute right-0 top-0 h-full w-2 rounded-l-lg bg-[#c49c48] z-20" />
+                      <div className="absolute right-0 top-0 h-full w-1 rounded-l-lg bg-[#c49c48] z-20" />
                     ) : (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-[#c49c48] z-20" />
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-[#c49c48] z-20" />
                     )
                   )}
                 </Link>

@@ -117,14 +117,14 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                             </div>
                             {/* Logo de l'entreprise */}
                             {expert.logo && (
-                              <div className="mt-4 sm:mt-0 flex items-center justify-center bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-md p-2 h-20 w-20">
+                              <div className="mt-4 sm:mt-0 flex items-center justify-center bg-white dark:bg-white border dark:border-gray-700 rounded-md p-2 h-20 w-20">
                                 <div className="relative h-24 w-24 overflow-hidden">
                                   <Image 
                                     src={expert.logo} 
                                     alt={`Logo de ${expert.prenom} ${expert.nom}`}
                                     fill
                                     style={{ objectFit: 'contain' }}
-                                    className="dark:bg-white rounded-sm"
+                                    className=""
                                     unoptimized={true}
                                   />
                                 </div>

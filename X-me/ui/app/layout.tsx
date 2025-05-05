@@ -9,6 +9,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 // Importation de la localisation française
 import { frFR } from '@clerk/localizations';
 import KeepAliveProvider from '../components/KeepAliveProvider';
+import Script from 'next/script';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -123,6 +124,24 @@ export default function RootLayout({
             </KeepAliveProvider>
           </ThemeProviderComponent>
         </ClerkProvider>
+        
+        {/* Termly Cookie Consent Integration */}
+        <div data-name="termly-embed" data-id="25cedf19-30dc-459d-b71f-82b1370679cc"></div>
+        <Script
+          id="termly-script"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function(d, s, id) {
+                var js, tjs = d.getElementsByTagName(s)[0];
+                if (d.getElementById(id)) return;
+                js = d.createElement(s); js.id = id;
+                js.src = "https://app.termly.io/embed-policy.min.js";
+                tjs.parentNode.insertBefore(js, tjs);
+              }(document, 'script', 'termly-jssdk'));
+            `
+          }}
+        />
       </body>
     </html>
   );
