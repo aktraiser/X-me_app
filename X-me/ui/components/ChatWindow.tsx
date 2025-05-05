@@ -1141,37 +1141,6 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
     }
   }, [researchActivities, loading]);
 
-  useEffect(() => {
-    if (!isSourcesLoaded || sources.length === 0) return;
-      
-    // Si nous avons des sources, c'est que c'est un message assistant
-    // Il faut retrouver le dernier message assistant et lui ajouter les sources
-    const lastAssistantMessageIndex = messages.findIndex(
-      (m) => m.role === 'assistant' && (!m.sources || m.sources.length === 0)
-    );
-      
-    if (lastAssistantMessageIndex !== -1) {
-      const updatedMessages = [...messages];
-      updatedMessages[lastAssistantMessageIndex] = {
-        ...updatedMessages[lastAssistantMessageIndex],
-        sources,
-      };
-      setMessages(updatedMessages);
-        
-      // Sauvegarder les sources ajoutées
-      saveConversationToSupabase({ 
-        chatId, 
-        messages: updatedMessages,
-        files: files, 
-        fileIds: fileIds,
-        focusMode
-      });
-    }
-      
-    setIsSourcesLoaded(false);
-    setSources([]);
-  }, [isSourcesLoaded, sources, messages, setMessages, chatId, files, fileIds, focusMode, saveConversationToSupabase]);
-
   if (hasError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen">
