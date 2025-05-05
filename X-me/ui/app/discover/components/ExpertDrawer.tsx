@@ -115,6 +115,21 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                                 {activité}
                               </p>
                             </div>
+                            {/* Logo de l'entreprise */}
+                            {expert.logo && (
+                              <div className="mt-4 sm:mt-0 flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2 h-20 w-20">
+                                <div className="relative h-16 w-16 overflow-hidden">
+                                  <Image 
+                                    src={expert.logo} 
+                                    alt={`Logo de ${expert.prenom} ${expert.nom}`}
+                                    fill
+                                    style={{ objectFit: 'contain' }}
+                                    className=""
+                                    unoptimized={true}
+                                  />
+                                </div>
+                              </div>
+                            )}
                           </div>
                           
                           {/* Badges */}
@@ -201,22 +216,6 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                               >
                                 <Globe className="h-6 w-6" />
                               </Link>
-                            )}
-                            
-                            {/* Logo de l'entreprise si disponible */}
-                            {expert.logo && (
-                              <div className="flex items-center justify-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-md p-2 h-14 w-14">
-                                <div className="relative h-10 w-10 overflow-hidden">
-                                  <Image 
-                                    src={expert.logo} 
-                                    alt={`Logo de ${expert.prenom} ${expert.nom}`}
-                                    fill
-                                    style={{ objectFit: 'contain' }}
-                                    className="bg-white"
-                                    unoptimized={true}
-                                  />
-                                </div>
-                              </div>
                             )}
                             
                             {/* Message s'il n'y a aucun lien */}

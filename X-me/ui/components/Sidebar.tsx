@@ -224,7 +224,7 @@ const Sidebar = ({
                     <span className="ml-3 text-base font-medium whitespace-nowrap overflow-hidden text-ellipsis transition-all duration-300">{link.label}</span>
                   )}
                   {link.active && (
-                    <div className="absolute right-0 -mr-1 h-full w-1 rounded-l-lg bg-[#c49c48]" />
+                    <div className="absolute right-0 top-0 h-full w-1 rounded-l-lg bg-[#c49c48]" />
                   )}
                 </Link>
                 {isExpanded && link.label === "Historique" && !loading && chatHistory && chatHistory.length > 0 && (
@@ -371,7 +371,7 @@ const Sidebar = ({
             )}
           >
             {link.active && (
-              <div className="absolute top-0 -mt-4 h-1 w-8 mx-auto rounded-b-lg bg-[#c49c48]" />
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -mt-4 h-1 w-8 rounded-b-lg bg-[#c49c48]" />
             )}
             <link.icon className="w-4 h-4 text-white" />
             <p className="text-xs">{link.label}</p>

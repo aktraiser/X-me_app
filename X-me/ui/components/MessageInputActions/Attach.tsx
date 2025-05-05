@@ -202,7 +202,7 @@ const Attach = ({
               hidden
             />
             <div className="w-8 h-8 flex items-center justify-center rounded-full border border-light-700/30 dark:border-white/10 bg-transparent hover:bg-black/10 dark:hover:bg-white/10 transition duration-200">
-              <Paperclip size={18} className="text-black dark:text-black" />
+              <Paperclip size={18} className="text-black dark:text-white" />
             </div>
           </button>
         </TooltipTrigger>
