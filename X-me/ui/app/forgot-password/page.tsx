@@ -33,7 +33,7 @@ export default function ForgotPasswordPage() {
       if (error) throw error;
 
       toast.success('Instructions envoyées par email');
-      router.push('/login');
+      router.push('/sign-in');
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Une erreur est survenue');
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
 
             <button
               type="button"
-              onClick={() => router.push('/login')}
+              onClick={() => router.push('/sign-in')}
               className="w-full text-center text-blue-500 hover:text-blue-400"
             >
               Retour à la connexion

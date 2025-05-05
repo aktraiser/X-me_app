@@ -293,7 +293,7 @@ export default function CustomSignIn() {
             
             <div className="mt-4 text-center text-sm">
               <span className="text-gray-600 dark:text-gray-400">Pas encore de compte ? </span>
-              <Link href="/register" className="text-blue-500 hover:text-blue-400">
+              <Link href="/sign-up" className="text-blue-500 hover:text-blue-400">
                 S&apos;inscrire
               </Link>
             </div>

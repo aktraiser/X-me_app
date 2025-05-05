@@ -37,8 +37,8 @@ const temporaryMiddleware = (request: NextRequest) => {
   const authToken = request.cookies.get('__session');
   
   if (!authToken) {
-    // Rediriger vers la page de login si l'utilisateur n'est pas connecté
-    return NextResponse.redirect(new URL('/login', request.url));
+    // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
+    return NextResponse.redirect(new URL('/sign-in', request.url));
   }
 
   return NextResponse.next();

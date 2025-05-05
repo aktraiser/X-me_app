@@ -23,12 +23,10 @@ const Layout = ({ children }: LayoutProps) => {
   useEffect(() => {
     // Routes d'authentification strictes (formulaires de connexion/inscription)
     const isPathAuthRoute = [
-      '/login',
-      '/auth',
-      '/register',
-      '/forgot-password',
       '/sign-in',
       '/sign-up',
+      '/auth',
+      '/forgot-password',
     ].some(route => pathname.startsWith(route));
 
     // Routes avec contenu textuel plus large (conditions, vie privée)

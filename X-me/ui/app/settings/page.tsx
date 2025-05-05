@@ -131,7 +131,7 @@ export default function SettingsPage() {
         setLoading(false);
       }
     } else if (isLoaded && !isSignedIn) {
-      router.push('/login');
+      router.push('/sign-in');
     }
   }, [isLoaded, isSignedIn, router]);
 
@@ -142,7 +142,7 @@ export default function SettingsPage() {
         await signOut();
         setNotificationMessage('Déconnexion réussie');
         setShowNotification(true);
-        router.push('/login');
+        router.push('/sign-in');
       } catch (error) {
         console.error('Error:', error);
         toast.error('Erreur lors de la déconnexion');
@@ -160,7 +160,7 @@ export default function SettingsPage() {
         await user?.delete();
         setNotificationMessage('Votre compte a été supprimé avec succès');
         setShowNotification(true);
-        router.push('/login');
+        router.push('/sign-in');
       } catch (error) {
         console.error('Error deleting account:', error);
         toast.error('Erreur lors de la suppression du compte');
