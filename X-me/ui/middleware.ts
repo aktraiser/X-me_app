@@ -21,6 +21,9 @@ const authRoutes = createRouteMatcher([
   "/forgot-password(.*)"
 ]);
 
+// Récupérer la clé publique de l'environnement
+const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+
 // Utiliser le middleware officiel de Clerk
 export default clerkMiddleware(async (auth, req) => {
   // Pour les routes publiques ou d'authentification, ne pas protéger
@@ -33,6 +36,9 @@ export default clerkMiddleware(async (auth, req) => {
   
   // Si la protection réussit, l'utilisateur est authentifié
   return NextResponse.next();
+}, {
+  // Fournir explicitement la clé publique
+  publishableKey: publishableKey
 });
 
 export const config = {
