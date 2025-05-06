@@ -1,31 +1,24 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import dynamic from 'next/dynamic'
+import { usePathname, useSearchParams } from 'next/navigation'
 
 const SCRIPT_SRC_BASE = 'https://app.termly.io'
+
+// Augmenter l'interface Window pour inclure Termly
+declare global {
+  interface Window {
+    Termly?: {
+      initialize: () => void;
+    };
+  }
+}
 
 interface TermlyCMPProps {
   autoBlock?: boolean;
   masterConsentsOrigin?: string;
   websiteUUID: string;
 }
-
-// Composant client uniquement qui gère l'initialisation de Termly lors des changements de navigation
-const TermlyInitializer = dynamic(() => Promise.resolve(() => {
-  // On ne peut utiliser usePathname et useSearchParams que dans un composant client
-  // qui ne sera pas rendu côté serveur
-  const { usePathname, useSearchParams } = require('next/navigation')
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    // @ts-ignore - Termly est ajouté globalement par le script
-    window.Termly?.initialize()
-  }, [pathname, searchParams])
-
-  return null
-}), { ssr: false })
 
 export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID }: TermlyCMPProps) {
   const scriptSrc = useMemo(() => {
@@ -44,20 +37,24 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
 
   useEffect(() => {
     if (isScriptAdded.current) return
-    
-    // Créer et ajouter le script de chargement principal de Termly
     const script = document.createElement('script')
     script.src = scriptSrc
-    document.head.appendChild(script)
-    
-    // Ajouter l'élément div nécessaire pour la bannière de consentement
-    const bannerElement = document.createElement('div')
-    bannerElement.setAttribute('data-type', 'cookie-banner')
-    bannerElement.setAttribute('data-uuid', websiteUUID)
-    document.body.appendChild(bannerElement)
-    
+    script.id = "termly-resource-blocker"
+    // Ajouter en premier pour s'assurer qu'il est au début du head
+    const firstChild = document.head.firstChild
+    document.head.insertBefore(script, firstChild)
     isScriptAdded.current = true
-  }, [scriptSrc, websiteUUID])
+  }, [scriptSrc])
 
-  return <TermlyInitializer />
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // Initialiser Termly quand la page change
+    if (typeof window !== 'undefined' && window.Termly) {
+      window.Termly.initialize()
+    }
+  }, [pathname, searchParams])
+
+  return null
 } 
