@@ -3,8 +3,8 @@ import { Metadata } from 'next';
 import { Suspense } from 'react';
 
 export const metadata: Metadata = {
-  title: 'Chat - X-me',
-  description: 'Chat avec X-me.',
+  title: 'Xandme',
+  description: 'Xandme est une plateforme de mise en relation avec des experts.',
 };
 
 const Page = ({ params }: { params: { id: string } }) => {

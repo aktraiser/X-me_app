@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import dynamic from 'next/dynamic'
 
 const SCRIPT_SRC_BASE = 'https://app.termly.io'
 
@@ -10,6 +10,22 @@ interface TermlyCMPProps {
   masterConsentsOrigin?: string;
   websiteUUID: string;
 }
+
+// Composant client uniquement qui gère l'initialisation de Termly lors des changements de navigation
+const TermlyInitializer = dynamic(() => Promise.resolve(() => {
+  // On ne peut utiliser usePathname et useSearchParams que dans un composant client
+  // qui ne sera pas rendu côté serveur
+  const { usePathname, useSearchParams } = require('next/navigation')
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // @ts-ignore - Termly est ajouté globalement par le script
+    window.Termly?.initialize()
+  }, [pathname, searchParams])
+
+  return null
+}), { ssr: false })
 
 export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID }: TermlyCMPProps) {
   const scriptSrc = useMemo(() => {
@@ -34,13 +50,5 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
     isScriptAdded.current = true
   }, [scriptSrc])
 
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  useEffect(() => {
-    // @ts-ignore - Termly est ajouté globalement par le script
-    window.Termly?.initialize()
-  }, [pathname, searchParams])
-
-  return null
+  return <TermlyInitializer />
 } 
