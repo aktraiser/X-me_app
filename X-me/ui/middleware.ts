@@ -3,11 +3,9 @@ import { NextResponse } from "next/server";
 
 // Créer un matcher pour les routes publiques qui ne nécessitent pas d'authentification
 const publicRoutes = createRouteMatcher([
-  "/",
+  // La route principale "/" n'est plus publique
   "/politique-confidentialite(.*)",
   "/conditions-utilisation(.*)",
-  "/privacy(.*)",
-  "/terms(.*)",
   "/a-propos(.*)"
 ]);
 
