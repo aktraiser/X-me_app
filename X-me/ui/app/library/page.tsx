@@ -256,7 +256,9 @@ const Page = () => {
                         </div>
                       </div>
                     ))}
-                    
+                    <div className="h-16 w-full">
+
+                    </div>
                     {/* Ajout d'une div vide pour le padding */}
                     <div
                       className="h-16 w-full"

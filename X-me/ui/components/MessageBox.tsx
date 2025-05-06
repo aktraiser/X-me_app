@@ -315,8 +315,17 @@ const MessageBox = ({
               }
               
               // Assurer la cohérence en copiant l'activité si elle existe
+              // Prendre en compte le champ avec accent (activité) d'abord
               if (matchingExpert.activité && !source.metadata.activite) {
                 source.metadata.activite = matchingExpert.activité;
+              } else if (expertAny.metier && !source.metadata.activite) {
+                source.metadata.activite = expertAny.metier;
+              } else if (expertAny.profession && !source.metadata.activite) {
+                source.metadata.activite = expertAny.profession;
+              } else if (expertAny.specialisation && !source.metadata.activite) {
+                source.metadata.activite = expertAny.specialisation;
+              } else if (expertAny.specialite && !source.metadata.activite) {
+                source.metadata.activite = expertAny.specialite;
               }
               
               console.log('✅ ID Expert ajouté aux métadonnées de la source:', matchingExpert.prenom, matchingExpert.nom, matchingExpert.id_expert);

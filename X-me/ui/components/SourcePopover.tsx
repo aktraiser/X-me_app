@@ -42,12 +42,13 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
   // Extraction des infos expert depuis metadata ou expertData
   const expertData = source?.metadata?.expertData || {};
   
-  // Extraire la première expertise comme activité principale
+  // Extraire l'activité comme dans ExpertCard.tsx
   const expertises = source?.metadata?.expertises || expertData?.expertises || '';
-  const premiereExpertise = expertises ? expertises.split(',')[0].trim() : '';
+  
+  // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise (exactement comme dans ExpertCard)
+  const activité = expertData?.activité || source?.metadata?.activite || (expertises ? expertises.split(',')[0].trim() : '') || "Expert";
   
   // Autres données expert
-  const activite = source?.metadata?.activite || expertData?.specialite || '';
   const tarif = source?.metadata?.tarif || expertData?.tarif || '';
   
   // Nom et photo
@@ -105,7 +106,7 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
             {/* En-tête avec photo et nom */}
             <div className="flex items-center gap-3 mb-1">
               {expertImage ? (
-                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 dark:border-gray-600 flex-shrink-0">
+                <div className="w-10 h-10 rounded-full overflow-hidden border border-gray-200 dark:border-gray-600 flex-shrink-0 flex items-center justify-center">
                   <img 
                     src={expertImage} 
                     alt={expertFullName || 'Expert'}
@@ -126,7 +127,7 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
                   {expertFullName || expertName}
                 </div>
                 <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                  {activite || premiereExpertise || "Expert"}
+                  {activité}
                 </div>
               </div>
             </div>
