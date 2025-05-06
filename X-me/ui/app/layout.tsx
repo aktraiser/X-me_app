@@ -30,87 +30,6 @@ export const metadata: Metadata = {
 // Clerk gère automatiquement l'utilisation de la bonne clé via NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsueGFuZG1lLmZyJA';
 
-// Configuration complète de la localisation française
-const localization = {
-  ...frFR,
-  signIn: {
-    ...frFR.signIn,
-    start: {
-      ...frFR.signIn?.start,
-      title: "Connexion à Xandme",
-      subtitle: "Tous les champs sont obligatoires",
-    },
-    emailCode: {
-      ...frFR.signIn?.emailCode,
-      title: "Vérifiez votre email",
-      subtitle: "Un code de vérification a été envoyé à {identifier}",
-    },
-    password: {
-      ...frFR.signIn?.password,
-      title: "Entrez votre mot de passe",
-      subtitle: "Pour vous connecter avec {identifier}",
-    },
-  },
-  signUp: {
-    ...frFR.signUp,
-    start: {
-      ...frFR.signUp?.start,
-      title: "Créer un compte Xandme",
-      subtitle: "Tous les champs sont obligatoires",
-    },
-    emailCode: {
-      ...frFR.signUp?.emailCode,
-      title: "Vérifiez votre email",
-      subtitle: "Un code de vérification a été envoyé à {identifier}",
-    },
-    phoneCode: {
-      ...frFR.signUp?.phoneCode,
-      title: "Vérifiez votre téléphone",
-      subtitle: "Un code de vérification a été envoyé au {identifier}",
-    },
-  },
-  socialButtonsBlockButton: "Continuer avec {{provider}}",
-  formFieldLabel__emailAddress: "Adresse email",
-  formFieldLabel__phoneNumber: "Numéro de téléphone",
-  formFieldLabel__password: "Mot de passe",
-  formFieldLabel__firstName: "Prénom",
-  formFieldLabel__lastName: "Nom",
-  formFieldAction__forgotPassword: "Mot de passe oublié ?",
-  formButtonPrimary: "Continuer",
-  footerActionLink__useAnotherMethod: "Utiliser une autre méthode",
-  signOut: {
-    title: "Se déconnecter",
-    subtitle: "Vous allez être déconnecté de votre compte",
-    action__signOut: "Se déconnecter",
-    action__cancel: "Annuler",
-  },
-  unstable__errors: {
-    ...frFR.unstable__errors,
-    // Erreurs de connexion
-    session_exists: "Vous êtes déjà connecté à un compte. Vous ne pouvez être connecté qu'à un seul compte à la fois.",
-    identifier_already_signed_in: "Vous êtes déjà connecté avec cet identifiant.",
-    form_identifier_not_found: "Aucun compte trouvé avec ces identifiants.",
-    form_password_incorrect: "Le mot de passe est incorrect.",
-    
-    // Erreurs d'inscription
-    form_identifier_exists__email_address: "Cette adresse email est déjà utilisée par un autre compte.",
-    form_identifier_exists__username: "Ce nom d'utilisateur est déjà pris.",
-    form_identifier_exists__phone_number: "Ce numéro de téléphone est déjà associé à un compte.",
-    form_password_length_too_short: "Le mot de passe doit contenir au moins 8 caractères.",
-    form_password_no_match: "Les mots de passe ne correspondent pas.",
-    
-    // Erreurs générales
-    form_param_format_invalid__phone_number: "Le numéro de téléphone doit être au format international valide.",
-    form_param_invalid: "Certaines informations saisies ne sont pas valides.",
-    form_param_missing: "Tous les champs sont obligatoires. Veuillez les remplir tous.",
-    network_error: "Erreur de connexion réseau. Veuillez vérifier votre connexion internet.",
-    form_code_incorrect: "Le code est incorrect.",
-    form_expired_code: "Le code a expiré, veuillez en demander un nouveau.",
-    form_password_validation_failed: "Le mot de passe doit contenir au moins 8 caractères, incluant une majuscule, une minuscule et un chiffre.",
-    form_email_invalid: "L'adresse email n'est pas valide. Veuillez vérifier et réessayer."
-  }
-};
-
 export default function RootLayout({
   children,
 }: {
@@ -127,7 +46,7 @@ export default function RootLayout({
         
         <ClerkProvider 
           publishableKey={publishableKey}
-          localization={localization}
+          localization={frFR}
           appearance={{
             elements: {
               formFieldErrorText: 'text-red-500 text-sm mt-1 font-medium',

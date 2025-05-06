@@ -24,29 +24,9 @@ export default function SignUpPage() {
       <SignUp 
         appearance={{
           baseTheme: isDarkTheme ? dark : undefined,
-          elements: {
-            formButtonPrimary: 
-              'bg-amber-600 hover:bg-amber-700 text-white font-medium text-sm py-2.5 rounded-md',
-            card: 'bg-white dark:bg-[#1E293B] shadow-lg w-full',
-            headerTitle: 'text-black dark:text-white text-2xl font-bold',
-            headerSubtitle: 'text-gray-600 dark:text-gray-400',
-            formFieldLabel: 'text-black dark:text-white',
-            formFieldInput: 'bg-gray-50 dark:bg-[#374151] border border-gray-300 dark:border-gray-600 text-black dark:text-white',
-            footer: 'text-gray-600 dark:text-gray-400',
-            footerActionLink: 'text-blue-500 hover:text-blue-400',
-            footerAction: 'hidden',
-            developmentModeTag: 'hidden',
-            powerButton: 'hidden',
-            formFieldError: 'text-red-500 text-sm mt-1 font-medium',
-            alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm',
-          },
           variables: {
             colorPrimary: '#d97706',
-            colorText: isDarkTheme ? '#ffffff' : '#000000',
-            colorTextSecondary: isDarkTheme ? '#cbd5e1' : '#64748b',
             colorBackground: isDarkTheme ? '#1e293b' : '#ffffff',
-            colorInputText: isDarkTheme ? '#ffffff' : '#000000',
-            colorInputBackground: isDarkTheme ? '#374151' : '#f9fafb',
           }
         }}
         path="/sign-up"
