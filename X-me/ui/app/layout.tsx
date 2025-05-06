@@ -99,6 +99,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        {/* Termly Cookie Consent Integration - Placé dans le head avant tous les autres scripts */}
+        <Script
+          id="termly-script"
+          src="https://app.termly.io/embed-policy.min.js"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={montserrat.className + " min-h-screen"}>
         <ClerkProvider 
           publishableKey={clerkPublishableKey}
@@ -125,13 +133,8 @@ export default function RootLayout({
           </ThemeProviderComponent>
         </ClerkProvider>
         
-        {/* Termly Cookie Consent Integration */}
+        {/* Termly Cookie Consent Embed Element */}
         <div data-name="termly-embed" data-id="2b659cf0-9192-417e-8ee3-8ba5e67271c7"></div>
-        <Script
-          id="termly-script"
-          src="https://app.termly.io/embed-policy.min.js"
-          strategy="beforeInteractive"
-        />
       </body>
     </html>
   );
