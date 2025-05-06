@@ -44,6 +44,7 @@
     "react-textarea-autosize": "^8.5.3",
     "rsuite": "^5.77.0",
     "sonner": "^1.7.1",
+    "svix": "^1.64.1",
     "swiper": "^11.2.2",
     "tailwind-merge": "^2.5.5",
     "uuid": "^11.1.0",
