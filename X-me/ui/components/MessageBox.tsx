@@ -138,11 +138,96 @@ const MessageBox = ({
       return;
     }
     
-    // Ouvrir le premier expert suggéré comme solution simple
-    const expertToOpen = message.suggestedExperts[0];
+    // Identifier l'expert à ouvrir en priorité par son ID
+    let expertToOpen: Expert | null = null;
+    
+    // 1. Vérifier si nous avons un ID expert direct dans la source
+    if (source.metadata.expertId) {
+      const matchingExpert = message.suggestedExperts.find(
+        expert => expert.id_expert && expert.id_expert.toString() === source.metadata.expertId
+      );
+      
+      if (matchingExpert) {
+        expertToOpen = matchingExpert;
+        console.log('✅ Expert trouvé par ID direct:', source.metadata.expertId);
+      }
+    }
+    
+    // 2. Vérifier si nous avons un ID dans expertData
+    if (!expertToOpen && source.metadata.expertData && source.metadata.expertData.id_expert) {
+      const expertId = source.metadata.expertData.id_expert;
+      const matchingExpert = message.suggestedExperts.find(
+        expert => expert.id_expert && expert.id_expert.toString() === expertId.toString()
+      );
+      
+      if (matchingExpert) {
+        expertToOpen = matchingExpert;
+        console.log('✅ Expert trouvé par ID dans expertData:', expertId);
+      }
+    }
+    
+    // 3. Recherche par nom/prénom si toujours pas d'expert trouvé
+    if (!expertToOpen && source.metadata.expertData) {
+      const expertNom = source.metadata.expertData.nom || '';
+      const expertPrenom = source.metadata.expertData.prenom || '';
+      
+      if (expertNom || expertPrenom) {
+        const matchingExpert = message.suggestedExperts.find(expert => 
+          (expertNom && expert.nom && expert.nom.toLowerCase() === expertNom.toLowerCase()) ||
+          (expertPrenom && expert.prenom && expert.prenom.toLowerCase() === expertPrenom.toLowerCase()) ||
+          (expertNom && expertPrenom && expert.nom && expert.prenom && 
+           expert.nom.toLowerCase() === expertNom.toLowerCase() && 
+           expert.prenom.toLowerCase() === expertPrenom.toLowerCase())
+        );
+        
+        if (matchingExpert) {
+          expertToOpen = matchingExpert;
+          console.log('✅ Expert trouvé par nom/prénom:', expertPrenom, expertNom);
+        }
+      }
+    }
+    
+    // 4. Si on n'a toujours pas trouvé, utiliser le titre de la source pour rechercher
+    if (!expertToOpen && source.metadata.title) {
+      const sourceTitle = source.metadata.title;
+      const expertNameFromTitle = sourceTitle.split(/[-,]/)[0].trim().toLowerCase();
+      
+      console.log('🔍 Recherche par titre de source:', expertNameFromTitle);
+      
+      const matchingExpert = message.suggestedExperts.find(expert => {
+        const fullName = `${expert.prenom} ${expert.nom}`.toLowerCase();
+        const lastName = expert.nom.toLowerCase();
+        const firstName = expert.prenom.toLowerCase();
+        
+        return fullName === expertNameFromTitle || 
+               fullName.includes(expertNameFromTitle) || 
+               expertNameFromTitle.includes(fullName) ||
+               expertNameFromTitle.includes(lastName) ||
+               lastName.includes(expertNameFromTitle) ||
+               firstName.includes(expertNameFromTitle) ||
+               expertNameFromTitle.includes(firstName);
+      });
+      
+      if (matchingExpert) {
+        expertToOpen = matchingExpert;
+        console.log('✅ Expert trouvé par titre de source:', sourceTitle);
+      }
+    }
+    
+    // 5. Si on n'a toujours pas trouvé, prendre le premier expert de la liste
+    if (!expertToOpen && message.suggestedExperts.length > 0) {
+      expertToOpen = message.suggestedExperts[0];
+      console.log('⚠️ Aucun expert correspondant trouvé, utilisation du premier expert par défaut');
+    }
+    
+    if (!expertToOpen) {
+      console.log('❌ Impossible de trouver un expert à afficher');
+      return;
+    }
     
     // Afficher les données pour le débogage
     console.log('👤 Données de l\'expert sélectionné:', {
+      id: expertToOpen.id_expert,
       nom: expertToOpen.nom,
       prenom: expertToOpen.prenom,
       activite: expertToOpen.activité,
@@ -153,7 +238,7 @@ const MessageBox = ({
       specialisation: (expertToOpen as any).specialisation
     });
     
-    console.log('👤 Sélection de l\'expert suggéré');
+    console.log('👤 Ouverture du drawer pour l\'expert sélectionné');
     setSelectedExpert(expertToOpen);
     setDrawerOpen(true);
   };

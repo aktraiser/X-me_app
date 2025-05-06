@@ -257,13 +257,16 @@ const Page = () => {
                       </div>
                     ))}
                     
+                    {/* Ajout d'une div vide pour le padding */}
+                    <div
+                      className="h-16 w-full"
+                      onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    
                     {/* Ajout du composant de pagination */}
                     {chats.length > itemsPerPage && (
-                      <div 
-                        className="mt-16 mb-8 pt-4"
-                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                        style={{ cursor: 'pointer' }}
-                      >
+                      <div className="mb-8">
                         <Pagination
                           currentPage={currentPage}
                           totalItems={chats.length}
