@@ -126,21 +126,11 @@ export default function RootLayout({
         </ClerkProvider>
         
         {/* Termly Cookie Consent Integration */}
-        <div data-name="termly-embed" data-id="25cedf19-30dc-459d-b71f-82b1370679cc"></div>
+        <div data-name="termly-embed" data-id="2b659cf0-9192-417e-8ee3-8ba5e67271c7"></div>
         <Script
           id="termly-script"
-          strategy="afterInteractive"
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function(d, s, id) {
-                var js, tjs = d.getElementsByTagName(s)[0];
-                if (d.getElementById(id)) return;
-                js = d.createElement(s); js.id = id;
-                js.src = "https://app.termly.io/embed-policy.min.js";
-                tjs.parentNode.insertBefore(js, tjs);
-              }(document, 'script', 'termly-jssdk'));
-            `
-          }}
+          src="https://app.termly.io/embed-policy.min.js"
+          strategy="beforeInteractive"
         />
       </body>
     </html>

@@ -79,6 +79,20 @@ const LayoutContent = ({ children }: LayoutProps) => {
     }
   }, [lastScrollY, setNavVisible]);
 
+  // Composant pour le lien des préférences de consentement Termly
+  const TermlyPreferences = () => {
+    return (
+      <div className="fixed bottom-2 right-4 z-50">
+        <a 
+          href="#" 
+          className="termly-display-preferences text-xs text-gray-500 dark:text-gray-400 hover:underline"
+        >
+          Préférences de cookies
+        </a>
+      </div>
+    );
+  };
+
   // Layout pour les routes d'authentification (modales étroites)
   if (isAuthRoute) {
     return (
@@ -86,6 +100,8 @@ const LayoutContent = ({ children }: LayoutProps) => {
         <main className="flex flex-col items-center justify-center w-full max-w-md px-4">
           {children}
         </main>
+        {/* Termly preferences link */}
+        <TermlyPreferences />
       </div>
     );
   }
@@ -97,6 +113,8 @@ const LayoutContent = ({ children }: LayoutProps) => {
         <main className="flex flex-col w-full max-w-4xl px-4 py-8">
           {children}
         </main>
+        {/* Termly preferences link */}
+        <TermlyPreferences />
       </div>
     );
   }
@@ -147,6 +165,9 @@ const LayoutContent = ({ children }: LayoutProps) => {
       <div className="hidden lg:block">
         <InfoBubble />
       </div>
+
+      {/* Termly preferences link */}
+      <TermlyPreferences />
     </div>
   );
 };
