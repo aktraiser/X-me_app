@@ -39,7 +39,7 @@ const Page = () => {
   const { userId, isSignedIn } = useAuth();
   const { session } = useSession();
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 5; // Nombre de discussions par page
+  const itemsPerPage = 15; // Nombre de discussions par page
 
   // Récupérer l'utilisateur courant
   useEffect(() => {
@@ -259,12 +259,14 @@ const Page = () => {
                     
                     {/* Ajout du composant de pagination */}
                     {chats.length > itemsPerPage && (
-                      <Pagination
-                        currentPage={currentPage}
-                        totalItems={chats.length}
-                        itemsPerPage={itemsPerPage}
-                        onPageChange={handlePageChange}
-                      />
+                      <div className="mt-10">
+                        <Pagination
+                          currentPage={currentPage}
+                          totalItems={chats.length}
+                          itemsPerPage={itemsPerPage}
+                          onPageChange={handlePageChange}
+                        />
+                      </div>
                     )}
                   </>
                 )}

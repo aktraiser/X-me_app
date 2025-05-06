@@ -39,6 +39,12 @@ interface SourceMetadata {
   title?: string;
   favicon?: string;
   expertId?: string;
+  expertData?: any; // Utiliser any pour éviter les conflits de types
+  expertises?: string; // Garder le type string, conforme à SourcePopover
+  activite?: string;
+  tarif?: string;
+  illustrationImage?: string;
+  image_url?: string;
 }
 
 // Define the type for source documents
@@ -95,8 +101,15 @@ const MessageBox = ({
       const uniqueExpertsMap = new Map<string, Expert>();
       
       message.suggestedExperts.forEach(expert => {
-        if (expert.id_expert && !uniqueExpertsMap.has(expert.id_expert.toString())) {
-          uniqueExpertsMap.set(expert.id_expert.toString(), expert);
+        // S'assurer que les données de l'expert sont complètes, en particulier l'activité
+        const expertWithActivity = { 
+          ...expert,
+          // Si l'expert n'a pas d'activité définie mais a des expertises, utiliser la première expertise
+          activité: expert.activité || (expert.expertises ? expert.expertises.split(',')[0].trim() : undefined)
+        };
+        
+        if (expertWithActivity.id_expert && !uniqueExpertsMap.has(expertWithActivity.id_expert.toString())) {
+          uniqueExpertsMap.set(expertWithActivity.id_expert.toString(), expertWithActivity);
         }
       });
       
@@ -122,16 +135,37 @@ const MessageBox = ({
   const handleExpertSourceClick = (source: SourceDocument) => {
     console.log('🔍 Clic sur source expert détecté:', source.metadata);
     
-    // Vérifier si nous avons des experts suggérés
-    if (!message.suggestedExperts || message.suggestedExperts.length === 0) {
-      console.log('❌ Aucun expert suggéré disponible dans le message actuel');
+    // Si la source contient un ID d'expert, chercher l'expert correspondant dans les experts suggérés
+    if (source.metadata.expertId && message.suggestedExperts && message.suggestedExperts.length > 0) {
+      const expertId = source.metadata.expertId;
+      const matchingExpert = message.suggestedExperts.find(expert => 
+        expert.id_expert && expert.id_expert.toString() === expertId
+      );
+      
+      if (matchingExpert) {
+        console.log('👤 Expert correspondant trouvé pour la source:', matchingExpert.prenom, matchingExpert.nom);
+        setSelectedExpert(matchingExpert);
+        setDrawerOpen(true);
+        return;
+      }
+    }
+    
+    // Si pas d'ID ou pas d'expert trouvé, mais que nous avons des données d'expert dans la source
+    if (source.metadata.expertData) {
+      console.log('👤 Utilisation des données d\'expert depuis la source');
+      setSelectedExpert(source.metadata.expertData);
+      setDrawerOpen(true);
       return;
     }
     
-    // Ouvrir le premier expert suggéré comme solution simple
-    console.log('👤 Sélection de l\'expert suggéré');
-    setSelectedExpert(message.suggestedExperts[0]);
-    setDrawerOpen(true);
+    // Fallback: Ouvrir le premier expert suggéré (comportement original)
+    if (message.suggestedExperts && message.suggestedExperts.length > 0) {
+      console.log('👤 Aucun expert correspondant à la source, utilisation du premier expert suggéré');
+      setSelectedExpert(message.suggestedExperts[0]);
+      setDrawerOpen(true);
+    } else {
+      console.log('❌ Aucun expert suggéré disponible dans le message actuel');
+    }
   };
 
   useEffect(() => {
@@ -189,6 +223,20 @@ const MessageBox = ({
             // Si un expert correspondant est trouvé, ajouter son ID aux métadonnées de la source
             if (matchingExpert && matchingExpert.id_expert) {
               source.metadata.expertId = matchingExpert.id_expert.toString();
+              
+              // Ajouter également les données complètes de l'expert pour une meilleure cohérence d'affichage
+              source.metadata.expertData = matchingExpert;
+              
+              // Assurer la cohérence en copiant les expertises si elles existent
+              if (matchingExpert.expertises && !source.metadata.expertises) {
+                source.metadata.expertises = matchingExpert.expertises;
+              }
+              
+              // Assurer la cohérence en copiant l'activité si elle existe
+              if (matchingExpert.activité && !source.metadata.activite) {
+                source.metadata.activite = matchingExpert.activité;
+              }
+              
               console.log('✅ ID Expert ajouté aux métadonnées de la source:', matchingExpert.prenom, matchingExpert.nom, matchingExpert.id_expert);
             } else {
               console.log('⚠️ Aucun expert correspondant trouvé pour la source:', sourceTitle);

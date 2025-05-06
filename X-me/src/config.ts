@@ -91,11 +91,8 @@ export const isGeminiEnabled = () => {
   return !!apiKey && apiKey.length > 0;
 };
 
-// Clé API Firecrawl par défaut
-const DEFAULT_FIRECRAWL_API_KEY = 'fc-12aa7e5b001e40d28ce76781635ab389';
-
-export const getFirecrawlApiKey = () => 
-  process.env.FIRECRAWL_API_KEY || DEFAULT_FIRECRAWL_API_KEY;
+// Configuration Firecrawl - API key doit être définie dans les variables d'environnement
+export const getFirecrawlApiKey = () => process.env.FIRECRAWL_API_KEY || '';
 
 export const isFirecrawlEnabled = () => {
   const apiKey = getFirecrawlApiKey();

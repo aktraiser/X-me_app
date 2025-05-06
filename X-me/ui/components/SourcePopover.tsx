@@ -67,7 +67,14 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
 
   // Extraction des infos expert depuis metadata ou expertData pour éviter le 'undefined'
   const expertData = source?.metadata?.expertData || {};
-  const activite = source?.metadata?.activite || expertData?.specialite || (source?.metadata?.expertises ? source.metadata.expertises.split(',')[0].trim() : '') || (expertData?.expertises ? expertData.expertises.split(',')[0].trim() : '') || "Expert";
+  
+  // Privilégier le champ activité s'il existe, utiliser la spécialité ensuite, 
+  // et en dernier recours utiliser la première expertise
+  const activite = expertData?.activité || source?.metadata?.activite || expertData?.specialite || 
+                  (source?.metadata?.expertises ? source.metadata.expertises.split(',')[0].trim() : '') || 
+                  (expertData?.expertises ? expertData.expertises.split(',')[0].trim() : '') || 
+                  "Expert";
+  
   const tarif = source?.metadata?.tarif || expertData?.tarif || '';
   const expertises = source?.metadata?.expertises || expertData?.expertises || '';
   
