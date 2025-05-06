@@ -423,7 +423,7 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
                               id="reason"
                               name="reason"
                               rows={4}
-                              className="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-blue-500 dark:focus:border-blue-500 focus:ring-blue-500 dark:focus:ring-blue-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                              className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-blue-600 sm:text-sm"
                               placeholder="Décrivez le contexte de votre demande en détail..."
                               value={reason}
                               onChange={(e) => setReason(e.target.value)}

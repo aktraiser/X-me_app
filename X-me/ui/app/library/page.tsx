@@ -10,6 +10,7 @@ import PageHeader from '@/components/PageHeader';
 import { useAuth, useSession } from '@clerk/nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
+import Pagination from '@/components/Pagination';
 
 export interface Chat {
   id: string;
@@ -37,6 +38,8 @@ const Page = () => {
   const fetchedRef = useRef(false);
   const { userId, isSignedIn } = useAuth();
   const { session } = useSession();
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5; // Nombre de discussions par page
 
   // Récupérer l'utilisateur courant
   useEffect(() => {
@@ -122,6 +125,23 @@ const Page = () => {
     }
   }, [user, userId, session]);
 
+  // Fonction pour changer de page
+  const handlePageChange = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
+    // Faire défiler vers le haut si nécessaire
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Calcul des discussions à afficher sur la page courante
+  const getCurrentPageChats = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return chats.slice(startIndex, endIndex);
+  };
+
+  // Discussions paginées
+  const currentChats = getCurrentPageChats();
+
   return (
     <>
       <PageHeader
@@ -175,66 +195,78 @@ const Page = () => {
                   </div>
                 )}
                 {chats.length > 0 && (
-                  chats.map((chat, i) => (
-                    <div
-                      className={cn(
-                        'flex flex-col space-y-4 py-6',
-                        i !== chats.length - 1
-                          ? 'border-b border-white-200 dark:border-dark-200'
-                          : '',
-                      )}
-                      key={i}
-                    >
-                      <Link
-                        href={`/c/${chat.id}`}
-                        className="text-black dark:text-white lg:text-xl font-medium truncate transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer"
-                        onClick={(e) => {
-                          // Vérifier si le chat a des métadonnées complètes
-                          if (!chat.metadata?.complete_conversation) {
-                            console.log('[DEBUG] Conversation potentiellement incomplète, sauvegarde préventive');
-                            
-                            // Empêcher temporairement la navigation
-                            if (typeof localStorage !== 'undefined') {
-                              const lastAccessed = localStorage.getItem(`chat_${chat.id}_accessed`);
-                              
-                              // Ne pas retarder si la chat a déjà été accédé dans les 5 dernières minutes
-                              if (lastAccessed && (Date.now() - parseInt(lastAccessed)) < 5 * 60 * 1000) {
-                                return; // Continuer la navigation normalement
-                              }
-                              
-                              // Enregistrer l'accès
-                              localStorage.setItem(`chat_${chat.id}_accessed`, Date.now().toString());
-                            }
-                          }
-                        }}
+                  <>
+                    {currentChats.map((chat, i) => (
+                      <div
+                        className={cn(
+                          'flex flex-col space-y-4 py-6',
+                          i !== currentChats.length - 1
+                            ? 'border-b border-white-200 dark:border-dark-200'
+                            : '',
+                        )}
+                        key={i}
                       >
-                        {chat.title}
-                      </Link>
-                      <p className="text-sm text-black/60 dark:text-white/60 line-clamp-2">
-                        {chat.metadata?.complete_conversation ? 
-                          "Conversation complète disponible" 
-                          : 
-                          chat.content
-                        }
-                      </p>
-                      <div className="flex flex-row items-center justify-between w-full">
-                        <div className="flex flex-row items-center space-x-1 lg:space-x-1.5 text-black/70 dark:text-white/70">
-                          <ClockIcon size={15} />
-                          <p className="text-xs">
-                            {formatTimeDifference(
-                              new Date(), 
-                              new Date(chat.created_at || chat.createdAt || new Date().toISOString())
-                            )} Ago
-                          </p>
+                        <Link
+                          href={`/c/${chat.id}`}
+                          className="text-black dark:text-white lg:text-xl font-medium truncate transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer"
+                          onClick={(e) => {
+                            // Vérifier si le chat a des métadonnées complètes
+                            if (!chat.metadata?.complete_conversation) {
+                              console.log('[DEBUG] Conversation potentiellement incomplète, sauvegarde préventive');
+                              
+                              // Empêcher temporairement la navigation
+                              if (typeof localStorage !== 'undefined') {
+                                const lastAccessed = localStorage.getItem(`chat_${chat.id}_accessed`);
+                                
+                                // Ne pas retarder si la chat a déjà été accédé dans les 5 dernières minutes
+                                if (lastAccessed && (Date.now() - parseInt(lastAccessed)) < 5 * 60 * 1000) {
+                                  return; // Continuer la navigation normalement
+                                }
+                                
+                                // Enregistrer l'accès
+                                localStorage.setItem(`chat_${chat.id}_accessed`, Date.now().toString());
+                              }
+                            }
+                          }}
+                        >
+                          {chat.title}
+                        </Link>
+                        <p className="text-sm text-black/60 dark:text-white/60 line-clamp-2">
+                          {chat.metadata?.complete_conversation ? 
+                            "Conversation complète disponible" 
+                            : 
+                            chat.content
+                          }
+                        </p>
+                        <div className="flex flex-row items-center justify-between w-full">
+                          <div className="flex flex-row items-center space-x-1 lg:space-x-1.5 text-black/70 dark:text-white/70">
+                            <ClockIcon size={15} />
+                            <p className="text-xs">
+                              {formatTimeDifference(
+                                new Date(), 
+                                new Date(chat.created_at || chat.createdAt || new Date().toISOString())
+                              )} il y a
+                            </p>
+                          </div>
+                          <DeleteChat
+                            chatId={chat.id}
+                            chats={chats}
+                            setChats={setChats}
+                          />
                         </div>
-                        <DeleteChat
-                          chatId={chat.id}
-                          chats={chats}
-                          setChats={setChats}
-                        />
                       </div>
-                    </div>
-                  ))
+                    ))}
+                    
+                    {/* Ajout du composant de pagination */}
+                    {chats.length > itemsPerPage && (
+                      <Pagination
+                        currentPage={currentPage}
+                        totalItems={chats.length}
+                        itemsPerPage={itemsPerPage}
+                        onPageChange={handlePageChange}
+                      />
+                    )}
+                  </>
                 )}
               </div>
             )}
