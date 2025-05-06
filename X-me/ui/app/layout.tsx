@@ -44,7 +44,11 @@ export default function RootLayout({
           autoBlock={true}
         />
         
-        <ClerkProvider localization={frFR}>
+        {/* Clerk en français */}
+        <ClerkProvider 
+          localization={frFR}
+          publishableKey={publishableKey}
+        >
           <ThemeProviderComponent>
             <KeepAliveProvider>
               <Layout>{children}</Layout>
