@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef } from 'react'
-import { usePathname, useSearchParams } from 'next/navigation'
+import { Suspense } from 'react'
 
 const SCRIPT_SRC_BASE = 'https://app.termly.io'
 
@@ -20,7 +20,13 @@ interface TermlyCMPProps {
   websiteUUID: string;
 }
 
-export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID }: TermlyCMPProps) {
+// Composant interne qui utilise useSearchParams
+function TermlyContent({ autoBlock, masterConsentsOrigin, websiteUUID }: TermlyCMPProps) {
+  // Utilisation de usePathname et useSearchParams enveloppés dans un Suspense
+  const { usePathname, useSearchParams } = require('next/navigation')
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  
   const scriptSrc = useMemo(() => {
     const src = new URL(SCRIPT_SRC_BASE)
     src.pathname = `/resource-blocker/${websiteUUID}`
@@ -46,9 +52,6 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
     isScriptAdded.current = true
   }, [scriptSrc])
 
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
   useEffect(() => {
     // Initialiser Termly quand la page change
     if (typeof window !== 'undefined' && window.Termly) {
@@ -57,4 +60,13 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
   }, [pathname, searchParams])
 
   return null
+}
+
+// Composant principal qui enveloppe TermlyContent dans un Suspense
+export default function TermlyCMP(props: TermlyCMPProps) {
+  return (
+    <Suspense>
+      <TermlyContent {...props} />
+    </Suspense>
+  )
 } 
