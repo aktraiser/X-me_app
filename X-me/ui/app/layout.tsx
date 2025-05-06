@@ -10,6 +10,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { frFR } from '@clerk/localizations';
 import KeepAliveProvider from '../components/KeepAliveProvider';
 import TermlyCMP from '@/components/TermlyCMP';
+import Script from 'next/script';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -102,7 +103,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        {/* Chargement du script Termly en premier avec beforeInteractive */}
+        <Script
+          id="termly-script"
+          src={`https://app.termly.io/resource-blocker/${TERMLY_WEBSITE_UUID}?autoBlock=on`}
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className={montserrat.className + " min-h-screen"}>
+        {/* Div for Termly embed - needed for cookie preferences */}
+        <div data-name="termly-embed" data-id={TERMLY_WEBSITE_UUID}></div>
+        
         <ClerkProvider 
           publishableKey={clerkPublishableKey}
           localization={customLocalization}
@@ -122,9 +134,12 @@ export default function RootLayout({
         >
           <ThemeProviderComponent>
             <KeepAliveProvider>
+              {/* Nous n'utilisons plus TermlyCMP pour charger le script, 
+                  mais nous gardons le composant pour l'initialisation */}
               <TermlyCMP 
                 websiteUUID={TERMLY_WEBSITE_UUID} 
                 autoBlock={true}
+                skipScriptLoad={true}
               />
               <Layout>{children}</Layout>
               <Toaster position="top-right" />

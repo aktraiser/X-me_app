@@ -8,9 +8,10 @@ interface TermlyCMPProps {
   autoBlock?: boolean;
   masterConsentsOrigin?: string;
   websiteUUID: string;
+  skipScriptLoad?: boolean;
 }
 
-export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID }: TermlyCMPProps) {
+export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID, skipScriptLoad = false }: TermlyCMPProps) {
   const [mounted, setMounted] = useState(false)
   
   // Calculer l'URL du script Termly
@@ -28,9 +29,9 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
 
   const isScriptAdded = useRef(false)
 
-  // Charger le script Termly
+  // Charger le script Termly uniquement si skipScriptLoad est false
   useEffect(() => {
-    if (isScriptAdded.current) return
+    if (skipScriptLoad || isScriptAdded.current) return
     try {
       const script = document.createElement('script')
       script.src = scriptSrc
@@ -39,7 +40,7 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
     } catch (error) {
       console.error('Error adding Termly script:', error)
     }
-  }, [scriptSrc])
+  }, [scriptSrc, skipScriptLoad])
 
   // Marquer le composant comme monté et garantir que window est disponible
   useEffect(() => {
