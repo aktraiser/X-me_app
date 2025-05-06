@@ -44,23 +44,7 @@ export default function RootLayout({
           autoBlock={true}
         />
         
-        <ClerkProvider 
-          publishableKey={publishableKey}
-          localization={frFR}
-          appearance={{
-            elements: {
-              formFieldErrorText: 'text-red-500 text-sm mt-1 font-medium',
-              formFieldError: 'border-red-500 focus:ring-red-500',
-              formFieldInput: 'bg-gray-50 dark:bg-[#374151] border border-gray-300 dark:border-gray-600 text-black dark:text-white rounded-md p-2.5',
-              formFieldLabel: 'block text-black dark:text-white font-medium mb-1.5',
-              card: 'bg-white dark:bg-[#1E293B] shadow-lg',
-              formFieldInputShowPasswordButton: 'text-gray-600 hover:text-gray-800',
-              identityPreview: 'bg-gray-100 dark:bg-gray-800',
-              alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm mb-4',
-              logoImage: 'w-32 h-32',
-            }
-          }}
-        >
+        <ClerkProvider localization={frFR}>
           <ThemeProviderComponent>
             <KeepAliveProvider>
               <Layout>{children}</Layout>
