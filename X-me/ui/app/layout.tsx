@@ -103,8 +103,11 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={montserrat.className + " min-h-screen"}>
-        {/* Intégration du composant Termly CMP */}
-        <TermlyCMP websiteUUID={TERMLY_WEBSITE_UUID} />
+        {/* Intégration du composant Termly CMP avec auto-blocage activé */}
+        <TermlyCMP 
+          websiteUUID={TERMLY_WEBSITE_UUID} 
+          autoBlock={true}
+        />
         
         <ClerkProvider 
           publishableKey={clerkPublishableKey}

@@ -44,11 +44,20 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
 
   useEffect(() => {
     if (isScriptAdded.current) return
+    
+    // Créer et ajouter le script de chargement principal de Termly
     const script = document.createElement('script')
     script.src = scriptSrc
     document.head.appendChild(script)
+    
+    // Ajouter l'élément div nécessaire pour la bannière de consentement
+    const bannerElement = document.createElement('div')
+    bannerElement.setAttribute('data-type', 'cookie-banner')
+    bannerElement.setAttribute('data-uuid', websiteUUID)
+    document.body.appendChild(bannerElement)
+    
     isScriptAdded.current = true
-  }, [scriptSrc])
+  }, [scriptSrc, websiteUUID])
 
   return <TermlyInitializer />
 } 
