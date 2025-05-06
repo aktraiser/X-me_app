@@ -28,6 +28,7 @@ export const metadata: Metadata = {
 
 // Utilisation des variables d'environnement au lieu d'une clé codée en dur
 // Clerk gère automatiquement l'utilisation de la bonne clé via NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
 
 // Personnalisation minimale avec traduction des erreurs
 const customLocalization = {
@@ -110,7 +111,7 @@ export default function RootLayout({
         />
         
         <ClerkProvider 
-          // Plus de clé codée en dur - Clerk utilisera NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+          publishableKey={publishableKey || 'pk_test_bWFpbi1ibHVlYmlyZC02NC5jbGVyay5hY2NvdW50cy5kZXYk'}
           localization={customLocalization}
           appearance={{
             elements: {
