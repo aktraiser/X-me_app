@@ -9,7 +9,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 // Importation de la localisation française
 import { frFR } from '@clerk/localizations';
 import KeepAliveProvider from '../components/KeepAliveProvider';
-import Script from 'next/script';
+import TermlyCMP from '@/components/TermlyCMP';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -18,9 +18,12 @@ const montserrat = Montserrat({
   fallback: ['Arial', 'sans-serif'],
 });
 
+// UUID de votre site Termly
+const TERMLY_WEBSITE_UUID = '2b659cf0-9192-417e-8ee3-8ba5e67271c7';
+
 export const metadata: Metadata = {
-  title: 'X&me - Discutez avec internet',
-  description: 'X&me est un chatbot alimenté par l\'IA connecté à internet.',
+  title: 'Xandme - Ici c\'est vous le patron ',
+  description: 'Xand&me est une plateforme de mise en relation avec des experts.',
 };
 
 // Ajouter une clé Clerk publique temporaire pour le développement
@@ -99,15 +102,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <head>
-        {/* Termly Cookie Consent Integration - Placé dans le head avant tous les autres scripts */}
-        <Script
-          id="termly-script"
-          src="https://app.termly.io/embed-policy.min.js"
-          strategy="beforeInteractive"
-        />
-      </head>
       <body className={montserrat.className + " min-h-screen"}>
+        {/* Intégration du composant Termly CMP */}
+        <TermlyCMP websiteUUID={TERMLY_WEBSITE_UUID} />
+        
         <ClerkProvider 
           publishableKey={clerkPublishableKey}
           localization={customLocalization}
@@ -132,9 +130,6 @@ export default function RootLayout({
             </KeepAliveProvider>
           </ThemeProviderComponent>
         </ClerkProvider>
-        
-        {/* Termly Cookie Consent Embed Element */}
-        <div data-name="termly-embed" data-id="2b659cf0-9192-417e-8ee3-8ba5e67271c7"></div>
       </body>
     </html>
   );

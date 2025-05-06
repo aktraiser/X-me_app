@@ -256,16 +256,16 @@ const Page = () => {
                         </div>
                       </div>
                     ))}
-                    <div className="h-16 w-full">
 
-                    </div>
                     {/* Ajout d'une div vide pour le padding */}
                     <div
                       className="h-16 w-full"
                       onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                       style={{ cursor: 'pointer' }}
                     />
-                    
+                    <div className="h-16 w-full">
+
+                    </div>
                     {/* Ajout du composant de pagination */}
                     {chats.length > itemsPerPage && (
                       <div className="mb-8">
