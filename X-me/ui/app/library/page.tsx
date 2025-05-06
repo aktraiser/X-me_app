@@ -259,7 +259,11 @@ const Page = () => {
                     
                     {/* Ajout du composant de pagination */}
                     {chats.length > itemsPerPage && (
-                      <div className="mt-10">
+                      <div 
+                        className="mt-16 mb-8 pt-4"
+                        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                        style={{ cursor: 'pointer' }}
+                      >
                         <Pagination
                           currentPage={currentPage}
                           totalItems={chats.length}

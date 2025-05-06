@@ -16,6 +16,9 @@ interface SourceMetadata {
   expertises?: string;
   expertData?: any;
   image_url?: string;
+  metier?: string;
+  profession?: string;
+  specialisation?: string;
 }
 
 // Define the type for source documents
@@ -68,12 +71,23 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
   // Extraction des infos expert depuis metadata ou expertData pour éviter le 'undefined'
   const expertData = source?.metadata?.expertData || {};
   
-  // Privilégier le champ activité s'il existe, utiliser la spécialité ensuite, 
-  // et en dernier recours utiliser la première expertise
-  const activite = expertData?.activité || source?.metadata?.activite || expertData?.specialite || 
-                  (source?.metadata?.expertises ? source.metadata.expertises.split(',')[0].trim() : '') || 
-                  (expertData?.expertises ? expertData.expertises.split(',')[0].trim() : '') || 
-                  "Expert";
+  // Déterminer l'activité professionnelle de l'expert
+  // Privilégier les champs qui décrivent le métier/profession plutôt que les domaines d'expertise
+  // Exemple: "Avocat" ou "Avocat en droit des affaires" plutôt que "Création d'entreprise"
+  const metier = expertData?.metier || source?.metadata?.metier;
+  const profession = expertData?.profession || source?.metadata?.profession;
+  const specialisation = expertData?.specialisation || source?.metadata?.specialisation;
+  
+  // Ordre de priorité pour l'activité (privilégier les champs de métier/profession)
+  let activite = metier || profession || specialisation || 
+                 expertData?.activité || source?.metadata?.activite || 
+                 expertData?.specialite;
+                 
+  // Seulement si nous n'avons pas trouvé d'activité professionnelle, utiliser la première expertise
+  if (!activite) {
+    const expertises = source?.metadata?.expertises || expertData?.expertises || '';
+    activite = expertises ? expertises.split(',')[0].trim() : 'Expert';
+  }
   
   const tarif = source?.metadata?.tarif || expertData?.tarif || '';
   const expertises = source?.metadata?.expertises || expertData?.expertises || '';

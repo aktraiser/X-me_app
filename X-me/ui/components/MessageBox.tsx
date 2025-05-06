@@ -45,6 +45,10 @@ interface SourceMetadata {
   tarif?: string;
   illustrationImage?: string;
   image_url?: string;
+  // Ajout des nouveaux champs pour métier/profession
+  metier?: string;
+  profession?: string;
+  specialisation?: string;
 }
 
 // Define the type for source documents
@@ -101,15 +105,8 @@ const MessageBox = ({
       const uniqueExpertsMap = new Map<string, Expert>();
       
       message.suggestedExperts.forEach(expert => {
-        // S'assurer que les données de l'expert sont complètes, en particulier l'activité
-        const expertWithActivity = { 
-          ...expert,
-          // Si l'expert n'a pas d'activité définie mais a des expertises, utiliser la première expertise
-          activité: expert.activité || (expert.expertises ? expert.expertises.split(',')[0].trim() : undefined)
-        };
-        
-        if (expertWithActivity.id_expert && !uniqueExpertsMap.has(expertWithActivity.id_expert.toString())) {
-          uniqueExpertsMap.set(expertWithActivity.id_expert.toString(), expertWithActivity);
+        if (expert.id_expert && !uniqueExpertsMap.has(expert.id_expert.toString())) {
+          uniqueExpertsMap.set(expert.id_expert.toString(), expert);
         }
       });
       
@@ -135,37 +132,30 @@ const MessageBox = ({
   const handleExpertSourceClick = (source: SourceDocument) => {
     console.log('🔍 Clic sur source expert détecté:', source.metadata);
     
-    // Si la source contient un ID d'expert, chercher l'expert correspondant dans les experts suggérés
-    if (source.metadata.expertId && message.suggestedExperts && message.suggestedExperts.length > 0) {
-      const expertId = source.metadata.expertId;
-      const matchingExpert = message.suggestedExperts.find(expert => 
-        expert.id_expert && expert.id_expert.toString() === expertId
-      );
-      
-      if (matchingExpert) {
-        console.log('👤 Expert correspondant trouvé pour la source:', matchingExpert.prenom, matchingExpert.nom);
-        setSelectedExpert(matchingExpert);
-        setDrawerOpen(true);
-        return;
-      }
-    }
-    
-    // Si pas d'ID ou pas d'expert trouvé, mais que nous avons des données d'expert dans la source
-    if (source.metadata.expertData) {
-      console.log('👤 Utilisation des données d\'expert depuis la source');
-      setSelectedExpert(source.metadata.expertData);
-      setDrawerOpen(true);
+    // Vérifier si nous avons des experts suggérés
+    if (!message.suggestedExperts || message.suggestedExperts.length === 0) {
+      console.log('❌ Aucun expert suggéré disponible dans le message actuel');
       return;
     }
     
-    // Fallback: Ouvrir le premier expert suggéré (comportement original)
-    if (message.suggestedExperts && message.suggestedExperts.length > 0) {
-      console.log('👤 Aucun expert correspondant à la source, utilisation du premier expert suggéré');
-      setSelectedExpert(message.suggestedExperts[0]);
-      setDrawerOpen(true);
-    } else {
-      console.log('❌ Aucun expert suggéré disponible dans le message actuel');
-    }
+    // Ouvrir le premier expert suggéré comme solution simple
+    const expertToOpen = message.suggestedExperts[0];
+    
+    // Afficher les données pour le débogage
+    console.log('👤 Données de l\'expert sélectionné:', {
+      nom: expertToOpen.nom,
+      prenom: expertToOpen.prenom,
+      activite: expertToOpen.activité,
+      expertises: expertToOpen.expertises,
+      // Cast vers any pour accéder aux propriétés qui ne sont pas dans l'interface
+      metier: (expertToOpen as any).metier,
+      profession: (expertToOpen as any).profession,
+      specialisation: (expertToOpen as any).specialisation
+    });
+    
+    console.log('👤 Sélection de l\'expert suggéré');
+    setSelectedExpert(expertToOpen);
+    setDrawerOpen(true);
   };
 
   useEffect(() => {
@@ -226,6 +216,13 @@ const MessageBox = ({
               
               // Ajouter également les données complètes de l'expert pour une meilleure cohérence d'affichage
               source.metadata.expertData = matchingExpert;
+              
+              // Copier les informations de métier/profession si elles sont disponibles dans les données
+              // Utiliser any pour accéder de manière dynamique aux propriétés qui pourraient ne pas être définies dans le type
+              const expertAny = matchingExpert as any;
+              if (expertAny.metier) source.metadata.metier = expertAny.metier;
+              if (expertAny.profession) source.metadata.profession = expertAny.profession;
+              if (expertAny.specialisation) source.metadata.specialisation = expertAny.specialisation;
               
               // Assurer la cohérence en copiant les expertises si elles existent
               if (matchingExpert.expertises && !source.metadata.expertises) {

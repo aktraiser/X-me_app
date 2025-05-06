@@ -230,7 +230,7 @@ const Sidebar = ({
                     isExpanded ? (
                       <div className="absolute right-0 top-0 h-full w-2 rounded-l-lg bg-[#c49c48] z-20" />
                     ) : (
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 h-2 w-2 rounded-full bg-[#c49c48] z-20" />
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 h-1 w-1 rounded-full bg-[#c49c48] z-20" />
                     )
                   )}
                 </Link>
