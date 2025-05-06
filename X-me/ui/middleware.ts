@@ -21,8 +21,8 @@ const authRoutes = createRouteMatcher([
   "/forgot-password(.*)"
 ]);
 
-// Récupérer la clé publique de l'environnement
-const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+// Récupérer la clé publique de l'environnement ou utiliser une valeur fixe si non disponible
+const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsueGFuZG1lLmZyJA';
 
 // Utiliser le middleware officiel de Clerk
 export default clerkMiddleware(async (auth, req) => {

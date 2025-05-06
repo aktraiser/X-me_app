@@ -42,7 +42,7 @@ COPY ui/ ./
 # Mise à jour de browserslist
 RUN npx update-browserslist-db@latest
 
-# Build avec la gestion des erreurs ESLint
-RUN yarn build || (echo "Build failed but continuing..." && exit 0)
+# Build avec la gestion des erreurs - continuez même si le build échoue
+RUN yarn build || true
 
 CMD ["yarn", "start"]
