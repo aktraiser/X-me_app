@@ -103,12 +103,6 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={montserrat.className + " min-h-screen"}>
-        {/* Intégration du composant Termly CMP avec auto-blocage activé */}
-        <TermlyCMP 
-          websiteUUID={TERMLY_WEBSITE_UUID} 
-          autoBlock={true}
-        />
-        
         <ClerkProvider 
           publishableKey={clerkPublishableKey}
           localization={customLocalization}
@@ -128,6 +122,10 @@ export default function RootLayout({
         >
           <ThemeProviderComponent>
             <KeepAliveProvider>
+              <TermlyCMP 
+                websiteUUID={TERMLY_WEBSITE_UUID} 
+                autoBlock={true}
+              />
               <Layout>{children}</Layout>
               <Toaster position="top-right" />
             </KeepAliveProvider>

@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useRef } from 'react'
-import dynamic from 'next/dynamic'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 const SCRIPT_SRC_BASE = 'https://app.termly.io'
 
@@ -11,14 +10,10 @@ interface TermlyCMPProps {
   websiteUUID: string;
 }
 
-// Nous créons un composant wrapper pour la partie qui utilise usePathname et useSearchParams
-// et nous l'importons dynamiquement avec { ssr: false } pour éviter les erreurs de prérendu
-const TermlyInitializer = dynamic(
-  () => import('./TermlyInitializer').then((mod) => mod.default),
-  { ssr: false }
-)
-
 export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID }: TermlyCMPProps) {
+  const [mounted, setMounted] = useState(false)
+  
+  // Calculer l'URL du script Termly
   const scriptSrc = useMemo(() => {
     const src = new URL(SCRIPT_SRC_BASE)
     src.pathname = `/resource-blocker/${websiteUUID}`
@@ -33,13 +28,40 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
 
   const isScriptAdded = useRef(false)
 
+  // Charger le script Termly
   useEffect(() => {
     if (isScriptAdded.current) return
-    const script = document.createElement('script')
-    script.src = scriptSrc
-    document.head.appendChild(script)
-    isScriptAdded.current = true
+    try {
+      const script = document.createElement('script')
+      script.src = scriptSrc
+      document.head.appendChild(script)
+      isScriptAdded.current = true
+    } catch (error) {
+      console.error('Error adding Termly script:', error)
+    }
   }, [scriptSrc])
 
-  return <TermlyInitializer />
+  // Marquer le composant comme monté et garantir que window est disponible
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  // Initialiser Termly quand la page change
+  useEffect(() => {
+    if (mounted && typeof window !== 'undefined') {
+      // Attendre un court instant pour que tout soit chargé
+      const timer = setTimeout(() => {
+        try {
+          // @ts-ignore - Termly est ajouté globalement par le script
+          if (window.Termly) window.Termly.initialize()
+        } catch (error) {
+          console.error('Error initializing Termly:', error)
+        }
+      }, 100)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [mounted])
+
+  return null
 } 
