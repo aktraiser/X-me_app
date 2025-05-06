@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
+import dynamic from 'next/dynamic'
 
 const SCRIPT_SRC_BASE = 'https://app.termly.io'
 
@@ -8,13 +9,25 @@ interface TermlyCMPProps {
   autoBlock?: boolean;
   masterConsentsOrigin?: string;
   websiteUUID: string;
-  skipScriptLoad?: boolean;
 }
 
-export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID, skipScriptLoad = false }: TermlyCMPProps) {
-  const [mounted, setMounted] = useState(false)
-  
-  // Calculer l'URL du script Termly
+// Composant client uniquement qui gère l'initialisation de Termly lors des changements de navigation
+const TermlyInitializer = dynamic(() => Promise.resolve(() => {
+  // On ne peut utiliser usePathname et useSearchParams que dans un composant client
+  // qui ne sera pas rendu côté serveur
+  const { usePathname, useSearchParams } = require('next/navigation')
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+
+  useEffect(() => {
+    // @ts-ignore - Termly est ajouté globalement par le script
+    window.Termly?.initialize()
+  }, [pathname, searchParams])
+
+  return null
+}), { ssr: false })
+
+export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID }: TermlyCMPProps) {
   const scriptSrc = useMemo(() => {
     const src = new URL(SCRIPT_SRC_BASE)
     src.pathname = `/resource-blocker/${websiteUUID}`
@@ -29,40 +42,22 @@ export default function TermlyCMP({ autoBlock, masterConsentsOrigin, websiteUUID
 
   const isScriptAdded = useRef(false)
 
-  // Charger le script Termly uniquement si skipScriptLoad est false
   useEffect(() => {
-    if (skipScriptLoad || isScriptAdded.current) return
-    try {
-      const script = document.createElement('script')
-      script.src = scriptSrc
-      document.head.appendChild(script)
-      isScriptAdded.current = true
-    } catch (error) {
-      console.error('Error adding Termly script:', error)
-    }
-  }, [scriptSrc, skipScriptLoad])
+    if (isScriptAdded.current) return
+    
+    // Créer et ajouter le script de chargement principal de Termly
+    const script = document.createElement('script')
+    script.src = scriptSrc
+    document.head.appendChild(script)
+    
+    // Ajouter l'élément div nécessaire pour la bannière de consentement
+    const bannerElement = document.createElement('div')
+    bannerElement.setAttribute('data-type', 'cookie-banner')
+    bannerElement.setAttribute('data-uuid', websiteUUID)
+    document.body.appendChild(bannerElement)
+    
+    isScriptAdded.current = true
+  }, [scriptSrc, websiteUUID])
 
-  // Marquer le composant comme monté et garantir que window est disponible
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Initialiser Termly quand la page change
-  useEffect(() => {
-    if (mounted && typeof window !== 'undefined') {
-      // Attendre un court instant pour que tout soit chargé
-      const timer = setTimeout(() => {
-        try {
-          // @ts-ignore - Termly est ajouté globalement par le script
-          if (window.Termly) window.Termly.initialize()
-        } catch (error) {
-          console.error('Error initializing Termly:', error)
-        }
-      }, 100)
-      
-      return () => clearTimeout(timer)
-    }
-  }, [mounted])
-
-  return null
+  return <TermlyInitializer />
 } 
