@@ -13,11 +13,6 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL;
  * Envoie une requête ping au serveur backend
  */
 const pingBackend = async () => {
-  // Désactivé temporairement pour éviter les erreurs 404
-  console.log('[KeepAlive] Ping au backend désactivé pour le moment');
-  
-  // Si le backend est disponible plus tard, décommentez ce code
-  /*
   try {
     const response = await fetch(`${API_URL}/ping`, {
       method: 'GET',
@@ -34,7 +29,6 @@ const pingBackend = async () => {
   } catch (error) {
     console.error('[KeepAlive] Erreur lors du ping au backend:', error);
   }
-  */
 };
 
 /**

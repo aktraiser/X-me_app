@@ -11,15 +11,15 @@ import { frFR } from '@clerk/localizations';
 import KeepAliveProvider from '../components/KeepAliveProvider';
 import TermlyCMP from '@/components/TermlyCMP';
 
-// UUID pour Termly Consent Management Platform
-const TERMLY_WEBSITE_UUID = '2b659cf0-9192-417e-8ee3-8ba5e67271c7';
-
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
   subsets: ['latin'],
   display: 'swap',
   fallback: ['Arial', 'sans-serif'],
 });
+
+// UUID de votre site Termly
+const TERMLY_WEBSITE_UUID = '2b659cf0-9192-417e-8ee3-8ba5e67271c7';
 
 export const metadata: Metadata = {
   title: 'Xandme - Ici c\'est vous le patron ',
@@ -104,22 +104,15 @@ export default function RootLayout({
   return (
     <html lang="fr" suppressHydrationWarning>
       <body className={montserrat.className + " min-h-screen"}>
-        {/* Intégration du composant Termly CMP selon les bonnes pratiques */}
+        {/* Intégration du composant Termly CMP avec auto-blocage activé */}
         <TermlyCMP 
           websiteUUID={TERMLY_WEBSITE_UUID} 
           autoBlock={true}
         />
         
-        {/* Div nécessaire pour l'embed Termly */}
-        <div data-name="termly-embed" data-id={TERMLY_WEBSITE_UUID}></div>
-        
         <ClerkProvider 
-          publishableKey={publishableKey || 'pk_test_bWFpbi1ibHVlYmlyZC02NC5jbGVyay5hY2NvdW50cy5kZXYk'}
+          // Plus de clé codée en dur - Clerk utilisera NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
           localization={customLocalization}
-          // Désactiver temporairement les domaines personnalisés jusqu'à ce que le SSL soit correctement configuré
-          isSatellite={false}
-          // Ne pas utiliser les domaines personnalisés pour l'instant
-          domain=""
           appearance={{
             elements: {
               formFieldErrorText: 'text-red-500 text-sm mt-1 font-medium',

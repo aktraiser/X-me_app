@@ -1,8 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
-// Créer un matcher pour les routes d'API
-const apiRoutes = createRouteMatcher(["/api(.*)"])
+// Créer un matcher pour les routes publiques qui ne nécessitent pas d'authentification
+const publicRoutes = createRouteMatcher([
+  "/",
+  "/politique-confidentialite(.*)",
+  "/conditions-utilisation(.*)",
+  "/privacy(.*)",
+  "/terms(.*)",
+  "/a-propos(.*)"
+]);
 
 // Créer un matcher pour les routes d'authentification Clerk
 const authRoutes = createRouteMatcher([
@@ -11,41 +18,22 @@ const authRoutes = createRouteMatcher([
   "/login(.*)",
   "/register(.*)",
   "/auth(.*)",
-  "/forgot-password(.*)",
-  "/terms(.*)",
-  "/privacy(.*)"
+  "/forgot-password(.*)"
 ]);
 
-// Middleware temporaire pendant la migration
-const temporaryMiddleware = (request: NextRequest) => {
-  // Pour les routes API, on laisse passer
-  if (apiRoutes(request)) {
+// Utiliser le middleware officiel de Clerk
+export default clerkMiddleware(async (auth, req) => {
+  // Pour les routes publiques ou d'authentification, ne pas protéger
+  if (publicRoutes(req) || authRoutes(req)) {
     return NextResponse.next();
   }
-
-  // Pour les routes d'authentification, on ajoute un en-tête personnalisé
-  // qui sera utilisé côté client pour masquer la navigation
-  if (authRoutes(request)) {
-    const response = NextResponse.next();
-    response.headers.set("x-auth-route", "true");
-    return response;
-  }
   
-  // Vérifier si l'utilisateur est authentifié via un cookie ou un JWT
-  // Pour le moment, on redirige vers la page de login si non connecté
-  // À remplacer par une vérification d'authentification complète
-  const authToken = request.cookies.get('__session');
+  // Pour toutes les autres routes, protéger
+  const isAuthenticated = await auth.protect();
   
-  if (!authToken) {
-    // Rediriger vers la page de connexion si l'utilisateur n'est pas connecté
-    return NextResponse.redirect(new URL('/sign-in', request.url));
-  }
-
+  // Si la protection réussit, l'utilisateur est authentifié
   return NextResponse.next();
-}
-
-// Utiliser temporaryMiddleware pendant la migration, puis on remettra clerkMiddleware
-export default temporaryMiddleware;
+});
 
 export const config = {
   matcher: [
