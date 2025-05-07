@@ -6,6 +6,7 @@ import InfoBubble from './InfoBubble';
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { NavVisibilityProvider, useNavVisibility } from '@/hooks/useNavVisibility';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -87,6 +88,11 @@ const LayoutContent = ({ children }: LayoutProps) => {
           {children}
         </main>
         
+        {/* Sélecteur de langue */}
+        <div className="fixed top-4 right-4">
+          <LanguageSwitcher />
+        </div>
+        
         {/* Lien vers les préférences de consentement Termly */}
         <div className="fixed bottom-2 right-4">
           <a href="#" className="termly-display-preferences text-xs text-gray-500 dark:text-gray-400 hover:underline">
@@ -104,6 +110,11 @@ const LayoutContent = ({ children }: LayoutProps) => {
         <main className="flex flex-col w-full max-w-4xl px-4 py-8">
           {children}
         </main>
+        
+        {/* Sélecteur de langue */}
+        <div className="fixed top-4 right-4">
+          <LanguageSwitcher />
+        </div>
         
         {/* Lien vers les préférences de consentement Termly */}
         <div className="fixed bottom-2 right-4">
@@ -148,6 +159,11 @@ const LayoutContent = ({ children }: LayoutProps) => {
             // Desktop: margins and rounded corners
             "lg:m-3 lg:ml-0 lg:rounded-xl"
           )}>
+            {/* Sélecteur de langue en haut à droite */}
+            <div className="absolute top-4 right-4 z-10">
+              <LanguageSwitcher />
+            </div>
+            
             <div className="h-full overflow-y-auto scrollbar-hide" id="main-scroll-container">
               <div className="w-full max-w-none mx-auto">
                 {children}

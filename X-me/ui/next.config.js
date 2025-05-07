@@ -1,4 +1,6 @@
 /** @type {import('next').NextConfig} */
+const { i18n } = require('./next-i18next.config');
+
 const nextConfig = {
   output: 'standalone',
   // Désactiver la génération statique pour éviter les erreurs liées à Clerk
@@ -16,7 +18,9 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
   // Désactiver les builds statiques pour les routes qui utilisent Clerk
-  exportPathMap: undefined
+  exportPathMap: undefined,
+  // Configuration i18n
+  i18n
 }
 
 module.exports = nextConfig 
