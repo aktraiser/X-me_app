@@ -15,6 +15,7 @@ import {
 } from "./ui/tooltip";
 import { getApiUrl } from '@/lib/config';
 import { useNavVisibility } from '@/hooks/useNavVisibility';
+import { Session } from '@supabase/supabase-js';
 
 interface Chat {
   id: string;
@@ -58,7 +59,7 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
   const { isNavVisible } = useNavVisibility();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session?.user) setUser(session.user);
     });
   }, [supabase]);
