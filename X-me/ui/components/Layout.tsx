@@ -29,10 +29,6 @@ const LayoutContent = ({ children }: LayoutProps) => {
       '/sign-up',
       '/auth',
       '/forgot-password',
-      '/reset-password',
-      '/sso-callback',
-      '/clerk', // Routes dynamiques de Clerk
-      '/__clerk' // Routes internes de Clerk
     ].some(route => pathname.startsWith(route));
 
     // Routes avec contenu textuel plus large (conditions, vie privée)
@@ -45,7 +41,7 @@ const LayoutContent = ({ children }: LayoutProps) => {
 
     // Routes publiques accessibles sans connexion
     const isPathPublicRoute = [
-      '/a-propos'
+
     ].some(route => pathname.startsWith(route));
 
     setIsAuthRoute(isPathAuthRoute);
@@ -83,21 +79,29 @@ const LayoutContent = ({ children }: LayoutProps) => {
     }
   }, [lastScrollY, setNavVisible]);
 
+  // Composant pour le lien des préférences de consentement Termly
+  const TermlyPreferences = () => {
+    return (
+      <div className="fixed bottom-2 right-4 z-50">
+        <a 
+          href="#" 
+          className="termly-display-preferences text-xs text-gray-500 dark:text-gray-400 hover:underline"
+        >
+          Préférences de cookies
+        </a>
+      </div>
+    );
+  };
+
   // Layout pour les routes d'authentification (modales étroites)
   if (isAuthRoute) {
     return (
-      <div className="min-h-screen bg-[#F5F5EC] dark:bg-[#0F172A] flex items-center justify-center p-4">
-        {/* Conteneur pour les formulaires d'authentification Clerk */}
-        <div className="clerk-container w-full max-w-md">
+      <div className="min-h-screen bg-[#F5F5EC] dark:bg-[#0F172A] flex items-center justify-center">
+        <main className="flex flex-col items-center justify-center w-full max-w-md px-4">
           {children}
-        </div>
-        
-        {/* Lien vers les préférences de consentement Termly */}
-        <div className="fixed bottom-2 right-4">
-          <a href="#" className="termly-display-preferences text-xs text-gray-500 dark:text-gray-400 hover:underline">
-            Préférences de consentement
-          </a>
-        </div>
+        </main>
+        {/* Termly preferences link */}
+        <TermlyPreferences />
       </div>
     );
   }
@@ -109,13 +113,8 @@ const LayoutContent = ({ children }: LayoutProps) => {
         <main className="flex flex-col w-full max-w-4xl px-4 py-8">
           {children}
         </main>
-        
-        {/* Lien vers les préférences de consentement Termly */}
-        <div className="fixed bottom-2 right-4">
-          <a href="#" className="termly-display-preferences text-xs text-gray-500 dark:text-gray-400 hover:underline">
-            Préférences de consentement
-          </a>
-        </div>
+        {/* Termly preferences link */}
+        <TermlyPreferences />
       </div>
     );
   }
@@ -173,6 +172,9 @@ const LayoutContent = ({ children }: LayoutProps) => {
       <div className="hidden lg:block">
         <InfoBubble />
       </div>
+
+      {/* Termly preferences link */}
+      <TermlyPreferences />
     </div>
   );
 };
