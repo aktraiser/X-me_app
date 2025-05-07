@@ -114,3 +114,62 @@ body {
 .loading-dots::after {
   animation: dotsAnimation 1s infinite;
 }
+
+/* Styles personnalisés pour Clerk */
+.clerk-container {
+  width: 100%;
+  max-width: 400px;
+  margin: 0 auto;
+}
+
+/* Boutons primaires personnalisés pour Clerk */
+.cl-formButtonPrimary {
+  background-color: #d97706 !important;
+  color: white !important;
+  border-radius: 0.5rem !important;
+  font-weight: 600 !important;
+  transition: background-color 0.2s ease-in-out !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #b45309 !important;
+}
+
+/* Liens dans les footers et headers */
+.cl-footerActionLink, 
+.cl-headerSubtitle a {
+  color: #d97706 !important;
+  text-decoration: none !important;
+  transition: text-decoration 0.2s ease-in-out !important;
+}
+
+.cl-footerActionLink:hover, 
+.cl-headerSubtitle a:hover {
+  text-decoration: underline !important;
+}
+
+/* Styles pour le mode sombre */
+.dark .cl-card {
+  background-color: #1E293B !important;
+  color: #F5F5EC !important;
+}
+
+.dark .cl-formFieldInput {
+  background-color: #0F172A !important;
+  color: #F5F5EC !important;
+  border-color: #334155 !important;
+}
+
+.dark .cl-headerTitle,
+.dark .cl-headerSubtitle {
+  color: #F5F5EC !important;
+}
+
+.dark .cl-footerActionText,
+.dark .cl-footerActionLink {
+  color: #94A3B8 !important;
+}
+
+.dark .cl-footerActionLink {
+  color: #d97706 !important;
+}
