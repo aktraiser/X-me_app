@@ -2,13 +2,12 @@
 import type { Metadata } from 'next';
 import { Montserrat } from 'next/font/google';
 import './globals.css';
+import { ClerkProvider } from '@clerk/nextjs';
+import { frFR } from '@clerk/localizations';
 import ThemeProviderComponent from '@/components/theme/Provider';
+import KeepAliveProvider from '@/components/KeepAliveProvider';
 import { Toaster } from 'react-hot-toast';
 import Layout from '@/components/Layout';
-import { ClerkProvider } from '@clerk/nextjs';
-// Importation de la localisation française
-import { frFR } from '@clerk/localizations';
-import KeepAliveProvider from '@/components/KeepAliveProvider';
 import TermlyCMP from '@/components/TermlyCMP';
 
 const montserrat = Montserrat({
@@ -26,10 +25,10 @@ export const metadata: Metadata = {
   description: 'Xand&me est une plateforme de mise en relation avec des experts.',
 };
 
-// Clé publique de Clerk
+// Récupérer la clé publique depuis les variables d'environnement
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsueGFuZG1lLmZyJA';
 
-// Personnalisation des traductions en français
+// Personnalisation des traductions françaises basée sur la documentation officielle
 const customFrenchLocalizations = {
   ...frFR,
   signIn: {
@@ -102,7 +101,7 @@ const customFrenchLocalizations = {
     form_password_incorrect: "Le mot de passe est incorrect.",
     form_code_incorrect: "Le code est incorrect.",
     form_expired_code: "Le code a expiré, veuillez en demander un nouveau.",
-    form_password_validation_failed: "Votre mot de passe doit contenir au moins 8 caractères, un chiffre et une lettre majuscule.",
+    form_password_validation_failed: "Votre mot de passe doit contenir au moins 8 caractères.",
     not_allowed_access: "Accès non autorisé. Veuillez vous connecter avec un compte valide.",
     session_exists: "Vous êtes déjà connecté. Veuillez vous déconnecter avant de créer un nouveau compte.",
     form_email_invalid: "L'adresse email n'est pas valide. Veuillez vérifier et réessayer."
@@ -127,14 +126,28 @@ export default function RootLayout({
           publishableKey={publishableKey}
           localization={customFrenchLocalizations}
           appearance={{
+            layout: {
+              // Désactiver les avertissements en mode développement si nécessaire
+              // unsafe_disableDevelopmentModeWarnings: true,
+              helpPageUrl: 'https://xandme.fr/aide',
+              logoPlacement: 'inside',
+              logoImageUrl: 'https://i.imgur.com/Lmi0aw1.png',
+              showOptionalFields: true,
+              socialButtonsPlacement: 'bottom',
+              socialButtonsVariant: 'iconButton',
+              termsPageUrl: 'https://xandme.fr/conditions-utilisation',
+              privacyPageUrl: 'https://xandme.fr/politique-confidentialite',
+            },
             variables: {
               colorPrimary: '#d97706',
               colorTextOnPrimaryBackground: '#ffffff',
               colorBackground: '#F5F5EC',
+              colorInputBackground: '#FFFFFF',
               colorText: '#1E293B',
+              colorInputText: '#1E293B',
               colorDanger: '#EF4444',
               colorSuccess: '#10B981',
-              fontFamily: 'inherit',
+              fontFamily: '"Montserrat", sans-serif',
               borderRadius: '0.5rem',
             },
             elements: {
@@ -153,14 +166,22 @@ export default function RootLayout({
               },
               formFieldInput: {
                 borderRadius: '0.5rem',
+                border: '1px solid #E2E8F0',
               },
               footer: {
                 '& a': {
                   color: '#d97706',
                 }
               },
+              headerTitle: {
+                fontWeight: 700,
+                fontSize: '1.5rem',
+              },
               headerSubtitle: {
                 color: '#4B5563',
+              },
+              identityPreview: {
+                borderRadius: '0.5rem',
               }
             }
           }}

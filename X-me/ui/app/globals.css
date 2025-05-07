@@ -114,3 +114,93 @@ body {
 .loading-dots::after {
   animation: dotsAnimation 1s infinite;
 }
+
+/**
+ * Styles personnalisés pour les composants Clerk
+ * Ces styles ciblent directement les classes CSS de Clerk
+ */
+.clerk-container {
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Override des styles Clerk en mode clair */
+.cl-card {
+  border-radius: 0.75rem !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.cl-formButtonPrimary {
+  background-color: #d97706 !important;
+  color: white !important;
+  font-weight: 600 !important;
+  border-radius: 0.5rem !important;
+  transition: background-color 0.2s !important;
+}
+
+.cl-formButtonPrimary:hover {
+  background-color: #b45309 !important;
+}
+
+.cl-socialButtonsIconButton {
+  border-radius: 0.5rem !important;
+}
+
+.cl-formFieldInput {
+  border-radius: 0.5rem !important;
+  padding: 0.75rem 1rem !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+.cl-footerActionLink, 
+.cl-headerSubtitle a {
+  color: #d97706 !important;
+  font-weight: 500 !important;
+}
+
+.cl-headerTitle {
+  font-weight: 700 !important;
+  font-size: 1.5rem !important;
+}
+
+/* Override des styles Clerk en mode sombre */
+.dark .cl-card {
+  background-color: #1E293B !important;
+  border: 1px solid #334155 !important;
+}
+
+.dark .cl-formFieldInput {
+  background-color: #0F172A !important;
+  border-color: #334155 !important;
+  color: #F8FAFC !important;
+}
+
+.dark .cl-formFieldLabel {
+  color: #E2E8F0 !important;
+}
+
+.dark .cl-headerTitle {
+  color: #F8FAFC !important;
+}
+
+.dark .cl-headerSubtitle {
+  color: #CBD5E1 !important;
+}
+
+.dark .cl-footerActionText {
+  color: #94A3B8 !important;
+}
+
+.dark .cl-footerActionLink {
+  color: #d97706 !important;
+}
+
+.dark .cl-identityPreview {
+  background-color: #1E293B !important;
+  border-color: #334155 !important;
+}
+
+/* Styles spécifiques pour les boutons sociaux */
+.cl-socialButtons {
+  gap: 0.75rem !important;
+}
