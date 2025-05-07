@@ -1,4 +1,4 @@
-import { frFR } from '@clerk/localizations/fr-FR';
+import { frFR } from '@clerk/localizations';
 
 // Traductions personnalisées pour corriger les problèmes de traduction
 export const customFrenchTranslations = {
