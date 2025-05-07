@@ -1,21 +1,16 @@
 'use client';
 
 import { ReactNode } from 'react';
-import { ClerkProvider } from '@clerk/nextjs';   // Utilisation du chemin standard
+import { ClerkProvider } from '@clerk/nextjs';
 import { frFR } from '@clerk/localizations';
 import ThemeProviderComponent from '@/components/theme/Provider';
 import KeepAliveProvider from '@/components/KeepAliveProvider';
 import { Toaster } from 'react-hot-toast';
 import Layout from '@/components/Layout';
 
-
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function Providers({ children }: { children: ReactNode }) {
   return (
     <ClerkProvider localization={frFR}>
-      <html lang="en">
-        <body>{children}</body>
-      </html>
-
       <ThemeProviderComponent>
         <KeepAliveProvider>
           <Layout>{children}</Layout>
@@ -23,5 +18,5 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </KeepAliveProvider>
       </ThemeProviderComponent>
     </ClerkProvider>
-  )
+  );
 }
