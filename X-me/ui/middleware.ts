@@ -11,12 +11,17 @@ const publicRoutes = createRouteMatcher([
 
 // Créer un matcher pour les routes d'authentification Clerk
 const authRoutes = createRouteMatcher([
+  // Routes standards de Clerk
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/login(.*)",
   "/register(.*)",
   "/auth(.*)",
-  "/forgot-password(.*)"
+  "/forgot-password(.*)",
+  // Routes personnalisées en français
+  "/connexion(.*)",
+  "/inscription(.*)",
+  "/mot-de-passe-oublie(.*)"
 ]);
 
 // Récupérer la clé publique de l'environnement ou utiliser une valeur fixe si non disponible
@@ -26,6 +31,24 @@ const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live
 export default clerkMiddleware(async (auth, req) => {
   // Pour les routes publiques ou d'authentification, ne pas protéger
   if (publicRoutes(req) || authRoutes(req)) {
+    // Rediriger les chemins personnalisés vers les chemins standards de Clerk
+    const url = req.nextUrl.clone();
+    const path = url.pathname;
+    
+    // Redirection des routes personnalisées
+    if (path.startsWith('/connexion')) {
+      url.pathname = path.replace('/connexion', '/sign-in');
+      return NextResponse.redirect(url);
+    }
+    else if (path.startsWith('/inscription')) {
+      url.pathname = path.replace('/inscription', '/sign-up');
+      return NextResponse.redirect(url);
+    }
+    else if (path.startsWith('/mot-de-passe-oublie')) {
+      url.pathname = path.replace('/mot-de-passe-oublie', '/forgot-password');
+      return NextResponse.redirect(url);
+    }
+    
     return NextResponse.next();
   }
   
@@ -36,22 +59,7 @@ export default clerkMiddleware(async (auth, req) => {
   return NextResponse.next();
 }, {
   // Fournir explicitement la clé publique
-  publishableKey: publishableKey,
-  // Configurer la Content Security Policy
-  contentSecurityPolicy: {
-    strict: true,
-    directives: {
-      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://main-bluebird-64.clerk.accounts.dev", "https://challenges.cloudflare.com"],
-      'connect-src': ["'self'", "https://main-bluebird-64.clerk.accounts.dev", "https://clerk.xandme.fr"],
-      'img-src': ["'self'", "https://img.clerk.com"],
-      'worker-src': ["'self'", "blob:"],
-      'style-src': ["'self'", "'unsafe-inline'"],
-      'frame-src': ["'self'", "https://challenges.cloudflare.com"],
-      'form-action': ["'self'"]
-    }
-  },
-  // Configurer les domaines autorisés pour prévenir les attaques CSRF
-  authorizedParties: ['https://xandme.fr']
+  publishableKey: publishableKey
 });
 
 export const config = {
