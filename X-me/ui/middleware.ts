@@ -32,11 +32,30 @@ export default clerkMiddleware(async (auth, req) => {
   // Pour toutes les autres routes, protéger
   const isAuthenticated = await auth.protect();
   
+  // Créer la réponse
+  const response = NextResponse.next();
+  
+  // Ajouter l'en-tête CSP pour permettre l'utilisation de eval() par Clerk
+  const cspHeader = `
+    default-src 'self';
+    script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.xandme.fr;
+    style-src 'self' 'unsafe-inline';
+    img-src 'self' blob: data: https://*.clerk.accounts.dev https://clerk.xandme.fr;
+    font-src 'self' data:;
+    object-src 'none';
+    connect-src 'self' https://*.clerk.accounts.dev https://clerk.xandme.fr https://api.xandme.fr;
+    frame-src 'self' https://*.clerk.accounts.dev https://clerk.xandme.fr;
+  `.replace(/\s{2,}/g, ' ').trim();
+  
+  response.headers.set('Content-Security-Policy', cspHeader);
+  
   // Si la protection réussit, l'utilisateur est authentifié
-  return NextResponse.next();
+  return response;
 }, {
   // Fournir explicitement la clé publique
-  publishableKey: publishableKey
+  publishableKey: publishableKey,
+  // Activer le debug en développement
+  debug: process.env.NODE_ENV === 'development'
 });
 
 export const config = {

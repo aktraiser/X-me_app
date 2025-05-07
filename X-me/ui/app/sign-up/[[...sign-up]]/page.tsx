@@ -44,7 +44,7 @@ export default function SignUpPage() {
       </div>
       
       <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-        En vous inscrivant ou en vous connectant, vous acceptez les{' '}
+        En vous inscrivant, vous acceptez les{' '}
         <Link href="/terms" className="text-blue-500 hover:text-blue-400">
           Conditions d&apos;Utilisation
         </Link>{' '}
