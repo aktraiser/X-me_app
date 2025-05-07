@@ -2,7 +2,7 @@
 
 import { ReactNode } from 'react';
 import { ClerkProvider } from '@clerk/nextjs';
-import { frFR } from '@clerk/localizations';
+import { frFR } from '@clerk/localizations/fr-FR';
 import ThemeProviderComponent from '@/components/theme/Provider';
 import KeepAliveProvider from '@/components/KeepAliveProvider';
 import { Toaster } from 'react-hot-toast';
@@ -13,7 +13,7 @@ const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live
 
 export default function Providers({ children }: { children: ReactNode }) {
   return (
-    <ClerkProvider 
+    <ClerkProvider
       localization={frFR}
       publishableKey={publishableKey}
     >
