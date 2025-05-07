@@ -29,9 +29,6 @@ const LayoutContent = ({ children }: LayoutProps) => {
       '/sign-up',
       '/auth',
       '/forgot-password',
-      '/clerk',        // Ajouter routes dynamiques de Clerk
-      '/__clerk',      // Routes internes de Clerk
-      '/reset-password' // Route de réinitialisation du mot de passe
     ].some(route => pathname.startsWith(route));
 
     // Routes avec contenu textuel plus large (conditions, vie privée)
@@ -87,9 +84,7 @@ const LayoutContent = ({ children }: LayoutProps) => {
     return (
       <div className="min-h-screen bg-[#F5F5EC] dark:bg-[#0F172A] flex items-center justify-center">
         <main className="flex flex-col items-center justify-center w-full max-w-md px-4">
-          <div className="clerk-container w-full">
-            {children}
-          </div>
+          {children}
         </main>
         
         {/* Lien vers les préférences de consentement Termly */}
