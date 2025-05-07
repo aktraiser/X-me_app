@@ -8,19 +8,14 @@ import KeepAliveProvider from '@/components/KeepAliveProvider';
 import { Toaster } from 'react-hot-toast';
 import Layout from '@/components/Layout';
 
-export function Providers({ children }: { children: ReactNode }) {
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      localization={frFR}
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsueGFuZG1lLmZyJA'}
-      appearance={{
-        variables: { colorPrimary: '#c49c48' },
-        layout: {
-          socialButtonsPlacement: 'bottom',
-          socialButtonsVariant: 'iconButton',
-        },
-      }}
-    >
+    <ClerkProvider localization={frFR}>
+      <html lang="en">
+        <body>{children}</body>
+      </html>
+
       <ThemeProviderComponent>
         <KeepAliveProvider>
           <Layout>{children}</Layout>
@@ -28,5 +23,5 @@ export function Providers({ children }: { children: ReactNode }) {
         </KeepAliveProvider>
       </ThemeProviderComponent>
     </ClerkProvider>
-  );
-} 
+  )
+}
