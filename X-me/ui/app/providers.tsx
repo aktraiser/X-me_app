@@ -6,12 +6,11 @@ import { frFR } from '@clerk/localizations';
 import ThemeProviderComponent from '@/components/theme/Provider';
 import KeepAliveProvider from '@/components/KeepAliveProvider';
 import { Toaster } from 'react-hot-toast';
-import Layout from '@/components/Layout';
 
 // Clé publique de l'environnement ou valeur par défaut
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsueGFuZG1lLmZyJA';
 
-// Personnalisation des traductions en français basée sur la documentation officielle
+// Personnalisation des traductions en français selon la documentation
 const customFrenchLocalizations = {
   ...frFR,
   signIn: {
@@ -65,11 +64,9 @@ const customFrenchLocalizations = {
 };
 
 export default function Providers({ children }: { children: ReactNode }) {
-  // Effet pour gérer le CSP et permettre eval()
+  // Effet pour gérer le CSP et permettre eval() côté client en développement
   useEffect(() => {
-    // Cette approche est utilisée uniquement pour le développement
     if (process.env.NODE_ENV === 'development') {
-      // Ajouter meta tag pour désactiver temporairement le CSP pour eval()
       const meta = document.createElement('meta');
       meta.httpEquiv = 'Content-Security-Policy';
       meta.content = "script-src 'self' 'unsafe-eval' clerk.xandme.fr *.clerk.accounts.dev;";
@@ -126,7 +123,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     >
       <ThemeProviderComponent>
         <KeepAliveProvider>
-          <Layout>{children}</Layout>
+          {children}
           <Toaster position="top-right" />
         </KeepAliveProvider>
       </ThemeProviderComponent>

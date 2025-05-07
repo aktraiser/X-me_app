@@ -29,8 +29,9 @@ const LayoutContent = ({ children }: LayoutProps) => {
       '/sign-up',
       '/auth',
       '/forgot-password',
-      '/clerk', // Routes dynamiques de Clerk
-      '/__clerk' // Routes internes de Clerk
+      '/clerk',        // Ajouter routes dynamiques de Clerk
+      '/__clerk',      // Routes internes de Clerk
+      '/reset-password' // Route de réinitialisation du mot de passe
     ].some(route => pathname.startsWith(route));
 
     // Routes avec contenu textuel plus large (conditions, vie privée)
@@ -86,7 +87,7 @@ const LayoutContent = ({ children }: LayoutProps) => {
     return (
       <div className="min-h-screen bg-[#F5F5EC] dark:bg-[#0F172A] flex items-center justify-center">
         <main className="flex flex-col items-center justify-center w-full max-w-md px-4">
-          <div className="clerk-container bg-white dark:bg-dark-primary w-full rounded-lg shadow-md">
+          <div className="clerk-container w-full">
             {children}
           </div>
         </main>

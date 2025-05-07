@@ -22,9 +22,12 @@ const authRoutes = createRouteMatcher([
 // Récupérer la clé publique de l'environnement ou utiliser une valeur fixe si non disponible
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsueGFuZG1lLmZyJA';
 
-// Fonction pour ajouter les headers CSP nécessaires pour Clerk
+// Fonction pour ajouter les headers CSP pour Clerk
 function addClerkCSPHeaders(response: NextResponse): NextResponse {
-  // Définir la politique CSP pour permettre eval() et autres fonctionnalités requises par Clerk
+  // Obtenir les headers existants
+  const headers = new Headers(response.headers);
+  
+  // Définir la politique CSP qui autorise Clerk et eval()
   const cspContent = `
     default-src 'self';
     script-src 'self' 'unsafe-eval' 'unsafe-inline' https://clerk.xandme.fr https://*.clerk.accounts.dev;
@@ -35,33 +38,31 @@ function addClerkCSPHeaders(response: NextResponse): NextResponse {
     connect-src 'self' https://clerk.xandme.fr https://*.clerk.accounts.dev;
     frame-src 'self' https://clerk.xandme.fr https://*.clerk.accounts.dev;
   `.replace(/\s+/g, ' ').trim();
-
-  // Ajouter les headers à la réponse
-  const headers = new Headers(response.headers);
+  
   headers.set('Content-Security-Policy', cspContent);
   
-  // Créer une nouvelle réponse avec les headers modifiés
-  return NextResponse.next({
-    headers
-  });
+  // Créer une nouvelle réponse avec les headers
+  return NextResponse.next({ headers });
 }
 
 // Utiliser le middleware officiel de Clerk
 export default clerkMiddleware(async (auth, req) => {
-  // Pour les routes publiques ou d'authentification, ne pas protéger mais ajouter les headers CSP
+  // Pour les routes publiques ou d'authentification, ne pas protéger
   if (publicRoutes(req) || authRoutes(req)) {
+    // Ajouter les headers CSP à la réponse
     return addClerkCSPHeaders(NextResponse.next());
   }
   
   // Pour toutes les autres routes, protéger
   const isAuthenticated = await auth.protect();
   
-  // Ajouter les headers CSP à la réponse
+  // Si la protection réussit, l'utilisateur est authentifié
+  // Ajouter également les headers CSP
   return addClerkCSPHeaders(NextResponse.next());
 }, {
   // Fournir explicitement la clé publique
   publishableKey: publishableKey,
-  // Activer le mode debug en développement
+  // Activer le debug en développement
   debug: process.env.NODE_ENV === 'development'
 });
 

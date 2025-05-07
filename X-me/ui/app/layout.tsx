@@ -4,6 +4,7 @@ import { Montserrat } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 import TermlyCMP from '@/components/TermlyCMP';
+import Layout from '@/components/Layout';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -35,7 +36,7 @@ export default function RootLayout({
         />
         
         <Providers>
-          {children}
+          <Layout>{children}</Layout>
         </Providers>
       </body>
     </html>
