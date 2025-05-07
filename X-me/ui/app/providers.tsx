@@ -1,110 +1,88 @@
 'use client';
 
-import { ReactNode } from 'react';
-import { ClerkProvider } from '@clerk/nextjs';
+import { ReactNode, useEffect } from 'react';
+import { ClerkProvider, useClerk } from '@clerk/nextjs';
 import { frFR } from '@clerk/localizations/fr-FR';
-import { enUS } from '@clerk/localizations/en-US';
 import ThemeProviderComponent from '@/components/theme/Provider';
 import KeepAliveProvider from '@/components/KeepAliveProvider';
 import { Toaster } from 'react-hot-toast';
 import Layout from '@/components/Layout';
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 
 // Clé publique de l'environnement ou valeur par défaut
 const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || 'pk_live_Y2xlcmsueGFuZG1lLmZyJA';
 
-// Personnalisation des traductions françaises
-const customFrFR = {
-  ...frFR,
-  signIn: {
-    ...frFR.signIn,
-    start: {
-      ...frFR.signIn?.start,
-      title: 'Connexion',
-      subtitle: 'pour continuer sur Xandme',
-      actionText: 'Vous n\'avez pas de compte ?',
-      actionLink: 'S\'inscrire'
+// Composant pour forcer la localisation manuellement après le chargement
+function LocalizationDebugger() {
+  const { setActive } = useClerk();
+  
+  useEffect(() => {
+    // Afficher des informations de débogage sur frFR
+    console.log('[DEBUG] frFR:', {
+      available: !!frFR,
+      keys: frFR ? Object.keys(frFR) : [],
+      signIn: frFR?.signIn ? 'disponible' : 'non disponible',
+      signUp: frFR?.signUp ? 'disponible' : 'non disponible',
+    });
+    
+    // Essayer de forcer la localisation avec l'API Clerk
+    try {
+      if (window.Clerk) {
+        window.Clerk.setLocale && window.Clerk.setLocale('fr-FR');
+        console.log('[DEBUG] setLocale appelé');
+        
+        // Essayer également les méthodes internes si disponibles
+        if (window.Clerk.__unstable_updateProps) {
+          window.Clerk.__unstable_updateProps({ localization: frFR });
+          console.log('[DEBUG] __unstable_updateProps appelé');
+        }
+      } else {
+        console.warn('[DEBUG] window.Clerk non disponible');
+      }
+    } catch (error) {
+      console.error('[DEBUG] Erreur:', error);
     }
-  },
-  signUp: {
-    ...frFR.signUp,
-    start: {
-      ...frFR.signUp?.start,
-      title: 'Créer un compte',
-      subtitle: 'pour continuer sur Xandme',
-      actionText: 'Vous avez déjà un compte ?',
-      actionLink: 'Se connecter'
-    }
-  },
-  userButton: {
-    ...frFR.userButton,
-    action__signOut: 'Déconnexion'
+  }, [setActive]);
+  
+  return null;
+}
+
+// Type global pour window.Clerk
+declare global {
+  interface Window {
+    Clerk?: any;
   }
-};
-
-// Personnalisation des traductions anglaises
-const customEnUS = {
-  ...enUS,
-  signIn: {
-    ...enUS.signIn,
-    start: {
-      ...enUS.signIn?.start,
-      subtitle: 'to continue to Xandme'
-    }
-  },
-  signUp: {
-    ...enUS.signUp,
-    start: {
-      ...enUS.signUp?.start,
-      subtitle: 'to continue to Xandme'
-    }
-  }
-};
-
-// Carte des localisations disponibles
-const localizationMap = {
-  'fr': customFrFR,
-  'en': customEnUS,
-};
-
-// Type pour la localisation
-type LocalizationType = typeof frFR;
+}
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const [currentLocale, setCurrentLocale] = useState('fr'); // Par défaut en français
-  const [localization, setLocalization] = useState<LocalizationType>(customFrFR as LocalizationType);
-  const router = useRouter();
-
-  // Détecter la langue du navigateur au chargement (client-side)
-  useEffect(() => {
-    // Récupérer la langue du navigateur ou du localStorage si définie
-    const savedLocale = localStorage.getItem('locale');
-    const browserLocale = navigator.language.split('-')[0];
-    const detectedLocale = savedLocale || 
-                        (localizationMap[browserLocale as keyof typeof localizationMap] ? browserLocale : 'fr');
-    
-    setCurrentLocale(detectedLocale);
-    const selectedLocalization = localizationMap[detectedLocale as keyof typeof localizationMap] || customFrFR;
-    setLocalization(selectedLocalization as LocalizationType);
-    
-    // Log pour debug
-    console.log('[i18n] Locale détectée:', detectedLocale);
-  }, []);
-
   return (
     <ClerkProvider
-      localization={localization}
+      localization={frFR}
       publishableKey={publishableKey}
       appearance={{
+        baseTheme: undefined,
+        variables: {
+          colorPrimary: '#c49c48',
+          colorText: '#333333',
+        },
         elements: {
-          formButtonPrimary: "bg-primary hover:bg-primary-darker text-white",
+          formButtonPrimary: "bg-primary hover:bg-primary-darker text-white font-semibold",
           footerActionLink: "text-primary hover:text-primary-darker",
+          formFieldInput: "text-base",
+          formFieldLabel: "text-sm",
+          formFieldHintText: "text-xs",
+          formFieldErrorText: "text-xs text-red-500",
           card: "shadow-md rounded-lg",
           navbar: "hidden",
+        },
+        layout: {
+          socialButtonsVariant: 'blockButton',
+          socialButtonsPlacement: 'bottom',
+          termsPageUrl: '/conditions-utilisation',
+          privacyPageUrl: '/politique-confidentialite',
         }
       }}
     >
+      <LocalizationDebugger />
       <ThemeProviderComponent>
         <KeepAliveProvider>
           <Layout>{children}</Layout>
