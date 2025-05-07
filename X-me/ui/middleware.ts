@@ -36,7 +36,22 @@ export default clerkMiddleware(async (auth, req) => {
   return NextResponse.next();
 }, {
   // Fournir explicitement la clé publique
-  publishableKey: publishableKey
+  publishableKey: publishableKey,
+  // Configurer la Content Security Policy
+  contentSecurityPolicy: {
+    strict: true,
+    directives: {
+      'script-src': ["'self'", "'unsafe-inline'", "'unsafe-eval'", "https://main-bluebird-64.clerk.accounts.dev", "https://challenges.cloudflare.com"],
+      'connect-src': ["'self'", "https://main-bluebird-64.clerk.accounts.dev", "https://clerk.xandme.fr"],
+      'img-src': ["'self'", "https://img.clerk.com"],
+      'worker-src': ["'self'", "blob:"],
+      'style-src': ["'self'", "'unsafe-inline'"],
+      'frame-src': ["'self'", "https://challenges.cloudflare.com"],
+      'form-action': ["'self'"]
+    }
+  },
+  // Configurer les domaines autorisés pour prévenir les attaques CSRF
+  authorizedParties: ['https://xandme.fr']
 });
 
 export const config = {
