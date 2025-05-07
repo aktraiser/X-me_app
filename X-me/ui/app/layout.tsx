@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="fr" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning>
       <body className={montserrat.className + " min-h-screen"}>
         {/* Intégration du composant Termly CMP avec auto-blocage activé */}
         <TermlyCMP 

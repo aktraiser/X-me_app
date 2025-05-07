@@ -15,7 +15,6 @@ import {
 } from "./ui/tooltip";
 import { getApiUrl } from '@/lib/config';
 import { useNavVisibility } from '@/hooks/useNavVisibility';
-import type { Session } from '@supabase/supabase-js';
 
 interface Chat {
   id: string;
@@ -59,7 +58,7 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
   const { isNavVisible } = useNavVisibility();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) setUser(session.user);
     });
   }, [supabase]);
@@ -102,7 +101,7 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
       <aside
         className={cn(
           "hidden lg:flex lg:fixed lg:inset-y-0 lg:z-50 lg:flex-col bg-light-secondary dark:bg-dark-secondary overflow-hidden transition-all duration-300 ease-in-out",
-          isExpanded ? "lg:w-52" : "lg:w-16"
+          isExpanded ? "lg:w-48" : "lg:w-14"
         )}
       >
         <div className="flex flex-col justify-between h-full py-8 px-2">
@@ -145,8 +144,12 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
                 <Link
                   href={link.href}
                   className={cn(
-                    "relative flex items-center w-full h-10 rounded-lg transition-colors duration-200",
-                    link.active ? "bg-black/10 dark:bg-white/10 text-black dark:text-white" : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10",
+                    "relative flex items-center w-full h-10 rounded-lg transition-all duration-200",
+                    link.active 
+                      ? isExpanded 
+                        ? "bg-[#c49c48]/20 text-white" 
+                        : "text-black dark:text-white" 
+                      : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10",
                     isExpanded ? "px-3" : "justify-center"
                   )}
                 >
@@ -154,8 +157,10 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
                   {isExpanded && <span className="ml-3 truncate">{link.label}</span>}
                   {link.active && (
                     <span className={cn(
-                      "absolute right-0 top-0 h-full bg-[#c49c48] z-20",
-                      isExpanded ? "w-1" : "w-2 h-2 rounded-full right-2 top-1/2 -translate-y-1/2"
+                      "absolute bg-[#c49c48]",
+                      isExpanded 
+                        ? "w-1 right-0 top-0 h-full" 
+                        : "w-1 h-8 rounded-r-md left-0"
                     )} />
                   )}
                 </Link>
@@ -181,8 +186,8 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
             <button
               onClick={() => setIsExpanded(prev => !prev)}
               className={cn(
-                "flex items-center w-full h-10 rounded-lg transition-colors duration-200",
-                isExpanded ? "px-3 bg-black/5 dark:bg-white/5 hover:bg-black/10" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
+                "flex items-center w-full h-10 rounded-lg transition-all duration-200",
+                isExpanded ? "px-3 justify-start hover:bg-black/10" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
               )}
             >
               {isExpanded ? (
@@ -205,14 +210,24 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
             <Link
               href="/settings"
               className={cn(
-                "flex items-center w-full h-10 rounded-lg transition-colors duration-200",
+                "flex items-center w-full h-10 rounded-lg transition-all duration-200",
                 isExpanded ? "px-3" : "justify-center",
-                segments.includes('settings') ? 'text-[#c49c48]' : 'text-black/70 dark:text-white/70',
+                segments.includes('settings') 
+                  ? isExpanded 
+                    ? 'bg-[#c49c48]/20 text-white' 
+                    : 'text-[#c49c48]' 
+                  : 'text-black/70 dark:text-white/70',
                 'hover:bg-black/10 dark:hover:bg-white/10'
               )}
             >
-              <div className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-light-primary dark:bg-dark-primary">
-                <User className={cn('w-4 h-4', segments.includes('settings') && 'text-[#c49c48]')} />
+              <div className={cn(
+                "inline-flex items-center justify-center w-8 h-8 rounded-full bg-light-primary dark:bg-dark-primary",
+                segments.includes('settings') && "bg-[#c49c48]/20"
+              )}>
+                <User className={cn(
+                  'w-4 h-4', 
+                  segments.includes('settings') && 'text-[#c49c48]'
+                )} />
               </div>
               {isExpanded && <span className="ml-3">Mon Profil</span>}
             </Link>
@@ -222,11 +237,13 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
 
       {/* Mobile Navigation */}
       {segments.length === 0 && (
-        <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary lg:hidden">
+        <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
           <Image src="/images/logo.svg" alt="Logo" width={32} height={32} />
           <Link href="/settings">
-            <div className={cn("w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",
-              segments.includes('settings') && 'bg-[#c49c48]/20')}>
+            <div className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",
+              segments.includes('settings') && 'bg-[#c49c48]/20'
+            )}>
               <User className={cn('w-4 h-4', segments.includes('settings') && 'text-[#c49c48]')} />
             </div>
           </Link>
@@ -235,15 +252,26 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
 
       {/* Bottom Nav */}
       <nav className={cn(
-        "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 lg:hidden transition-transform duration-300",
-        isNavVisible ? 'translate-y-0' : 'translate-y-full',
-        'bg-dark-secondary'
+        "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 bg-dark-secondary shadow-t-sm z-[100] lg:hidden transition-transform duration-300 ease-in-out",
+        isNavVisible ? 'translate-y-0' : 'translate-y-full'
       )}>
         {navLinks.map((link, i) => (
-          <Link key={i} href={link.href} className="flex flex-col items-center space-y-1">
-            {link.active && <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-2 w-2 h-2 rounded-full bg-[#c49c48]" />}
-            <link.icon className="w-4 h-4 text-white" />
-            <span className="text-xs text-white">{link.label}</span>
+          <Link 
+            key={i} 
+            href={link.href} 
+            className="flex flex-col items-center space-y-1"
+          >
+            {link.active && (
+              <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-2 w-2 h-2 rounded-full bg-[#c49c48]" />
+            )}
+            <link.icon className={cn(
+              "w-4 h-4 text-white",
+              link.active && "text-[#c49c48]"
+            )} />
+            <span className={cn(
+              "text-xs",
+              link.active ? "text-[#c49c48]" : "text-white/70"
+            )}>{link.label}</span>
           </Link>
         ))}
       </nav>
