@@ -25,6 +25,11 @@ const nextConfig = {
       },
     ],
   },
+  i18n: {
+    locales: ['fr'],
+    defaultLocale: 'fr',
+    localeDetection: false, // Désactive la détection automatique pour forcer le français
+  },
   async rewrites() {
     const backendUrl = process.env.NODE_ENV === 'production' 
       ? 'http://xme-backend:3001'

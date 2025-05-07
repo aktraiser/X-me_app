@@ -36,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="fr" suppressHydrationWarning>
       <body className={montserrat.className + " min-h-screen"}>
         {/* Intégration du composant Termly CMP avec auto-blocage activé */}
         <TermlyCMP 
@@ -48,6 +48,16 @@ export default function RootLayout({
         <ClerkProvider 
           localization={frFR}
           publishableKey={publishableKey}
+          appearance={{
+            baseTheme: undefined,
+            variables: {
+              colorPrimary: '#c49c48'
+            },
+            layout: {
+              socialButtonsPlacement: 'bottom',
+              socialButtonsVariant: 'iconButton',
+            }
+          }}
         >
           <ThemeProviderComponent>
             <KeepAliveProvider>
