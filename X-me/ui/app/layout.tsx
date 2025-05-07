@@ -112,6 +112,7 @@ export default function RootLayout({
         
         <ClerkProvider 
           // Plus de clé codée en dur - Clerk utilisera NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+          publishableKey={publishableKey}
           localization={customLocalization}
           appearance={{
             elements: {
