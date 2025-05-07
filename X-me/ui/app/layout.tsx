@@ -4,7 +4,6 @@ import { Montserrat } from 'next/font/google';
 import './globals.css';
 import Providers from './providers';
 import TermlyCMP from '@/components/TermlyCMP';
-import Script from 'next/script';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -28,10 +27,6 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
-      <head>
-        {/* Script de forçage de traduction française pour Clerk */}
-        <Script src="/force-french.js" strategy="afterInteractive" />
-      </head>
       <body className={montserrat.className + " min-h-screen"}>
         {/* Intégration du composant Termly CMP avec auto-blocage activé */}
         <TermlyCMP 
