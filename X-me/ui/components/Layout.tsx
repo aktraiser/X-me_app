@@ -81,6 +81,12 @@ const LayoutContent = ({ children }: LayoutProps) => {
 
   // Composant pour le lien des préférences de consentement Termly
   const TermlyPreferences = () => {
+    // Vérifier si nous sommes sur une page de connexion ou d'inscription
+    const isSignInOrSignUp = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
+    
+    // N'afficher que sur les pages sign-in et sign-up
+    if (!isSignInOrSignUp) return null;
+    
     return (
       <div className="fixed bottom-2 right-4 z-50">
         <a 
@@ -155,13 +161,6 @@ const LayoutContent = ({ children }: LayoutProps) => {
             <div className="h-full overflow-y-auto scrollbar-hide" id="main-scroll-container">
               <div className="w-full max-w-none mx-auto">
                 {children}
-              </div>
-              
-              {/* Footer avec lien vers les préférences de consentement Termly */}
-              <div className="px-4 py-2 border-t border-gray-200 dark:border-gray-700 text-center">
-                <a href="#" className="termly-display-preferences text-sm text-gray-500 dark:text-gray-400 hover:underline">
-                  Préférences de consentement
-                </a>
               </div>
             </div>
           </div>

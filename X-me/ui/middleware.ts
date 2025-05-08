@@ -6,7 +6,8 @@ const publicRoutes = createRouteMatcher([
   // La route principale "/" n'est plus publique
   "/politique-confidentialite(.*)",
   "/conditions-utilisation(.*)",
-  "/a-propos(.*)"
+  "/a-propos(.*)",
+  "/api/ping"
 ]);
 
 // Créer un matcher pour les routes d'authentification Clerk

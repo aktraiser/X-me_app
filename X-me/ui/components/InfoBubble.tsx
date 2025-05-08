@@ -25,6 +25,7 @@ const PopoverContent = React.forwardRef<
 ))
 PopoverContent.displayName = PopoverPrimitive.Content.displayName
 
+{/* Footer avec lien vers les préférences de consentement Termly */}
 const InfoBubble = () => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -66,6 +67,12 @@ const InfoBubble = () => {
             >
               À propos de nous
             </Link>
+            <a 
+              href="#" 
+              className="termly-display-preferences text-sm text-black/90 dark:text-white/90 hover:underline"
+            >
+              Préférences de consentement
+            </a>
           </div>
         </PopoverContent>
       </Popover>

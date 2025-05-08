@@ -16,6 +16,11 @@ import logger from '../utils/logger';
 
 const router = express.Router();
 
+// Endpoint ping pour les health checks
+router.get('/ping', (_, res) => {
+  res.status(200).json({ status: 'pong', timestamp: new Date().toISOString() });
+});
+
 router.use('/images', imagesRouter);
 router.use('/videos', videosRouter);
 router.use('/config', configRouter);
