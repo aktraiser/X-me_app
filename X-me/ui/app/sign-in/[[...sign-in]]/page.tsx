@@ -35,24 +35,6 @@ export default function SignInPage() {
         afterSignInUrl="/"
       />
       
-      <div className="mt-4 text-center">
-        <span className="text-gray-600 dark:text-gray-400">Pas encore de compte ? </span>
-        <Link href="/sign-up" className="text-blue-500 hover:text-blue-400 font-medium">
-          S&apos;inscrire
-        </Link>
-      </div>
-      
-      <div className="mt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-        En vous inscrivant ou en vous connectant, vous acceptez les{' '}
-        <Link href="/terms" className="text-blue-500 hover:text-blue-400">
-          Conditions d&apos;Utilisation
-        </Link>{' '}
-        et la{' '}
-        <Link href="/privacy" className="text-blue-500 hover:text-blue-400">
-          Politique de Confidentialité
-        </Link>{' '}
-        de X-me.
-      </div>
     </div>
   );
 } 
