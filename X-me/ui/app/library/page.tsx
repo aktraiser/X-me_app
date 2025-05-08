@@ -209,7 +209,7 @@ const Page = () => {
                       >
                         <Link
                           href={`/c/${chat.id}`}
-                          className="text-black dark:text-white lg:text-xl font-medium truncate transition duration-200 hover:text-[#24A0ED] dark:hover:text-[#24A0ED] cursor-pointer"
+                          className="text-black dark:text-white lg:text-xl font-medium truncate transition duration-200 hover:text-orange-500 dark:hover:text-orange-500 cursor-pointer"
                           onClick={(e) => {
                             // Vérifier si le chat a des métadonnées complètes
                             if (!chat.metadata?.complete_conversation) {

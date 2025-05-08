@@ -297,8 +297,8 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
                             Avant de vous donner les coordonnées de notre expert, nous avons besoin de comprendre votre demande. 
                             Ces informations seront transmise à notre expert.
                           </p>
-                          <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
                         </div>
+                        <div className="my-4 border-t border-gray-200 dark:border-gray-700"></div>
                         <p className="text-sm text-gray-500 dark:text-gray-400 italic mb-4">Tous les champs sont obligatoires</p>
                         <form onSubmit={handleSubmit} className="mt-4">
                           <div className="mb-6">
@@ -316,8 +316,8 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                      <div className="flex flex-col text-sm">
-                                        <span className="font-medium text-gray-900 dark:text-white">{option.title}</span>
+                                      <div className="flex flex-col sm:flex-row text-sm items-start sm:items-center">
+                                        <span className="font-medium text-gray-900 dark:text-white sm:w-40">{option.title}</span>
                                         <span className="text-gray-500 dark:text-gray-400">
                                           {option.description}
                                         </span>
@@ -356,31 +356,29 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
                                   }
                                 >
                                   {({ checked }) => (
-                                    <>
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center">
-                                          <div className="text-sm">
-                                            <RadioGroup.Label
-                                              as="p"
-                                              className={`font-medium ${checked ? 'text-blue-900 dark:text-blue-200' : 'text-gray-900 dark:text-white'}`}
-                                            >
-                                              {option.title}
-                                            </RadioGroup.Label>
-                                            <RadioGroup.Description
-                                              as="span"
-                                              className={`inline ${checked ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}
-                                            >
-                                              {option.description}
-                                            </RadioGroup.Description>
-                                          </div>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center">
+                                        <div className="flex flex-col sm:flex-row text-sm items-start sm:items-center">
+                                          <RadioGroup.Label
+                                            as="p"
+                                            className={`font-medium ${checked ? 'text-blue-900 dark:text-blue-200' : 'text-gray-900 dark:text-white'} sm:w-60`}
+                                          >
+                                            {option.title}
+                                          </RadioGroup.Label>
+                                          <RadioGroup.Description
+                                            as="span"
+                                            className={`inline ${checked ? 'text-blue-700 dark:text-blue-300' : 'text-gray-500 dark:text-gray-400'}`}
+                                          >
+                                            {option.description}
+                                          </RadioGroup.Description>
                                         </div>
-                                        {checked && (
-                                          <div className="shrink-0 text-blue-600 dark:text-blue-500">
-                                            <Check className="h-5 w-5" />
-                                          </div>
-                                        )}
                                       </div>
-                                    </>
+                                      {checked && (
+                                        <div className="shrink-0 text-blue-600 dark:text-blue-500">
+                                          <Check className="h-5 w-5" />
+                                        </div>
+                                      )}
+                                    </div>
                                   )}
                                 </RadioGroup.Option>
                               ))}

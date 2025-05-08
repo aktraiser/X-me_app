@@ -213,8 +213,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                           
                           <div className="space-y-6">
                             <div className="sm:grid sm:grid-cols-2 sm:gap-4">
-                              <div>
-                                <label htmlFor="prenom" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              <div className="relative">
+                                <label
+                                  htmlFor="prenom"
+                                  className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
+                                >
                                   Prénom <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -226,7 +229,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                   required
                                   autoComplete="given-name"
                                   placeholder="Votre prénom"
-                                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 dark:focus:border-amber-500 focus:ring-amber-500 dark:focus:ring-amber-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                                 />
                                 {errors.prenom && (
                                   <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -235,8 +238,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 )}
                               </div>
 
-                              <div>
-                                <label htmlFor="nom" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                              <div className="relative">
+                                <label
+                                  htmlFor="nom"
+                                  className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
+                                >
                                   Nom <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -248,7 +254,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                   required
                                   autoComplete="family-name"
                                   placeholder="Votre nom"
-                                  className="block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 dark:focus:border-amber-500 focus:ring-amber-500 dark:focus:ring-amber-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                                 />
                                 {errors.nom && (
                                   <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -258,8 +264,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                               </div>
                             </div>
 
-                            <div>
-                              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="relative">
+                              <label
+                                htmlFor="email"
+                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
+                              >
                                 Email <span className="text-red-500">*</span>
                               </label>
                               <input
@@ -271,7 +280,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 required
                                 autoComplete="email"
                                 placeholder="votre.email@exemple.com"
-                                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 dark:focus:border-amber-500 focus:ring-amber-500 dark:focus:ring-amber-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                               />
                               {errors.email && (
                                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -280,8 +289,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                               )}
                             </div>
 
-                            <div>
-                              <label htmlFor="telephone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="relative">
+                              <label
+                                htmlFor="telephone"
+                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
+                              >
                                 Téléphone
                               </label>
                               <input
@@ -291,12 +303,15 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 value={formData.telephone}
                                 onChange={handleChange}
                                 placeholder="06 12 34 56 78"
-                                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 dark:focus:border-amber-500 focus:ring-amber-500 dark:focus:ring-amber-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                               />
                             </div>
 
-                            <div>
-                              <label htmlFor="ville" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="relative">
+                              <label
+                                htmlFor="ville"
+                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
+                              >
                                 Ville
                               </label>
                               <input
@@ -306,7 +321,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 value={formData.ville}
                                 onChange={handleChange}
                                 placeholder="Votre ville"
-                                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 dark:focus:border-amber-500 focus:ring-amber-500 dark:focus:ring-amber-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                               />
                             </div>
                           </div>
@@ -320,8 +335,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                           </h4>
 
                           <div className="space-y-6">
-                            <div>
-                              <label htmlFor="expertises" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="relative">
+                              <label
+                                htmlFor="expertises"
+                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
+                              >
                                 Domaines d&apos;expertise <span className="text-red-500">*</span>
                               </label>
                               <input
@@ -331,7 +349,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 onChange={handleChange}
                                 required
                                 placeholder="Ex: Comptable, Avocat, Juriste..."
-                                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 dark:focus:border-amber-500 focus:ring-amber-500 dark:focus:ring-amber-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                               />
                               {errors.expertises ? (
                                 <p className="mt-2 text-sm text-red-600 dark:text-red-400">
@@ -344,8 +362,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                               )}
                             </div>
 
-                            <div>
-                              <label htmlFor="message" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                            <div className="relative">
+                              <label
+                                htmlFor="message"
+                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
+                              >
                                 Message ou informations complémentaires
                               </label>
                               <textarea
@@ -355,7 +376,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 value={formData.message}
                                 onChange={handleChange}
                                 placeholder="Partagez-nous votre parcours, vos qualifications ou toute autre information pertinente..."
-                                className="block w-full rounded-md border border-gray-300 dark:border-gray-600 shadow-sm focus:border-amber-500 dark:focus:border-amber-500 focus:ring-amber-500 dark:focus:ring-amber-500 sm:text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                               />
                               <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
                                 Plus votre demande sera détaillée, mieux nous pourrons évaluer votre candidature.

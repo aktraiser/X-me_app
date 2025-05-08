@@ -70,8 +70,8 @@ const SidebarLogo = () => {
   return (
     <div className="flex items-center justify-center w-full px-2.5">
       <img
-        src="/images/logo.svg"
-        alt="Logo"
+        src="/images/logo.png"
+        alt="Logo X&ME"
         className="w-10 h-10"
       />
     </div>
@@ -94,15 +94,15 @@ const SidebarNewChat = () => {
     >
       {isExpanded ? (
         <div className="flex items-center w-full gap-3">
-          <Plus className="w-4 h-4" />
-          <span className="truncate">Nouvelle Discussion</span>
+          <Plus className="w-4 h-4 text-black dark:text-white" />
+          <span className="truncate text-black dark:text-white">Nouvelle Discussion</span>
         </div>
       ) : (
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="w-8 h-8 flex items-center justify-center rounded-full bg-light-primary dark:bg-dark-primary hover:bg-[#c49c48]/20 transition-colors">
-                <Plus className="w-4 h-4" />
+                <Plus className="w-4 h-4 text-black dark:text-white" />
               </div>
             </TooltipTrigger>
             <TooltipContent side="right" align="center" sideOffset={4}>Nouvelle discussion</TooltipContent>
@@ -161,7 +161,10 @@ const SidebarMenuItem = ({
           <Tooltip>
             <TooltipTrigger asChild>
               <div className="flex flex-col items-center">
-                <Icon className="w-4 h-4 text-black dark:text-white" />
+                <Icon className={cn(
+                  "w-4 h-4", 
+                  active ? "text-[#c49c48]" : "text-black dark:text-white"
+                )} />
                 {active && (
                   <div className="w-1.5 h-1.5 rounded-full bg-[#c49c48] mt-1"></div>
                 )}
@@ -191,7 +194,7 @@ const ChatHistoryList = ({ chatHistory }: { chatHistory: Chat[] }) => {
         <Link
           key={chat.id}
           href={`/c/${chat.id}`}
-          className="block truncate max-w-[160px] py-1 hover:text-black dark:hover:text-white transition-colors"
+          className="block truncate max-w-[160px] py-1 text-black/70 dark:text-white/70 hover:text-black dark:hover:text-white transition-colors"
         >
           {chat.title}
         </Link>
@@ -241,20 +244,20 @@ const SidebarToggleButton = () => {
       className={cn(
         "flex items-center w-full rounded-lg transition-all duration-200 cursor-pointer",
         isExpanded 
-          ? "px-3 justify-start hover:bg-black/10 h-10" 
+          ? "px-3 justify-start hover:bg-black/10 dark:hover:bg-white/10 h-10" 
           : "justify-center hover:bg-black/10 dark:hover:bg-white/10 py-2"
       )}
     >
       {isExpanded ? (
         <>
-          <ArrowLeftToLine className="w-4 h-4" />
-          <span className="ml-3">Réduire</span>
+          <ArrowLeftToLine className="w-4 h-4 text-black dark:text-white" />
+          <span className="ml-3 text-black dark:text-white">Réduire</span>
         </>
       ) : (
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <ArrowRightToLine className="w-4 h-4" />
+              <ArrowRightToLine className="w-4 h-4 text-black dark:text-white" />
             </TooltipTrigger>
             <TooltipContent side="right" align="center" sideOffset={4}>Étendre</TooltipContent>
           </Tooltip>
@@ -405,8 +408,8 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
         {segments.length === 0 && (
           <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
             <img
-              src="/images/logo.svg"
-              alt="Logo"
+              src="/images/logo.png"
+              alt="Logo X&ME"
               className="w-8 h-8"
             />
             <Link href="/settings">
@@ -429,19 +432,22 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
             <Link 
               key={i} 
               href={link.href} 
-              className="flex flex-col items-center space-y-1"
+              className="flex flex-col items-center space-y-1 relative"
             >
               {link.active && (
-                <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-2 w-2 h-2 rounded-full bg-[#c49c48]" />
+                <div className="absolute -top-1 w-1.5 h-1.5 rounded-full bg-[#c49c48]" />
               )}
               <link.icon className={cn(
-                "w-4 h-4 text-white",
-                link.active && "text-[#c49c48]"
+                "w-4 h-4",
+                link.active ? "text-[#c49c48]" : "text-white/70"
               )} />
               <span className={cn(
                 "text-xs",
                 link.active ? "text-[#c49c48]" : "text-white/70"
               )}>{link.label}</span>
+              {link.active && (
+                <div className="w-1.5 h-1.5 rounded-full bg-[#c49c48] mt-1"></div>
+              )}
             </Link>
           ))}
         </nav>

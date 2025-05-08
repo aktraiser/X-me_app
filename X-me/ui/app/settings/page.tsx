@@ -337,7 +337,7 @@ export default function SettingsPage() {
                   setSystemInstructions(e.target.value);
                 }}
                 onSave={(value: string) => saveConfig('systemInstructions', value)}
-                placeholder="Écrivez vos instructions système ici..."
+                placeholder="Écrivez vos instructions système ici... Par exemple: 'Je suis un entrepreneur intéressé par la finance et les nouvelles technologies. Donnez-moi des réponses concises. Je préfère des exemples pratiques. J'apprécie les informations sur l'actualité économique et les innovations technologiques.'"
               />
             </SettingsSection>
 

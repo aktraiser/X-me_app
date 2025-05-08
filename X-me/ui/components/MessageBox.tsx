@@ -654,7 +654,7 @@ const MessageBox = ({
                                   onClick={() => sendMessage(suggestion)}
                                   className="cursor-pointer flex flex-row justify-between font-medium space-x-2 items-center"
                                 >
-                                  <p className="transition duration-200 hover:text-[#24A0ED]">
+                                  <p className="transition duration-200 hover:text-orange-500">
                                     {suggestion}
                                   </p>
                                   <Plus
