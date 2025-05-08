@@ -1,9 +1,8 @@
 'use client';
 
 import { cn } from '@/lib/utils';
-import { Home, Search, Plus, Settings, Clock, Library, ArrowLeftToLine, ArrowRightToLine, User } from 'lucide-react';
+import { Home, Search, Plus, Settings, ArrowLeftToLine, ArrowRightToLine, User, Library } from 'lucide-react';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useSelectedLayoutSegments } from 'next/navigation';
 import React, { useState, useEffect, type ReactNode } from 'react';
 import { createClient } from '@/utils/supabase/client';
@@ -24,34 +23,332 @@ interface Chat {
   focusMode: string;
 }
 
-const IconWithTooltip = ({ icon: Icon, label, isExpanded }: { icon: any; label: string; isExpanded: boolean; }) => {
-  return isExpanded ? (
-    <Icon className="h-5 w-5 text-black dark:text-white" />
-  ) : (
-    <TooltipProvider delayDuration={0}>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <span className="flex items-center justify-center">
-            <Icon className="h-5 w-5 text-black dark:text-white" />
-          </span>
-        </TooltipTrigger>
-        <TooltipContent side="right" align="center" sideOffset={4} className="flex items-center gap-2">
-          {label}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+// Constantes pour les dimensions de la barre latérale
+const SIDEBAR_WIDTH = "16rem";
+const SIDEBAR_WIDTH_COLLAPSED = "5rem";
+
+// Context pour gérer l'état de la barre latérale
+const SidebarContext = React.createContext<{
+  isExpanded: boolean;
+  setIsExpanded: React.Dispatch<React.SetStateAction<boolean>>;
+}>({
+  isExpanded: false,
+  setIsExpanded: () => {},
+});
+
+// Hook pour utiliser le contexte de la barre latérale
+const useSidebar = () => {
+  const context = React.useContext(SidebarContext);
+  if (!context) {
+    throw new Error("useSidebar doit être utilisé dans un SidebarProvider");
+  }
+  return context;
+};
+
+// Provider pour le contexte de la barre latérale
+const SidebarProvider = ({ children, defaultExpanded = false, onExpandChange }: { 
+  children: ReactNode; 
+  defaultExpanded?: boolean;
+  onExpandChange?: (expanded: boolean) => void;
+}) => {
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
+
+  // Notifier le parent du changement d'état
+  useEffect(() => {
+    onExpandChange?.(isExpanded);
+  }, [isExpanded, onExpandChange]);
+
+  return (
+    <SidebarContext.Provider value={{ isExpanded, setIsExpanded }}>
+      {children}
+    </SidebarContext.Provider>
   );
 };
 
+// Composant pour le logo
+const SidebarLogo = () => {
+  return (
+    <div className="flex items-center justify-center w-full">
+      <object
+        data="/images/logo.svg"
+        type="image/svg+xml"
+        className="w-10 h-10"
+        aria-label="Logo"
+      />
+    </div>
+  );
+};
+
+// Composant pour le bouton de nouvelle discussion
+const SidebarNewChat = () => {
+  const { isExpanded } = useSidebar();
+
+  return (
+    <button
+      onClick={() => window.location.href = '/'}
+      className={cn(
+        "w-full flex items-center rounded-lg transition-all duration-200",
+        isExpanded 
+          ? "px-3 border border-black/10 dark:border-white/10 hover:border-[#c49c48] dark:hover:border-[#c49c48] h-10" 
+          : "justify-center hover:bg-black/10 dark:hover:bg-white/10 py-2"
+      )}
+    >
+      {isExpanded ? (
+        <div className="flex items-center w-full gap-3">
+          <Plus className="w-4 h-4" />
+          <span className="truncate">Nouvelle Discussion</span>
+        </div>
+      ) : (
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="w-8 h-8 flex items-center justify-center rounded-full bg-light-primary dark:bg-dark-primary hover:bg-[#c49c48]/20 transition-colors">
+                <Plus className="w-4 h-4" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center" sideOffset={4}>Nouvelle discussion</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </button>
+  );
+};
+
+// Composant pour l'en-tête de la barre latérale
+const SidebarHeader = () => {
+  return (
+    <div className="space-y-4 mb-6">
+      <SidebarLogo />
+      <SidebarNewChat />
+    </div>
+  );
+};
+
+// Composant pour un élément de menu
+const SidebarMenuItem = ({ 
+  icon: Icon, 
+  label, 
+  href, 
+  active 
+}: { 
+  icon: React.ElementType; 
+  label: string; 
+  href: string; 
+  active: boolean;
+}) => {
+  const { isExpanded } = useSidebar();
+
+  return (
+    <Link
+      href={href}
+      className={cn(
+        "relative flex items-center w-full rounded-lg transition-all duration-200 cursor-pointer",
+        active 
+          ? isExpanded 
+            ? "bg-[#c49c48]/20 text-white px-3 h-10" 
+            : "text-black dark:text-white py-2 justify-center hover:bg-black/10 dark:hover:bg-white/10" 
+          : isExpanded
+            ? "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10 px-3 h-10"
+            : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10 py-2 justify-center"
+      )}
+    >
+      {isExpanded ? (
+        <>
+          <Icon className="w-4 h-4 text-black dark:text-white" />
+          <span className="ml-3 truncate">{label}</span>
+        </>
+      ) : (
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Icon className="w-4 h-4 text-black dark:text-white" />
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center" sideOffset={4}>
+              {label}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+      {active && (
+        <span className={cn(
+          "absolute bg-[#c49c48]",
+          isExpanded 
+            ? "w-1 right-0 top-0 h-full" 
+            : "w-1 right-0 h-8 rounded-l-md"
+        )} />
+      )}
+    </Link>
+  );
+};
+
+// Composant pour l'historique des discussions
+const ChatHistoryList = ({ chatHistory }: { chatHistory: Chat[] }) => {
+  if (chatHistory.length === 0) return null;
+
+  return (
+    <div className="pl-10 mt-2 space-y-1 relative">
+      <div className="absolute left-8 top-0 bottom-0 w-px bg-black/10 dark:bg-white/10" />
+      {chatHistory.map(chat => (
+        <Link
+          key={chat.id}
+          href={`/c/${chat.id}`}
+          className="block truncate max-w-[160px] py-1 hover:text-black dark:hover:text-white transition-colors"
+        >
+          {chat.title}
+        </Link>
+      ))}
+    </div>
+  );
+};
+
+// Composant pour la navigation principale
+const SidebarNav = ({ chatHistory }: { chatHistory: Chat[] }) => {
+  const segments = useSelectedLayoutSegments();
+  const { isExpanded } = useSidebar();
+  const [loading] = useState(false);
+
+  const navLinks = [
+    { icon: Home, href: '/', active: segments.length === 0 || segments.includes('c'), label: 'Accueil' },
+    { icon: Search, href: '/discover', active: segments.includes('discover'), label: 'Nos experts' },
+    { icon: Library, href: '/library', active: segments.includes('library'), label: 'Historique' },
+  ];
+
+  return (
+    <div className="space-y-1">
+      {navLinks.map((link, i) => (
+        <div key={i} className="w-full">
+          <SidebarMenuItem 
+            icon={link.icon} 
+            label={link.label} 
+            href={link.href} 
+            active={link.active} 
+          />
+          {isExpanded && link.label === 'Historique' && !loading && 
+            <ChatHistoryList chatHistory={chatHistory} />
+          }
+        </div>
+      ))}
+    </div>
+  );
+};
+
+// Composant pour le bouton d'expansion/réduction
+const SidebarToggleButton = () => {
+  const { isExpanded, setIsExpanded } = useSidebar();
+
+  return (
+    <button
+      onClick={() => setIsExpanded(prev => !prev)}
+      className={cn(
+        "flex items-center w-full rounded-lg transition-all duration-200 cursor-pointer",
+        isExpanded 
+          ? "px-3 justify-start hover:bg-black/10 h-10" 
+          : "justify-center hover:bg-black/10 dark:hover:bg-white/10 py-2"
+      )}
+    >
+      {isExpanded ? (
+        <>
+          <ArrowLeftToLine className="w-4 h-4" />
+          <span className="ml-3">Réduire</span>
+        </>
+      ) : (
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <ArrowRightToLine className="w-4 h-4" />
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center" sideOffset={4}>Étendre</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
+    </button>
+  );
+};
+
+// Composant pour le lien vers le profil
+const SidebarProfileLink = () => {
+  const segments = useSelectedLayoutSegments();
+  const { isExpanded } = useSidebar();
+
+  return (
+    <Link
+      href="/settings"
+      className={cn(
+        "flex items-center w-full rounded-lg transition-all duration-200 cursor-pointer",
+        isExpanded 
+          ? "px-3 h-10" 
+          : "justify-center py-2",
+        segments.includes('settings') 
+          ? isExpanded 
+            ? 'bg-[#c49c48]/20 text-white' 
+            : 'text-[#c49c48]' 
+          : 'text-black/70 dark:text-white/70',
+        'hover:bg-black/10 dark:hover:bg-white/10'
+      )}
+    >
+      {isExpanded ? (
+        <>
+          <div className={cn(
+            "inline-flex items-center justify-center w-8 h-8 rounded-full bg-light-primary dark:bg-dark-primary",
+            segments.includes('settings') && "bg-[#c49c48]/20"
+          )}>
+            <User className={cn(
+              'w-4 h-4', 
+              segments.includes('settings') && 'text-[#c49c48]'
+            )} />
+          </div>
+          <span className="ml-3">Mon Profil</span>
+        </>
+      ) : (
+        <User className={cn(
+          'w-4 h-4', 
+          segments.includes('settings') && 'text-[#c49c48]'
+        )} />
+      )}
+    </Link>
+  );
+};
+
+// Composant pour le pied de la barre latérale
+const SidebarFooter = () => {
+  return (
+    <div className="space-y-4 w-full mt-auto">
+      <SidebarToggleButton />
+      <div className="w-full h-px bg-black/10 dark:bg-white/10" />
+      <SidebarProfileLink />
+    </div>
+  );
+};
+
+// Composant pour la barre latérale sur desktop
+const SidebarDesktop = ({ chatHistory }: { chatHistory: Chat[] }) => {
+  const { isExpanded } = useSidebar();
+
+  return (
+    <aside
+      className={cn(
+        "hidden lg:flex lg:fixed lg:inset-y-0 lg:z-50 lg:flex-col bg-light-secondary dark:bg-dark-secondary transition-all duration-300 ease-in-out",
+        isExpanded ? "lg:w-48" : "lg:w-20"
+      )}
+    >
+      <div className="flex grow flex-col justify-between h-full px-2 py-8">
+        <SidebarHeader />
+        <SidebarNav chatHistory={chatHistory} />
+        <SidebarFooter />
+      </div>
+    </aside>
+  );
+};
+
+// Composant principal de la barre latérale
 const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandChange?: (expanded: boolean) => void; }) => {
   const segments = useSelectedLayoutSegments();
-  const [isExpanded, setIsExpanded] = useState(false);
   const [chatHistory, setChatHistory] = useState<Chat[]>([]);
   const [loading, setLoading] = useState(false);
   const [user, setUser] = useState<any>(null);
   const supabase = createClient();
   const { isNavVisible } = useNavVisibility();
-
+  
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session?.user) setUser(session.user);
@@ -79,12 +376,11 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
         setLoading(false);
       }
     };
-    if (isExpanded) fetchChats();
+    fetchChats();
     return () => controller.abort();
-  }, [isExpanded]);
+  }, []);
 
-  useEffect(() => onExpandChange?.(isExpanded), [isExpanded, onExpandChange]);
-
+  // Navigation links pour le mobile
   const navLinks = [
     { icon: Home, href: '/', active: segments.length === 0 || segments.includes('c'), label: 'Accueil' },
     { icon: Search, href: '/discover', active: segments.includes('discover'), label: 'Nos experts' },
@@ -92,213 +388,70 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
   ];
 
   return (
-    <div>
-      <aside
-        className={cn(
-          "hidden lg:flex lg:fixed lg:inset-y-0 lg:z-50 lg:flex-col bg-light-secondary dark:bg-dark-secondary transition-all duration-300 ease-in-out",
-          isExpanded ? "lg:w-48" : "lg:w-16"
-        )}
-      >
-        <div className="flex flex-col justify-between h-full py-8">
-          {/* Logo & New Chat */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-center w-full px-2">
-              <object
-                data="/images/logo.svg"
-                type="image/svg+xml"
-                className="w-10 h-10"
-                aria-label="Logo"
-              />
-            </div>
-            <div className="px-3">
-              <button
-                onClick={() => window.location.href = '/'}
-                className={cn(
-                  "w-full h-10 flex items-center rounded-lg transition-all duration-200",
-                  isExpanded 
-                    ? "px-3 border hover:border-[#c49c48] dark:hover:border-[#c49c48] border-black/10 dark:border-white/10" 
-                    : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
-                )}
-              >
-                {isExpanded ? (
-                  <div className="flex items-center w-full gap-3">
-                    <Plus className="w-4 h-4" />
-                    <span className="truncate">Nouvelle Discussion</span>
-                  </div>
-                ) : (
-                  <TooltipProvider delayDuration={0}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-light-primary dark:bg-dark-primary hover:bg-[#c49c48]/20 transition-colors">
-                          <Plus className="w-4 h-4" />
-                        </div>
-                      </TooltipTrigger>
-                      <TooltipContent side="right" align="center" sideOffset={4}>Nouvelle discussion</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </button>
-            </div>
-          </div>
-
-          {/* Navigation Links */}
-          <div className="flex-1 mt-6">
-            <nav className="space-y-1 px-3">
-              {navLinks.map((link, i) => (
-                <div key={i} className="w-full">
-                  <Link
-                    href={link.href}
-                    className={cn(
-                      "relative flex items-center w-full h-10 rounded-lg transition-all duration-200",
-                      link.active 
-                        ? isExpanded 
-                          ? "bg-[#c49c48]/20 text-white" 
-                          : "text-black dark:text-white" 
-                        : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10",
-                      isExpanded ? "px-3 gap-3" : "justify-center"
-                    )}
-                  >
-                    <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
-                    {isExpanded && <span className="truncate">{link.label}</span>}
-                    {link.active && (
-                      <span className={cn(
-                        "absolute bg-[#c49c48]",
-                        isExpanded 
-                          ? "w-1 right-0 top-0 h-full" 
-                          : "w-1 h-8 rounded-r-md left-0"
-                      )} />
-                    )}
-                  </Link>
-                  {/* Chat History under Historique */}
-                  {isExpanded && link.label === 'Historique' && !loading && chatHistory.length > 0 && (
-                    <div className="pl-10 mt-2 space-y-1 relative">
-                      <div className="absolute left-8 top-0 bottom-0 w-px bg-black/10 dark:bg-white/10" />
-                      {chatHistory.map(chat => (
-                        <Link
-                          key={chat.id}
-                          href={`/c/${chat.id}`}
-                          className="block truncate max-w-[160px] py-1 hover:text-black dark:hover:text-white transition-colors"
-                        >{chat.title}</Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </nav>
-          </div>
-
-          {/* Footer: Expand & Profile */}
-          <div className="px-3 space-y-4 mt-4">
-            <button
-              onClick={() => setIsExpanded(prev => !prev)}
-              className={cn(
-                "flex items-center w-full h-10 rounded-lg transition-all duration-200",
-                isExpanded ? "px-3 justify-start hover:bg-black/10 dark:hover:bg-white/10" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
-              )}
-            >
-              {isExpanded ? (
-                <>
-                  <ArrowLeftToLine className="w-4 h-4" />
-                  <span className="ml-3">Réduire</span>
-                </>
-              ) : (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <ArrowRightToLine className="w-4 h-4" />
-                    </TooltipTrigger>
-                    <TooltipContent side="right" align="center" sideOffset={4}>Étendre</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </button>
-            <div className="w-full h-px bg-black/10 dark:bg-white/10" />
-            <Link
-              href="/settings"
-              className={cn(
-                "flex items-center w-full h-10 rounded-lg transition-all duration-200",
-                isExpanded ? "px-3 gap-3" : "justify-center",
-                segments.includes('settings') 
-                  ? isExpanded 
-                    ? 'bg-[#c49c48]/20 text-white' 
-                    : 'text-[#c49c48]' 
-                  : 'text-black/70 dark:text-white/70',
-                'hover:bg-black/10 dark:hover:bg-white/10'
-              )}
-            >
+    <SidebarProvider defaultExpanded={false} onExpandChange={onExpandChange}>
+      <div>
+        {/* Desktop Sidebar */}
+        <SidebarDesktop chatHistory={chatHistory} />
+        
+        {/* Mobile Header */}
+        {segments.length === 0 && (
+          <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
+            <object
+              data="/images/logo.svg"
+              type="image/svg+xml"
+              className="w-8 h-8"
+              aria-label="Logo"
+            />
+            <Link href="/settings">
               <div className={cn(
-                "inline-flex items-center justify-center w-8 h-8 rounded-full bg-light-primary dark:bg-dark-primary",
-                segments.includes('settings') && "bg-[#c49c48]/20"
+                "w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",
+                segments.includes('settings') && 'bg-[#c49c48]/20'
               )}>
-                <User className={cn(
-                  'w-4 h-4', 
-                  segments.includes('settings') && 'text-[#c49c48]'
-                )} />
+                <User className={cn('w-4 h-4', segments.includes('settings') && 'text-[#c49c48]')} />
               </div>
-              {isExpanded && <span>Mon Profil</span>}
             </Link>
-          </div>
-        </div>
-      </aside>
-
-      {/* Mobile Navigation */}
-      {segments.length === 0 && (
-        <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
-          <object
-            data="/images/logo.svg"
-            type="image/svg+xml"
-            className="w-8 h-8"
-            aria-label="Logo"
-          />
-          <Link href="/settings">
-            <div className={cn(
-              "w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",
-              segments.includes('settings') && 'bg-[#c49c48]/20'
-            )}>
-              <User className={cn('w-4 h-4', segments.includes('settings') && 'text-[#c49c48]')} />
-            </div>
-          </Link>
+          </nav>
+        )}
+        
+        {/* Mobile Bottom Navigation */}
+        <nav className={cn(
+          "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 bg-dark-secondary shadow-t-sm z-[100] lg:hidden transition-transform duration-300 ease-in-out",
+          isNavVisible ? 'translate-y-0' : 'translate-y-full'
+        )}>
+          {navLinks.map((link, i) => (
+            <Link 
+              key={i} 
+              href={link.href} 
+              className="flex flex-col items-center space-y-1"
+            >
+              {link.active && (
+                <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-2 w-2 h-2 rounded-full bg-[#c49c48]" />
+              )}
+              <link.icon className={cn(
+                "w-4 h-4 text-white",
+                link.active && "text-[#c49c48]"
+              )} />
+              <span className={cn(
+                "text-xs",
+                link.active ? "text-[#c49c48]" : "text-white/70"
+              )}>{link.label}</span>
+            </Link>
+          ))}
         </nav>
-      )}
+        
+        {children}
 
-      {/* Bottom Nav */}
-      <nav className={cn(
-        "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 bg-dark-secondary shadow-t-sm z-[100] lg:hidden transition-transform duration-300 ease-in-out",
-        isNavVisible ? 'translate-y-0' : 'translate-y-full'
-      )}>
-        {navLinks.map((link, i) => (
-          <Link 
-            key={i} 
-            href={link.href} 
-            className="flex flex-col items-center space-y-1"
-          >
-            {link.active && (
-              <span className="absolute top-0 left-1/2 transform -translate-x-1/2 -mt-2 w-2 h-2 rounded-full bg-[#c49c48]" />
-            )}
-            <link.icon className={cn(
-              "w-4 h-4 text-white",
-              link.active && "text-[#c49c48]"
-            )} />
-            <span className={cn(
-              "text-xs",
-              link.active ? "text-[#c49c48]" : "text-white/70"
-            )}>{link.label}</span>
-          </Link>
-        ))}
-      </nav>
-
-      {children}
-
-      <style jsx global>{`
-        .hide-scrollbar {
-          -ms-overflow-style: none;
-          scrollbar-width: none;
-          padding-right: 17px;
-          margin-right: -17px;
-        }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-      `}</style>
-    </div>
+        <style jsx global>{`
+          .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            padding-right: 17px;
+            margin-right: -17px;
+          }
+          .hide-scrollbar::-webkit-scrollbar { display: none; }
+        `}</style>
+      </div>
+    </SidebarProvider>
   );
 };
 
