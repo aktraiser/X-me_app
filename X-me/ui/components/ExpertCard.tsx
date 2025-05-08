@@ -10,6 +10,14 @@ interface ExpertCardProps {
   onContactClick: () => void;
 }
 
+// Fonction pour nettoyer les URL d'images
+const cleanImageUrl = (url: string | null | undefined): string => {
+  if (!url) return '';
+  
+  // Remplace les doubles barres obliques par une seule (sauf pour https://)
+  return url.replace(/([^:])\/\/+/g, '$1/');
+};
+
 const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick }) => {
   // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
   const activité = expert.activité || expert.expertises?.split(',')[0].trim() || "Expert";
@@ -26,7 +34,7 @@ const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick
           <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0">
             {expert.image_url ? (
               <Image
-                src={expert.image_url}
+                src={cleanImageUrl(expert.image_url)}
                 alt={`${expert.prenom} ${expert.nom}`}
                 fill
                 className="object-cover"

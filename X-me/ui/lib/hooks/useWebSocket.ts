@@ -1,4 +1,7 @@
+'use client';
+
 import { useEffect, useState } from 'react';
+import { debugLog } from './useDebug';
 
 export function useWebSocket() {
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -16,24 +19,24 @@ export function useWebSocket() {
     });
     
     const wsUrl = `${baseWsUrl}?${params.toString()}`;
-    console.log("[DEBUG WebSocket] URL finale:", wsUrl);
+    debugLog('WebSocket', 'URL finale:', wsUrl);
     
     const socket = new WebSocket(wsUrl);
 
     socket.addEventListener('open', () => {
-      console.log('[DEBUG WebSocket] Connexion ouverte');
+      debugLog('WebSocket', 'Connexion ouverte');
     });
 
     socket.addEventListener('error', (error) => {
-      console.error('[DEBUG WebSocket] Erreur:', error);
+      debugLog('WebSocket', 'Erreur:', error);
     });
 
     socket.addEventListener('close', (event) => {
-      console.log(`[DEBUG WebSocket] Connexion fermée: ${event.code} ${event.reason}`);
+      debugLog('WebSocket', `Connexion fermée: ${event.code} ${event.reason}`);
     });
 
     socket.addEventListener('message', (event) => {
-      console.log('[DEBUG WebSocket] Message reçu:', JSON.parse(event.data));
+      debugLog('WebSocket', 'Message reçu:', JSON.parse(event.data));
     });
 
     setWs(socket);

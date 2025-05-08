@@ -14,11 +14,12 @@ import Error from 'next/error';
 import { useAuth, useSession } from '@clerk/nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { v4 as uuidv4, v5 as uuidv5 } from 'uuid';
+import { debugLog, debugError } from '@/lib/hooks/useDebug';
 
-// Logs de débogage
-console.log('[DEBUG ChatWindow] Composant chargé');
-console.log('[DEBUG ChatWindow] URL WebSocket:', process.env.NEXT_PUBLIC_WS_URL);
-console.log('[DEBUG ChatWindow] URL API:', process.env.NEXT_PUBLIC_API_URL);
+// Logs de débogage conditionnels
+debugLog('ChatWindow', 'Composant chargé');
+debugLog('ChatWindow', 'URL WebSocket:', process.env.NEXT_PUBLIC_WS_URL);
+debugLog('ChatWindow', 'URL API:', process.env.NEXT_PUBLIC_API_URL);
 
 export type Message = {
   messageId: string;
@@ -88,7 +89,7 @@ const useSocket = (
   const reconnectTimeoutId = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connectWs = useCallback(async () => {
-    console.log('[DEBUG WebSocket] Tentative de connexion à:', url);
+    debugLog('WebSocket', 'Tentative de connexion à:', url);
     let chatModel = localStorage.getItem('chatModel');
     let chatModelProvider = localStorage.getItem('chatModelProvider');
     let embeddingModel = localStorage.getItem('embeddingModel');
@@ -97,7 +98,7 @@ const useSocket = (
     );
 
     try {
-      console.log('[DEBUG WebSocket] Récupération des modèles depuis:', `${process.env.NEXT_PUBLIC_API_URL}/models`);
+      debugLog('WebSocket', 'Récupération des modèles depuis:', `${process.env.NEXT_PUBLIC_API_URL}/models`);
       const providers = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/models`,
         {
@@ -107,7 +108,7 @@ const useSocket = (
         },
       ).then(async (res) => await res.json());
       
-      console.log('[DEBUG WebSocket] Modèles récupérés:', providers);
+      debugLog('WebSocket', 'Modèles récupérés:', providers);
 
       if (
         !chatModel ||
@@ -120,11 +121,11 @@ const useSocket = (
 
           // Forcer l'utilisation de 'openai' au lieu de custom_openai
           chatModelProvider = 'openai';
-          console.log('[DEBUG WebSocket] Fournisseur forcé à:', chatModelProvider);
+          debugLog('WebSocket', 'Fournisseur forcé à:', chatModelProvider);
 
           // Sélectionner un modèle disponible
           chatModel = Object.keys(chatModelProviders[chatModelProvider])[0];
-          console.log('[DEBUG WebSocket] Modèle forcé à:', chatModel);
+          debugLog('WebSocket', 'Modèle forcé à:', chatModel);
           
           if (
             !chatModelProviders ||
@@ -220,14 +221,14 @@ const useSocket = (
 
       wsURL.search = searchParams.toString();
       
-      console.log('[DEBUG WebSocket] URL finale:', wsURL.toString());
+      debugLog('WebSocket', 'URL finale:', wsURL.toString());
 
       const ws = new WebSocket(wsURL.toString());
 
       // Augmentation du timeout à 30 secondes
       const timeoutId = setTimeout(() => {
         if (ws.readyState !== 1) {
-          console.error('[DEBUG WebSocket] Échec de connexion après 30 secondes');
+          debugLog('WebSocket', 'Échec de connexion après 30 secondes');
           toast.error(
             'Impossible de se connecter au serveur. Veuillez réessayer plus tard.',
           );
@@ -236,11 +237,11 @@ const useSocket = (
 
       ws.addEventListener('message', (e) => {
         const data = JSON.parse(e.data);
-        console.log('[DEBUG WebSocket] Message reçu:', data);
+        debugLog('WebSocket', 'Message reçu:', data);
         if (data.type === 'signal' && data.data === 'open') {
           const interval = setInterval(() => {
             if (ws.readyState === 1) {
-              console.log('[DEBUG WebSocket] Connexion établie avec succès');
+              debugLog('WebSocket', 'Connexion établie avec succès');
               setIsWSReady(true);
               clearInterval(interval);
               // Réinitialiser le compteur de tentatives de reconnexion lorsque la connexion est établie
@@ -248,33 +249,33 @@ const useSocket = (
             }
           }, 5);
           clearTimeout(timeoutId);
-          console.log('[DEBUG] opened');
+          debugLog('', 'opened');
         }
         if (data.type === 'error') {
-          console.error('[DEBUG WebSocket] Erreur reçue:', data.data);
+          debugLog('WebSocket', 'Erreur reçue:', data.data);
           toast.error(data.data);
         }
       });
 
       ws.onerror = (event) => {
-        console.error('[DEBUG WebSocket] Erreur de connexion:', event);
+        debugLog('WebSocket', 'Erreur de connexion:', event);
         clearTimeout(timeoutId);
         // Ne pas définir setError(true) immédiatement pour permettre les tentatives de reconnexion
       };
 
       ws.onopen = () => {
-        console.log('[DEBUG WebSocket] Connexion ouverte');
+        debugLog('WebSocket', 'Connexion ouverte');
       };
 
       ws.onclose = (event) => {
-        console.error('[DEBUG WebSocket] Connexion fermée:', event.code, event.reason);
+        debugLog('WebSocket', `Connexion fermée: ${event.code} ${event.reason}`);
         clearTimeout(timeoutId);
         setIsWSReady(false);
         
         // Si la connexion a été fermée après une période d'inactivité (typique sur Render),
         // essayons de nous reconnecter automatiquement
         if (reconnectAttempts.current < maxReconnectAttempts) {
-          console.log(`[DEBUG WebSocket] Tentative de reconnexion ${reconnectAttempts.current + 1}/${maxReconnectAttempts} dans ${Math.min(30, Math.pow(2, reconnectAttempts.current))} secondes`);
+          debugLog('WebSocket', `Tentative de reconnexion ${reconnectAttempts.current + 1}/${maxReconnectAttempts} dans ${Math.min(30, Math.pow(2, reconnectAttempts.current))} secondes`);
           
           // Nettoyage du timeout précédent s'il existe
           if (reconnectTimeoutId.current) {
@@ -302,12 +303,12 @@ const useSocket = (
                 connectWs();
               }, 500);
             } else {
-              console.log('[DEBUG WebSocket] Navigateur hors ligne, attente de connexion réseau');
+              debugLog('WebSocket', 'Navigateur hors ligne, attente de connexion réseau');
               toast.error("Votre appareil semble hors ligne. Veuillez vérifier votre connexion internet.");
             }
           }, delay);
         } else {
-          console.error('[DEBUG WebSocket] Nombre maximal de tentatives de reconnexion atteint');
+          debugLog('WebSocket', 'Nombre maximal de tentatives de reconnexion atteint');
           setError(true);
           toast.error('Impossible de se connecter au serveur après plusieurs tentatives. Veuillez rafraîchir la page.');
         }
@@ -315,7 +316,7 @@ const useSocket = (
 
       setWs(ws);
     } catch (error: any) {
-      console.error('[DEBUG WebSocket] Erreur lors de la configuration:', error);
+      debugLog('WebSocket', 'Erreur lors de la configuration:', error);
       setError(true);
       toast.error(`Erreur lors de la configuration du WebSocket: ${error.message}`);
     }
@@ -332,16 +333,16 @@ const useSocket = (
         try {
           // Envoyer un message ping simple pour garder la connexion active
           ws.send(JSON.stringify({ type: 'ping' }));
-          console.log('[DEBUG WebSocket] Ping envoyé pour maintenir la connexion');
+          debugLog('WebSocket', 'Ping envoyé pour maintenir la connexion');
         } catch (error) {
-          console.error('[DEBUG WebSocket] Erreur lors de l\'envoi du ping:', error);
+          debugLog('WebSocket', 'Erreur lors de l\'envoi du ping:', error);
         }
       }
     }, 4 * 60 * 1000); // Ping toutes les 4 minutes (avant la déconnexion de 5 minutes)
     
     // Écouter les événements online/offline du navigateur
     const handleOnline = () => {
-      console.log('[DEBUG WebSocket] Navigateur en ligne, tentative de reconnexion');
+      debugLog('WebSocket', 'Navigateur en ligne, tentative de reconnexion');
       if (!ws || ws.readyState !== WebSocket.OPEN) {
         connectWs();
       }
@@ -377,14 +378,14 @@ const loadMessages = async (
   setFiles: (files: File[]) => void,
   setFileIds: (fileIds: string[]) => void,
 ) => {
-  console.log('[DEBUG] Tentative de chargement de la conversation:', chatId);
+  debugLog('ChatWindow', 'Tentative de chargement de la conversation:', chatId);
   
   // Obtenir un jeton JWT pour Supabase
   const authToken = await getSupabaseSession();
   
   // Essayer d'abord de récupérer depuis Supabase directement
   try {
-    console.log('[DEBUG] Tentative de récupération directe depuis Supabase');
+    debugLog('ChatWindow', 'Tentative de récupération directe depuis Supabase');
     
     // Créer un client Supabase
     const supabase = createClient(
@@ -412,7 +413,7 @@ const loadMessages = async (
       .single();
 
     if (!error && supabaseData) {
-      console.log('[DEBUG] Conversation récupérée depuis Supabase:', supabaseData.id);
+      debugLog('ChatWindow', 'Conversation récupérée depuis Supabase:', supabaseData.id);
       
       // Si la conversation existe dans Supabase mais n'a pas de messages complets,
       // on initialise quand même avec un minimum pour éviter la 404
@@ -420,7 +421,7 @@ const loadMessages = async (
           !Array.isArray(supabaseData.metadata.complete_conversation) ||
           supabaseData.metadata.complete_conversation.length === 0) {
         
-        console.log('[DEBUG] Conversation sans messages complets, création d\'une structure minimale');
+        debugLog('ChatWindow', 'Conversation sans messages complets, création d\'une structure minimale');
         
         // Créer un message utilisateur minimal basé sur le titre
         const minimalUserMessage = {
@@ -456,7 +457,7 @@ const loadMessages = async (
       
       // Utiliser la conversation complète depuis Supabase si elle existe
       if (supabaseData.metadata?.complete_conversation) {
-        console.log('[DEBUG] Conversation complète récupérée depuis Supabase');
+        debugLog('ChatWindow', 'Conversation complète récupérée depuis Supabase');
         
         // Utiliser la conversation complète depuis Supabase
         const completeMessages = supabaseData.metadata.complete_conversation.map((msg: any) => {
@@ -499,12 +500,12 @@ const loadMessages = async (
       }
     }
   } catch (error) {
-    console.error('[DEBUG] Erreur lors de la récupération directe depuis Supabase:', error);
+    debugLog('ChatWindow', 'Erreur lors de la récupération directe depuis Supabase:', error);
   }
 
   // Si Supabase a échoué, essayer l'API backend
   try {
-    console.log('[DEBUG] Tentative de récupération via l\'API backend');
+    debugLog('ChatWindow', 'Tentative de récupération via l\'API backend');
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_API_URL}/chats/${chatId}`,
       {
@@ -516,7 +517,7 @@ const loadMessages = async (
     );
 
     if (res.status === 404) {
-      console.log('[DEBUG] La conversation n\'existe pas dans l\'API backend');
+      debugLog('ChatWindow', 'La conversation n\'existe pas dans l\'API backend');
       // Au lieu de marquer comme non trouvée, créer une conversation vide
       // ou essayer à nouveau de récupérer depuis Supabase
       
@@ -585,7 +586,7 @@ const loadMessages = async (
 
     const data = await res.json();
     
-    console.log('[DEBUG] Données récupérées de l\'API backend:', data);
+    debugLog('ChatWindow', 'Données récupérées de l\'API backend:', data);
 
     // Traitement des données comme avant
     const messages = data.messages.map((msg: any) => {
@@ -601,7 +602,7 @@ const loadMessages = async (
       return [msg.role, msg.content];
     }) as [string, string][];
 
-    console.log('[DEBUG] messages loaded');
+    debugLog('ChatWindow', 'messages loaded');
 
     document.title = messages[0].content;
 
@@ -620,7 +621,7 @@ const loadMessages = async (
     setFocusMode(data.chat.focusMode);
     setIsMessagesLoaded(true);
   } catch (error) {
-    console.error('[DEBUG] Erreur lors de la récupération via l\'API backend:', error);
+    debugLog('ChatWindow', 'Erreur lors de la récupération via l\'API backend:', error);
     
     // En cas d'erreur avec l'API backend, créer une conversation vide
     const minimalMessages = [
@@ -654,7 +655,7 @@ const loadMessages = async (
 };
 
 const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: string }) => {
-  console.log('[DEBUG ChatWindow] Exécution du composant avec les props:', { id, defaultFocusMode });
+  debugLog('ChatWindow', 'Exécution du composant avec les props:', { id, defaultFocusMode });
   
   const searchParams = useSearchParams();
   const initialMessage = searchParams.get('q');
@@ -704,7 +705,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
     try {
       if (!chatData || !chatData.id) return;
       
-      console.log('[DEBUG] Sauvegarde de la conversation dans Supabase:', chatData);
+      debugLog('ChatWindow', 'Sauvegarde de la conversation dans Supabase:', chatData);
       
       // Extraire le contenu du premier message utilisateur pour le titre
       let title = "Nouvelle conversation";
@@ -728,7 +729,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
       const completeConversation = messages.map(msg => {
         // Log pour vérifier les sources avant de les sauvegarder
         if (msg.sources && msg.sources.length > 0) {
-          console.log('[DEBUG] Sources trouvées pour le message', msg.messageId, ':', msg.sources);
+          debugLog('ChatWindow', `Sources trouvées pour le message ${msg.messageId}:`, msg.sources);
         }
         
         return {
@@ -748,9 +749,9 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
         try {
           // Obtenir le jeton JWT via la session Clerk avec le template "supabase"
           authToken = await session?.getToken({ template: "supabase" });
-          console.log('[DEBUG] Jeton Clerk obtenu pour Supabase');
+          debugLog('ChatWindow', 'Jeton Clerk obtenu pour Supabase');
         } catch (error) {
-          console.error('[DEBUG] Impossible d\'obtenir le jeton Clerk:', error);
+          debugLog('ChatWindow', 'Impossible d\'obtenir le jeton Clerk:', error);
         }
       }
       
@@ -797,9 +798,9 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
       
       if (error) throw error;
       
-      console.log('[DEBUG] Conversation sauvegardée avec succès dans Supabase');
+      debugLog('ChatWindow', 'Conversation sauvegardée avec succès dans Supabase');
     } catch (error) {
-      console.error('[DEBUG] Erreur lors de la sauvegarde dans Supabase:', error);
+      debugLog('ChatWindow', 'Erreur lors de la sauvegarde dans Supabase:', error);
     }
   };
 
@@ -844,7 +845,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
     return () => {
       if (ws?.readyState === 1) {
         ws.close();
-        console.log('[DEBUG] closed');
+        debugLog('WebSocket', 'closed');
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -859,7 +860,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
   useEffect(() => {
     if (isMessagesLoaded && isWSReady) {
       setIsReady(true);
-      console.log('[DEBUG] ready');
+      debugLog('', 'ready');
     }
   }, [isMessagesLoaded, isWSReady]);
 
@@ -995,7 +996,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
       }
 
       if (data.type === 'suggestions') {
-        console.log('📦 ChatWindow: Suggestions reçues via WS:', {
+        debugLog('ChatWindow', 'Suggestions reçues via WS:', {
           count: data.data?.suggestions?.length || 0,
           expertsCount: data.data?.suggestedExperts?.length || 0,
           messageId: data.messageId || 'non spécifié'
@@ -1018,9 +1019,9 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
               return message;
             }),
           );
-          console.log('✅ ChatWindow: Suggestions et experts attachés au message:', targetMessageId);
+          debugLog('ChatWindow', 'Suggestions et experts attachés au message:', targetMessageId);
         } else {
-          console.error('❌ ChatWindow: Impossible d\'attacher les suggestions - aucun messageId');
+          debugLog('ChatWindow', 'Impossible d\'attacher les suggestions - aucun messageId');
         }
       }
 
@@ -1035,7 +1036,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
         setLoading(false);
 
         const lastMsg = messagesRef.current[messagesRef.current.length - 1];
-        console.log('📋 ChatWindow: État du dernier message après messageEnd:', {
+        debugLog('ChatWindow', 'État du dernier message après messageEnd:', {
           messageId: lastMsg.messageId,
           role: lastMsg.role,
           hasSuggestions: !!lastMsg.suggestions,
@@ -1046,7 +1047,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
 
         // Si le message n'a pas encore de suggestions, faire une dernière tentative
         if (!lastMsg.suggestions || lastMsg.suggestions.length === 0) {
-          console.log('🔄 ChatWindow: Dernière tentative de génération de suggestions');
+          debugLog('ChatWindow', 'Dernière tentative de génération de suggestions');
           
           // Vérifier les experts dans les sources
           const expertSources = lastMsg.sources?.filter(source => 
@@ -1058,7 +1059,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
             existingExperts = expertSources
               .map(source => source.metadata?.expertData)
               .filter(Boolean);
-            console.log(`⚙️ ChatWindow: ${existingExperts.length} experts trouvés dans les sources`);
+            debugLog('ChatWindow', `${existingExperts.length} experts trouvés dans les sources`);
           }
           
           try {
@@ -1067,7 +1068,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
             const { suggestions, suggestedExperts } = suggestionsResult;
             
             if (suggestions && suggestions.length > 0) {
-              console.log('✅ ChatWindow: Suggestions de secours générées:', suggestions.length);
+              debugLog('ChatWindow', '✅ ChatWindow: Suggestions de secours générées:', suggestions.length);
               
               setMessages((prev) =>
                 prev.map((msg) => {
@@ -1083,7 +1084,7 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
               );
             }
           } catch (error) {
-            console.error('❌ ChatWindow: Erreur lors de la génération des suggestions de secours:', error);
+            debugLog('ChatWindow', '❌ ChatWindow: Erreur lors de la génération des suggestions de secours:', error);
           } finally {
             setLoading(false);
           }
@@ -1091,10 +1092,10 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
       }
 
       if (data.type === 'researchActivity') {
-        console.log('🔍🔍 ChatWindow - Activité de recherche reçue:', data.data);
+        debugLog('ChatWindow', 'Activité de recherche reçue:', data.data);
         setResearchActivities(prev => {
           const newActivities = [...prev, data.data];
-          console.log('🔍🔍 Total activités après mise à jour:', newActivities.length);
+          debugLog('ChatWindow', `Total activités après mise à jour: ${newActivities.length}`);
           return newActivities;
         });
         setMessageAppeared(true);
@@ -1118,16 +1119,20 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
       return [...prev.slice(0, messages.length > 2 ? index - 1 : 0)];
     });
 
-    console.log("🔄 ChatWindow: Réécriture du message:", message.messageId);
+    debugLog('🔄 ChatWindow: Réécriture du message:', message.messageId);
     sendMessage(message.content, message.messageId);
   };
 
   useEffect(() => {
-    if (isReady && initialMessage && ws?.readyState === 1) {
-      sendMessage(initialMessage);
+    if (!isReady && isWSReady && (chatId || !userId)) {
+      setIsReady(true);
+      // Envoyer le message initial s'il existe
+      if (initialMessage && ws && ws.readyState === WebSocket.OPEN) {
+        sendMessage(initialMessage);
+      }
+      debugLog('', 'ready');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [ws?.readyState, isReady, initialMessage, isWSReady]);
+  }, [isWSReady, chatId, userId, isReady, initialMessage, ws]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {

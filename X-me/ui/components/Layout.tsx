@@ -11,6 +11,17 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
+// Ajout de la déclaration pour TypeScript
+declare global {
+  interface Window {
+    Termly?: {
+      displayPreferenceModal: () => void;
+      closePreferenceModal?: () => void;
+    };
+    displayPreferenceModal?: () => void;
+  }
+}
+
 // Composant interne qui utilise le hook useNavVisibility
 const LayoutContent = ({ children }: LayoutProps) => {
   const pathname = usePathname();
@@ -83,19 +94,69 @@ const LayoutContent = ({ children }: LayoutProps) => {
   const TermlyPreferences = () => {
     // Vérifier si nous sommes sur une page de connexion ou d'inscription
     const isSignInOrSignUp = pathname.startsWith('/sign-in') || pathname.startsWith('/sign-up');
+    const [isTermlyModalOpen, setIsTermlyModalOpen] = useState(false);
     
     // N'afficher que sur les pages sign-in et sign-up
     if (!isSignInOrSignUp) return null;
     
+    // Fonction pour ouvrir la modale des préférences Termly
+    const openTermlyPreferences = (e: React.MouseEvent) => {
+      e.preventDefault();
+      
+      // Afficher l'overlay
+      setIsTermlyModalOpen(true);
+      
+      // Définir une fonction d'observation pour détecter quand la modale se ferme
+      const observeModalClose = () => {
+        // Recherche un élément avec la classe spécifique à Termly qui indique que la modale est ouverte
+        const termlyModalOpen = document.querySelector('.termly-modal-open, .termly-consent-preferences-open');
+        
+        if (!termlyModalOpen) {
+          // Si la modale n'est plus présente, fermer l'overlay
+          setIsTermlyModalOpen(false);
+          clearInterval(checkInterval);
+        }
+      };
+      
+      // Vérifier périodiquement si la modale est toujours ouverte
+      const checkInterval = setInterval(observeModalClose, 500);
+      
+      // Accéder à l'API Termly si elle est disponible
+      if (typeof window !== 'undefined' && window.displayPreferenceModal) {
+        window.displayPreferenceModal();
+      } else if (typeof window !== 'undefined' && window.Termly && window.Termly.displayPreferenceModal) {
+        window.Termly.displayPreferenceModal();
+      } else {
+        console.warn('API Termly non disponible');
+        setIsTermlyModalOpen(false); // Fermer l'overlay si l'API n'est pas disponible
+      }
+    };
+    
     return (
-      <div className="fixed bottom-2 right-4 z-50">
-        <a 
-          href="#" 
-          className="termly-display-preferences text-xs text-gray-500 dark:text-gray-400 hover:underline"
-        >
-          Préférences de cookies
-        </a>
-      </div>
+      <>
+        {/* Overlay pour la modale Termly */}
+        {isTermlyModalOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999]"
+            onClick={() => {
+              // Fermer la modale Termly si on clique sur l'overlay
+              if (typeof window !== 'undefined' && window.Termly && window.Termly.closePreferenceModal) {
+                window.Termly.closePreferenceModal();
+              }
+              setIsTermlyModalOpen(false);
+            }}
+          />
+        )}
+        
+        <div className="fixed bottom-2 right-4 z-50">
+          <button 
+            onClick={openTermlyPreferences}
+            className="termly-display-preferences text-xs text-gray-500 dark:text-gray-400 hover:underline"
+          >
+            Préférences de cookies
+          </button>
+        </div>
+      </>
     );
   };
 
