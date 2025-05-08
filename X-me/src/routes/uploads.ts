@@ -28,6 +28,18 @@ const splitter = new RecursiveCharacterTextSplitter({
   lengthFunction: (text) => text.length
 });
 
+// Validation de sécurité des fichiers
+const fileFilter = (req: express.Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
+  // Vérifier l'extension du fichier
+  const allowedTypes = ['application/pdf', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain'];
+  if (!allowedTypes.includes(file.mimetype)) {
+    return cb(new Error('Type de fichier non autorisé. Seuls PDF, DOCX et TXT sont acceptés.'));
+  }
+  
+  // Vérifier la taille du fichier (intégré dans multer config ci-dessous)
+  cb(null, true);
+};
+
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, path.join(process.cwd(), './uploads'));
@@ -42,7 +54,26 @@ const storage = multer.diskStorage({
   },
 });
 
-const upload = multer({ storage });
+// Limite de taille: 20MB
+const MAX_FILE_SIZE = 20 * 1024 * 1024;
+const upload = multer({ 
+  storage,
+  fileFilter,
+  limits: { 
+    fileSize: MAX_FILE_SIZE,
+    files: 10 // Limite à 10 fichiers maximum par requête
+  }
+});
+
+// Mise en place d'un limiteur de requêtes pour empêcher les attaques par inondation
+const rateLimit = require('express-rate-limit');
+const uploadLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // Limite à 10 requêtes par fenêtre de temps
+  message: 'Trop de requêtes d\'upload, veuillez réessayer plus tard',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
 
 const preprocessDocument = (doc: Document): Document => {
   const cleanContent = doc.pageContent
@@ -225,6 +256,7 @@ const generateEmbeddings = async (
 
 router.post(
   '/',
+  uploadLimiter,
   upload.fields([
     { name: 'files' },
     { name: 'embedding_model', maxCount: 1 },

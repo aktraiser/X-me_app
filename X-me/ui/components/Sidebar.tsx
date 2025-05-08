@@ -24,21 +24,15 @@ interface Chat {
   focusMode: string;
 }
 
-const VerticalIconContainer = ({ children }: { children: ReactNode }) => (
-  <div className="flex flex-col items-center gap-y-3 w-full">
-    {children}
-  </div>
-);
-
 const IconWithTooltip = ({ icon: Icon, label, isExpanded }: { icon: any; label: string; isExpanded: boolean; }) => {
   return isExpanded ? (
-    <Icon className="w-4 h-4 text-black dark:text-white" />
+    <Icon className="h-5 w-5 text-black dark:text-white" />
   ) : (
     <TooltipProvider delayDuration={0}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <span className="inline-flex">
-            <Icon className="w-4 h-4 text-black dark:text-white" />
+          <span className="flex items-center justify-center">
+            <Icon className="h-5 w-5 text-black dark:text-white" />
           </span>
         </TooltipTrigger>
         <TooltipContent side="right" align="center" sideOffset={4} className="flex items-center gap-2">
@@ -101,94 +95,105 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
     <div>
       <aside
         className={cn(
-          "hidden lg:flex lg:fixed lg:inset-y-0 lg:z-50 lg:flex-col bg-light-secondary dark:bg-dark-secondary overflow-hidden transition-all duration-300 ease-in-out",
-          isExpanded ? "lg:w-48" : "lg:w-14"
+          "hidden lg:flex lg:fixed lg:inset-y-0 lg:z-50 lg:flex-col bg-light-secondary dark:bg-dark-secondary transition-all duration-300 ease-in-out",
+          isExpanded ? "lg:w-48" : "lg:w-16"
         )}
       >
-        <div className="flex flex-col justify-between h-full py-8 px-2">
+        <div className="flex flex-col justify-between h-full py-8">
           {/* Logo & New Chat */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-center w-full">
-              <Image src="/images/logo.svg" alt="Logo" width={40} height={40} />
+          <div className="space-y-6">
+            <div className="flex items-center justify-center w-full px-2">
+              <object
+                data="/images/logo.svg"
+                type="image/svg+xml"
+                className="w-10 h-10"
+                aria-label="Logo"
+              />
             </div>
-            <button
-              onClick={() => window.location.href = '/'}
-              className={cn(
-                "w-full h-12 flex items-center rounded-lg transition-all duration-200",
-                isExpanded ? "px-3 hover:border-[#c49c48] border border-transparent" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
-              )}
-            >
-              {isExpanded ? (
-                <div className="flex items-center w-full gap-3 px-3">
-                  <Plus className="w-4 h-4" />
-                  <span className="truncate">Nouvelle Discussion</span>
-                </div>
-              ) : (
-                <TooltipProvider delayDuration={0}>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="w-8 h-8 flex items-center justify-center rounded-full bg-light-primary dark:bg-dark-primary hover:bg-[#c49c48]/20 transition-colors">
-                        <Plus className="w-4 h-4" />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent side="right" align="center" sideOffset={4}>Nouvelle discussion</TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </button>
+            <div className="px-3">
+              <button
+                onClick={() => window.location.href = '/'}
+                className={cn(
+                  "w-full h-10 flex items-center rounded-lg transition-all duration-200",
+                  isExpanded 
+                    ? "px-3 border hover:border-[#c49c48] dark:hover:border-[#c49c48] border-black/10 dark:border-white/10" 
+                    : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
+                )}
+              >
+                {isExpanded ? (
+                  <div className="flex items-center w-full gap-3">
+                    <Plus className="w-4 h-4" />
+                    <span className="truncate">Nouvelle Discussion</span>
+                  </div>
+                ) : (
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-8 h-8 flex items-center justify-center rounded-full bg-light-primary dark:bg-dark-primary hover:bg-[#c49c48]/20 transition-colors">
+                          <Plus className="w-4 h-4" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent side="right" align="center" sideOffset={4}>Nouvelle discussion</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </button>
+            </div>
           </div>
 
           {/* Navigation Links */}
-          <div className="flex flex-col items-center gap-y-3">
-            {navLinks.map((link, i) => (
-              <div key={i} className="w-full">
-                <Link
-                  href={link.href}
-                  className={cn(
-                    "relative flex items-center w-full h-10 rounded-lg transition-all duration-200",
-                    link.active 
-                      ? isExpanded 
-                        ? "bg-[#c49c48]/20 text-white" 
-                        : "text-black dark:text-white" 
-                      : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10",
-                    isExpanded ? "px-3" : "justify-center"
+          <div className="flex-1 mt-6">
+            <nav className="space-y-1 px-3">
+              {navLinks.map((link, i) => (
+                <div key={i} className="w-full">
+                  <Link
+                    href={link.href}
+                    className={cn(
+                      "relative flex items-center w-full h-10 rounded-lg transition-all duration-200",
+                      link.active 
+                        ? isExpanded 
+                          ? "bg-[#c49c48]/20 text-white" 
+                          : "text-black dark:text-white" 
+                        : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10",
+                      isExpanded ? "px-3 gap-3" : "justify-center"
+                    )}
+                  >
+                    <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
+                    {isExpanded && <span className="truncate">{link.label}</span>}
+                    {link.active && (
+                      <span className={cn(
+                        "absolute bg-[#c49c48]",
+                        isExpanded 
+                          ? "w-1 right-0 top-0 h-full" 
+                          : "w-1 h-8 rounded-r-md left-0"
+                      )} />
+                    )}
+                  </Link>
+                  {/* Chat History under Historique */}
+                  {isExpanded && link.label === 'Historique' && !loading && chatHistory.length > 0 && (
+                    <div className="pl-10 mt-2 space-y-1 relative">
+                      <div className="absolute left-8 top-0 bottom-0 w-px bg-black/10 dark:bg-white/10" />
+                      {chatHistory.map(chat => (
+                        <Link
+                          key={chat.id}
+                          href={`/c/${chat.id}`}
+                          className="block truncate max-w-[160px] py-1 hover:text-black dark:hover:text-white transition-colors"
+                        >{chat.title}</Link>
+                      ))}
+                    </div>
                   )}
-                >
-                  <IconWithTooltip icon={link.icon} label={link.label} isExpanded={isExpanded} />
-                  {isExpanded && <span className="ml-3 truncate">{link.label}</span>}
-                  {link.active && (
-                    <span className={cn(
-                      "absolute bg-[#c49c48]",
-                      isExpanded 
-                        ? "w-1 right-0 top-0 h-full" 
-                        : "w-1 h-8 rounded-r-md left-0"
-                    )} />
-                  )}
-                </Link>
-                {/* Chat History under Historique */}
-                {isExpanded && link.label === 'Historique' && !loading && chatHistory.length > 0 && (
-                  <div className="pl-10 mt-2 space-y-1 relative">
-                    <div className="absolute left-8 top-0 bottom-0 w-px bg-black/10 dark:bg-white/10" />
-                    {chatHistory.map(chat => (
-                      <Link
-                        key={chat.id}
-                        href={`/c/${chat.id}`}
-                        className="block truncate max-w-[160px] py-1 hover:text-black dark:hover:text-white transition-colors"
-                      >{chat.title}</Link>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
+                </div>
+              ))}
+            </nav>
           </div>
 
           {/* Footer: Expand & Profile */}
-          <div className="space-y-4">
+          <div className="px-3 space-y-4 mt-4">
             <button
               onClick={() => setIsExpanded(prev => !prev)}
               className={cn(
                 "flex items-center w-full h-10 rounded-lg transition-all duration-200",
-                isExpanded ? "px-3 justify-start hover:bg-black/10" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
+                isExpanded ? "px-3 justify-start hover:bg-black/10 dark:hover:bg-white/10" : "justify-center hover:bg-black/10 dark:hover:bg-white/10"
               )}
             >
               {isExpanded ? (
@@ -212,7 +217,7 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
               href="/settings"
               className={cn(
                 "flex items-center w-full h-10 rounded-lg transition-all duration-200",
-                isExpanded ? "px-3" : "justify-center",
+                isExpanded ? "px-3 gap-3" : "justify-center",
                 segments.includes('settings') 
                   ? isExpanded 
                     ? 'bg-[#c49c48]/20 text-white' 
@@ -230,7 +235,7 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
                   segments.includes('settings') && 'text-[#c49c48]'
                 )} />
               </div>
-              {isExpanded && <span className="ml-3">Mon Profil</span>}
+              {isExpanded && <span>Mon Profil</span>}
             </Link>
           </div>
         </div>
@@ -239,7 +244,12 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
       {/* Mobile Navigation */}
       {segments.length === 0 && (
         <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
-          <Image src="/images/logo.svg" alt="Logo" width={32} height={32} />
+          <object
+            data="/images/logo.svg"
+            type="image/svg+xml"
+            className="w-8 h-8"
+            aria-label="Logo"
+          />
           <Link href="/settings">
             <div className={cn(
               "w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",

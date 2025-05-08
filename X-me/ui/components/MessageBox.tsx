@@ -29,6 +29,7 @@ import ExpertCard from './ExpertCard';
 import ExpertDrawer from '@/app/discover/components/ExpertDrawer';
 import SourcePopover from './SourcePopover';
 import ContactModal from '@/app/discover/components/ContactModal';
+import { debugLog, debugError } from '@/lib/hooks/useDebug';
 
 // Define SourceMetadata interface (similar to Source.tsx)
 interface SourceMetadata {
@@ -112,7 +113,7 @@ const MessageBox = ({
       
       // Convertir le Map en tableau
       const uniqueExperts = Array.from(uniqueExpertsMap.values());
-      console.log(`🧹 Dédoublonnage des experts : ${message.suggestedExperts.length} → ${uniqueExperts.length}`);
+      debugLog('MessageBox', `Dédoublonnage des experts : ${message.suggestedExperts.length} → ${uniqueExperts.length}`);
       
       setDedupedExperts(uniqueExperts);
     } else {
@@ -130,11 +131,11 @@ const MessageBox = ({
 
   // Fonction pour gérer les clics sur les sources d'experts
   const handleExpertSourceClick = (source: SourceDocument) => {
-    console.log('🔍 Clic sur source expert détecté:', source.metadata);
+    debugLog('MessageBox', 'Clic sur source expert détecté:', source.metadata);
     
     // Vérifier si nous avons des experts suggérés
     if (!message.suggestedExperts || message.suggestedExperts.length === 0) {
-      console.log('❌ Aucun expert suggéré disponible dans le message actuel');
+      debugLog('MessageBox', 'Aucun expert suggéré disponible dans le message actuel');
       return;
     }
     
@@ -149,7 +150,7 @@ const MessageBox = ({
       
       if (matchingExpert) {
         expertToOpen = matchingExpert;
-        console.log('✅ Expert trouvé par ID direct:', source.metadata.expertId);
+        debugLog('MessageBox', 'Expert trouvé par ID direct:', source.metadata.expertId);
       }
     }
     
@@ -162,7 +163,7 @@ const MessageBox = ({
       
       if (matchingExpert) {
         expertToOpen = matchingExpert;
-        console.log('✅ Expert trouvé par ID dans expertData:', expertId);
+        debugLog('MessageBox', 'Expert trouvé par ID dans expertData:', expertId);
       }
     }
     
@@ -182,7 +183,7 @@ const MessageBox = ({
         
         if (matchingExpert) {
           expertToOpen = matchingExpert;
-          console.log('✅ Expert trouvé par nom/prénom:', expertPrenom, expertNom);
+          debugLog('MessageBox', `Expert trouvé par nom/prénom: ${expertPrenom} ${expertNom}`);
         }
       }
     }
@@ -192,7 +193,7 @@ const MessageBox = ({
       const sourceTitle = source.metadata.title;
       const expertNameFromTitle = sourceTitle.split(/[-,]/)[0].trim().toLowerCase();
       
-      console.log('🔍 Recherche par titre de source:', expertNameFromTitle);
+      debugLog('MessageBox', 'Recherche par titre de source:', expertNameFromTitle);
       
       const matchingExpert = message.suggestedExperts.find(expert => {
         const fullName = `${expert.prenom} ${expert.nom}`.toLowerCase();
@@ -210,23 +211,23 @@ const MessageBox = ({
       
       if (matchingExpert) {
         expertToOpen = matchingExpert;
-        console.log('✅ Expert trouvé par titre de source:', sourceTitle);
+        debugLog('MessageBox', 'Expert trouvé par titre de source:', sourceTitle);
       }
     }
     
     // 5. Si on n'a toujours pas trouvé, prendre le premier expert de la liste
     if (!expertToOpen && message.suggestedExperts.length > 0) {
       expertToOpen = message.suggestedExperts[0];
-      console.log('⚠️ Aucun expert correspondant trouvé, utilisation du premier expert par défaut');
+      debugLog('MessageBox', 'Aucun expert correspondant trouvé, utilisation du premier expert par défaut');
     }
     
     if (!expertToOpen) {
-      console.log('❌ Impossible de trouver un expert à afficher');
+      debugLog('MessageBox', 'Impossible de trouver un expert à afficher');
       return;
     }
     
     // Afficher les données pour le débogage
-    console.log('👤 Données de l\'expert sélectionné:', {
+    debugLog('MessageBox', 'Données de l\'expert sélectionné:', {
       id: expertToOpen.id_expert,
       nom: expertToOpen.nom,
       prenom: expertToOpen.prenom,
@@ -238,14 +239,14 @@ const MessageBox = ({
       specialisation: (expertToOpen as any).specialisation
     });
     
-    console.log('👤 Ouverture du drawer pour l\'expert sélectionné');
+    debugLog('MessageBox', 'Ouverture du drawer pour l\'expert sélectionné');
     setSelectedExpert(expertToOpen);
     setDrawerOpen(true);
   };
 
   useEffect(() => {
     if (message.sources && message.sources.length > 0) {
-      console.log('🔍 Sources dans MessageBox:', message.sources.map(s => ({
+      debugLog('MessageBox', 'Sources dans MessageBox:', message.sources.map(s => ({
         type: s.metadata?.type,
         title: s.metadata?.title,
         url: s.metadata?.url
@@ -269,15 +270,15 @@ const MessageBox = ({
   if (message.role === 'assistant' && message.sources && message.sources.length > 0) {
       // Associer les sources d'experts avec les experts suggérés
       if (message.suggestedExperts && message.suggestedExperts.length > 0) {
-        console.log('⚙️ Traitement des sources d\'experts...');
+        debugLog('MessageBox', 'Traitement des sources d\'experts...');
         message.sources.forEach(source => {
           if (source.metadata?.type === 'expert' && message.suggestedExperts) {
             const sourceTitle = source.metadata?.title || '';
-            console.log('📄 Titre de la source:', sourceTitle);
+            debugLog('MessageBox', 'Titre de la source:', sourceTitle);
             
             // Extraire le nom de l'expert (avant le premier - ou la première virgule)
             const expertName = sourceTitle.split(/[-,]/)[0].trim().toLowerCase();
-            console.log('👤 Nom extrait de la source:', expertName);
+            debugLog('MessageBox', 'Nom extrait de la source:', expertName);
             
             // Chercher l'expert correspondant par son nom
             const matchingExpert = message.suggestedExperts.find(expert => {
@@ -328,9 +329,9 @@ const MessageBox = ({
                 source.metadata.activite = expertAny.specialite;
               }
               
-              console.log('✅ ID Expert ajouté aux métadonnées de la source:', matchingExpert.prenom, matchingExpert.nom, matchingExpert.id_expert);
+              debugLog('MessageBox', `ID Expert ajouté aux métadonnées de la source: ${matchingExpert.prenom} ${matchingExpert.nom} ${matchingExpert.id_expert}`);
             } else {
-              console.log('⚠️ Aucun expert correspondant trouvé pour la source:', sourceTitle);
+              debugLog('MessageBox', 'Aucun expert correspondant trouvé pour la source:', sourceTitle);
             }
           }
         });
@@ -367,7 +368,7 @@ const MessageBox = ({
 
   useEffect(() => {
     if (message.role === 'assistant') {
-      console.log(`🔍 MessageBox - Message ${messageIndex} info:`, {
+      debugLog('MessageBox', `Message ${messageIndex} info:`, {
         hasSuggestions: !!message.suggestions,
         suggestionsCount: message.suggestions?.length || 0,
         hasExperts: !!message.suggestedExperts,
@@ -379,16 +380,16 @@ const MessageBox = ({
       
       // Vérifier si les suggestions devraient être affichées
       if (isLast && (!message.suggestions || message.suggestions.length === 0)) {
-        console.log(`⚠️ MessageBox - Dernier message sans suggestions. Message ID: ${message.messageId}`);
+        debugLog('MessageBox', `Dernier message sans suggestions. Message ID: ${message.messageId}`);
       }
       
       if (isLast && message.suggestions && message.suggestions.length > 0) {
-        console.log(`✅ MessageBox - Dernier message avec ${message.suggestions.length} suggestion(s)`, message.suggestions);
+        debugLog('MessageBox', `Dernier message avec ${message.suggestions.length} suggestion(s)`, message.suggestions);
       }
       
       // Données d'experts sont présentes
       if (isLast && message.suggestedExperts && message.suggestedExperts.length > 0) {
-        console.log(`👥 MessageBox - Dernier message avec ${message.suggestedExperts.length} expert(s)`, 
+        debugLog('MessageBox', `Dernier message avec ${message.suggestedExperts.length} expert(s)`, 
           message.suggestedExperts.map(e => `${e.prenom} ${e.nom}`));
       }
 
@@ -399,7 +400,7 @@ const MessageBox = ({
         message.role === 'assistant' &&
         !loading;
       
-      console.log(`📊 MessageBox - Conditions d'affichage des suggestions:`, {
+      debugLog('MessageBox', `Conditions d'affichage des suggestions:`, {
         shouldShow: shouldShowSuggestions,
         isLast,
         hasSuggestions: !!message.suggestions && message.suggestions.length > 0,
@@ -440,7 +441,7 @@ const MessageBox = ({
                     alt="Illustration"
                     className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      console.error("Erreur de chargement de l'image:", e);
+                      debugError("MessageBox", "Erreur de chargement de l'image:", e);
                       const imgElement = e.target as HTMLImageElement;
                       if (imgElement.src.includes('unsplash.com')) {
                         const newUrl = imgElement.src.split('?')[0] + '?w=1200&q=80&fm=jpg';
