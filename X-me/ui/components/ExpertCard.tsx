@@ -26,7 +26,7 @@ const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick
           <div className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-full overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0">
             {expert.image_url ? (
               <Image
-                src={expert.image_url}
+                src={expert.image_url.replace(/([^:]\/)\/+/g, "$1")}
                 alt={`${expert.prenom} ${expert.nom}`}
                 fill
                 className="object-cover"
@@ -35,6 +35,7 @@ const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick
                   target.onerror = null;
                   target.src = '/placeholder-image.jpg';
                 }}
+                unoptimized={true}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-gray-200 to-gray-300 flex items-center justify-center">

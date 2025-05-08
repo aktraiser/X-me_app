@@ -11,6 +11,7 @@ import { useAuth, useSession } from '@clerk/nextjs';
 import { createClient } from '@supabase/supabase-js';
 import { format } from 'date-fns';
 import Pagination from '@/components/Pagination';
+import { debugLog, debugError } from '@/lib/hooks/useDebug';
 
 export interface Chat {
   id: string;
@@ -56,7 +57,7 @@ const Page = () => {
     const fetchChats = async () => {
       if (fetchedRef.current) return;
       
-      console.log('Tentative de récupération depuis Supabase');
+      debugLog('Library', 'Tentative de récupération depuis Supabase');
       setLoading(true);
       fetchedRef.current = true;
       
@@ -67,9 +68,9 @@ const Page = () => {
           try {
             // Obtenir le jeton JWT via la session Clerk avec le template "supabase"
             authToken = await session?.getToken({ template: "supabase" });
-            console.log('[DEBUG] Jeton Clerk obtenu pour Supabase avec le template supabase');
+            debugLog('Library', 'Jeton Clerk obtenu pour Supabase avec le template supabase');
           } catch (error) {
-            console.error('[DEBUG] Impossible d\'obtenir le jeton Clerk:', error);
+            debugError('Library', 'Impossible d\'obtenir le jeton Clerk:', error);
           }
         }
         
@@ -101,18 +102,18 @@ const Page = () => {
           throw error;
         }
         
-        console.log('Données reçues de Supabase:', data);
+        debugLog('Library', 'Données reçues de Supabase:', data);
         
         if (data && data.length > 0) {
           setChats(data);
           
           // Log pour déboguer les IDs
           data.forEach((chat: Chat) => {
-            console.log('ID de discussion:', chat.id, 'Type:', typeof chat.id);
+            debugLog('Library', `ID de discussion: ${chat.id}, Type: ${typeof chat.id}`);
           });
         }
       } catch (error) {
-        console.error('Erreur lors de la récupération depuis Supabase:', error);
+        debugError('Library', 'Erreur lors de la récupération depuis Supabase:', error);
       } finally {
         setLoading(false);
       }
@@ -212,7 +213,7 @@ const Page = () => {
                           onClick={(e) => {
                             // Vérifier si le chat a des métadonnées complètes
                             if (!chat.metadata?.complete_conversation) {
-                              console.log('[DEBUG] Conversation potentiellement incomplète, sauvegarde préventive');
+                              debugLog('Library', 'Conversation potentiellement incomplète, sauvegarde préventive');
                               
                               // Empêcher temporairement la navigation
                               if (typeof localStorage !== 'undefined') {

@@ -6,10 +6,12 @@ export default function BecomeExpertCard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const openModal = () => {
+    console.log("BecomeExpertCard: ouverture du modal");
     setIsModalOpen(true);
   };
 
   const closeModal = () => {
+    console.log("BecomeExpertCard: fermeture du modal");
     setIsModalOpen(false);
   };
 

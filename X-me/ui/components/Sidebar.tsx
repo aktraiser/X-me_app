@@ -24,7 +24,7 @@ interface Chat {
 }
 
 // Constantes pour les dimensions de la barre latérale
-const SIDEBAR_WIDTH = "16rem";
+const SIDEBAR_WIDTH = "14rem";
 const SIDEBAR_WIDTH_COLLAPSED = "5rem";
 
 // Context pour gérer l'état de la barre latérale
@@ -68,12 +68,11 @@ const SidebarProvider = ({ children, defaultExpanded = false, onExpandChange }: 
 // Composant pour le logo
 const SidebarLogo = () => {
   return (
-    <div className="flex items-center justify-center w-full">
-      <object
-        data="/images/logo.svg"
-        type="image/svg+xml"
+    <div className="flex items-center justify-center w-full px-2.5">
+      <img
+        src="/images/logo.svg"
+        alt="Logo"
         className="w-10 h-10"
-        aria-label="Logo"
       />
     </div>
   );
@@ -146,10 +145,10 @@ const SidebarMenuItem = ({
         active 
           ? isExpanded 
             ? "bg-[#c49c48]/20 text-white px-3 h-10" 
-            : "text-black dark:text-white py-2 justify-center hover:bg-black/10 dark:hover:bg-white/10" 
+            : "text-black dark:text-white py-2 flex justify-center" 
           : isExpanded
             ? "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10 px-3 h-10"
-            : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10 py-2 justify-center"
+            : "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10 py-2 flex justify-center"
       )}
     >
       {isExpanded ? (
@@ -161,7 +160,12 @@ const SidebarMenuItem = ({
         <TooltipProvider delayDuration={0}>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Icon className="w-4 h-4 text-black dark:text-white" />
+              <div className="flex flex-col items-center">
+                <Icon className="w-4 h-4 text-black dark:text-white" />
+                {active && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#c49c48] mt-1"></div>
+                )}
+              </div>
             </TooltipTrigger>
             <TooltipContent side="right" align="center" sideOffset={4}>
               {label}
@@ -169,13 +173,8 @@ const SidebarMenuItem = ({
           </Tooltip>
         </TooltipProvider>
       )}
-      {active && (
-        <span className={cn(
-          "absolute bg-[#c49c48]",
-          isExpanded 
-            ? "w-1 right-0 top-0 h-full" 
-            : "w-1 right-0 h-8 rounded-l-md"
-        )} />
+      {active && isExpanded && (
+        <span className="absolute bg-[#c49c48] w-1 right-0 top-0 h-full rounded-l-md" />
       )}
     </Link>
   );
@@ -214,7 +213,7 @@ const SidebarNav = ({ chatHistory }: { chatHistory: Chat[] }) => {
   ];
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-3">
       {navLinks.map((link, i) => (
         <div key={i} className="w-full">
           <SidebarMenuItem 
@@ -223,7 +222,7 @@ const SidebarNav = ({ chatHistory }: { chatHistory: Chat[] }) => {
             href={link.href} 
             active={link.active} 
           />
-          {isExpanded && link.label === 'Historique' && !loading && 
+          {isExpanded && link.label === 'Historique' && !loading && chatHistory.length > 0 && 
             <ChatHistoryList chatHistory={chatHistory} />
           }
         </div>
@@ -269,6 +268,7 @@ const SidebarToggleButton = () => {
 const SidebarProfileLink = () => {
   const segments = useSelectedLayoutSegments();
   const { isExpanded } = useSidebar();
+  const isActive = segments.includes('settings');
 
   return (
     <Link
@@ -278,7 +278,7 @@ const SidebarProfileLink = () => {
         isExpanded 
           ? "px-3 h-10" 
           : "justify-center py-2",
-        segments.includes('settings') 
+        isActive 
           ? isExpanded 
             ? 'bg-[#c49c48]/20 text-white' 
             : 'text-[#c49c48]' 
@@ -290,20 +290,25 @@ const SidebarProfileLink = () => {
         <>
           <div className={cn(
             "inline-flex items-center justify-center w-8 h-8 rounded-full bg-light-primary dark:bg-dark-primary",
-            segments.includes('settings') && "bg-[#c49c48]/20"
+            isActive && "bg-[#c49c48]/20"
           )}>
             <User className={cn(
               'w-4 h-4', 
-              segments.includes('settings') && 'text-[#c49c48]'
+              isActive && 'text-[#c49c48]'
             )} />
           </div>
           <span className="ml-3">Mon Profil</span>
         </>
       ) : (
-        <User className={cn(
-          'w-4 h-4', 
-          segments.includes('settings') && 'text-[#c49c48]'
-        )} />
+        <div className="flex flex-col items-center">
+          <User className={cn(
+            'w-4 h-4', 
+            isActive && 'text-[#c49c48]'
+          )} />
+          {isActive && (
+            <div className="w-1.5 h-1.5 rounded-full bg-[#c49c48] mt-1"></div>
+          )}
+        </div>
       )}
     </Link>
   );
@@ -328,8 +333,11 @@ const SidebarDesktop = ({ chatHistory }: { chatHistory: Chat[] }) => {
     <aside
       className={cn(
         "hidden lg:flex lg:fixed lg:inset-y-0 lg:z-50 lg:flex-col bg-light-secondary dark:bg-dark-secondary transition-all duration-300 ease-in-out",
-        isExpanded ? "lg:w-48" : "lg:w-20"
+        isExpanded ? `lg:w-[${SIDEBAR_WIDTH}]` : `lg:w-[${SIDEBAR_WIDTH_COLLAPSED}]`
       )}
+      style={{
+        width: isExpanded ? SIDEBAR_WIDTH : SIDEBAR_WIDTH_COLLAPSED
+      }}
     >
       <div className="flex grow flex-col justify-between h-full px-2 py-8">
         <SidebarHeader />
@@ -396,11 +404,10 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
         {/* Mobile Header */}
         {segments.length === 0 && (
           <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
-            <object
-              data="/images/logo.svg"
-              type="image/svg+xml"
+            <img
+              src="/images/logo.svg"
+              alt="Logo"
               className="w-8 h-8"
-              aria-label="Logo"
             />
             <Link href="/settings">
               <div className={cn(
