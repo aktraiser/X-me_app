@@ -425,7 +425,7 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
               "w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",
               segments.includes('settings') && 'bg-[#c49c48]/20'
             )}>
-              <User className={cn('w-4 h-4', segments.includes('settings') && 'text-[#c49c48]')} />
+              <User className={cn('w-4 h-4 text-black dark:text-white', segments.includes('settings') && 'text-[#c49c48]')} />
             </div>
           </Link>
         </nav>
@@ -433,7 +433,8 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
         {/* Mobile Bottom Navigation */}
         <nav className={cn(
           "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 bg-light-secondary dark:bg-dark-secondary shadow-t-sm z-[100] lg:hidden transition-transform duration-300 ease-in-out",
-          isNavVisible ? 'translate-y-0' : 'translate-y-full'
+          isNavVisible ? 'translate-y-0' : 'translate-y-full',
+          "border-t border-light-700 dark:border-dark-700"
         )}>
           {navLinks.map((link, i) => (
             <Link 

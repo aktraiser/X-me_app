@@ -337,7 +337,7 @@ export default function SettingsPage() {
                   setSystemInstructions(e.target.value);
                 }}
                 onSave={(value: string) => saveConfig('systemInstructions', value)}
-                placeholder="Je viens juste de lancer mon entreprise, j'ai encore beaucoup de choses à comprendre sur la gstion, l'organisation et la recherche d'expert"
+                placeholder="Je viens tout juste de lancer mon entreprise. Je me rends compte qu’il me reste encore beaucoup à apprendre, surtout en ce qui concerne la gestion, l’organisation et la manière de trouver les bons experts pour m’entourer."
               />
             </SettingsSection>
 

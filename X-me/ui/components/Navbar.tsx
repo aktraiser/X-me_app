@@ -3,6 +3,7 @@ import { Message } from './ChatWindow';
 import { useEffect, useState } from 'react';
 import { formatTimeDifference } from '@/lib/utils';
 import DeleteChat from './DeleteChat';
+import { usePathname } from 'next/navigation';
 
 const Navbar = ({
   chatId,
@@ -13,6 +14,13 @@ const Navbar = ({
 }) => {
   const [title, setTitle] = useState<string>('');
   const [timeAgo, setTimeAgo] = useState<string>('');
+  const pathname = usePathname();
+  
+  // Vérifier si on est sur la page d'accueil
+  const isHomePage = pathname === '/';
+  
+  // Vérifier si une discussion est en cours (s'il y a des messages)
+  const hasMessages = messages && messages.length > 0;
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -61,6 +69,11 @@ const Navbar = ({
       };
     }
   }, []);
+
+  // Si ce n'est pas la page d'accueil OU si une discussion est en cours, ne pas afficher la Navbar
+  if (!isHomePage || hasMessages) {
+    return null;
+  }
 
   return (
     <div className="sticky top-0 z-50 w-full border-b border-dark-200 bg-light-secondary dark:bg-dark-primary rounded-t-xl">

@@ -77,11 +77,17 @@ const MessageInput = ({
         }
       }}
       className={cn(
-        'bg-light-secondary dark:bg-dark-secondary p-4 flex items-center overflow-hidden border-[0.5px] border-light-700 dark:border-dark-700 transition-transform duration-300',
+        'bg-light-secondary dark:bg-dark-secondary p-4 flex items-center overflow-hidden border-[0.5px] border-light-700 dark:border-dark-700 transition-all duration-300 ease-in-out',
         mode === 'multi' ? 'flex-col rounded-lg' : 'flex-row rounded-full',
+        'fixed bottom-0 left-0 right-0 lg:relative lg:bottom-auto',
         'lg:transform-none',
-        !isNavVisible ? 'transform translate-y-16' : 'transform translate-y-0'
+        'z-[90]'
       )}
+      style={{
+        transform: `translateY(${isNavVisible ? '0' : '-60px'})`,
+        marginBottom: isNavVisible ? '64px' : '8px',
+        transition: 'transform 0.3s ease-in-out, margin-bottom 0.3s ease-in-out'
+      }}
     >
       {mode === 'single' && (
         <AttachSmall
@@ -99,7 +105,7 @@ const MessageInput = ({
           setTextareaRows(Math.ceil(height / props.rowHeight));
         }}
         className="transition bg-transparent placeholder:text-black/50 dark:placeholder:text-white/50 text-sm text-black dark:text-white resize-none focus:outline-none w-full px-2 max-h-24 lg:max-h-36 xl:max-h-48 flex-grow flex-shrink"
-        placeholder="Message à Xandme"
+        placeholder="Message à Xandme..."
       />
       {mode === 'single' && (
         <div className="flex flex-row items-center space-x-4">

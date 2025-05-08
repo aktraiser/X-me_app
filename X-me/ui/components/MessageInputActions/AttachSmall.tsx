@@ -5,7 +5,7 @@ import {
   PopoverPanel,
   Transition,
 } from '@headlessui/react';
-import { CopyPlus, File, LoaderCircle, Plus, Trash } from 'lucide-react';
+import { Paperclip, File, LoaderCircle, Plus, Trash } from 'lucide-react';
 import { Fragment, useRef, useState } from 'react';
 import { File as FileType } from '../ChatWindow';
 
@@ -145,7 +145,7 @@ const AttachSmall = ({
         multiple
         hidden
       />
-      <CopyPlus size={20} />
+      <Paperclip size={20} />
     </button>
   );
 };
