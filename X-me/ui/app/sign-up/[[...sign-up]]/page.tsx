@@ -19,21 +19,22 @@ export default function SignUpPage() {
   const isDarkTheme = mounted && theme === 'dark';
 
   return (
-    <div className="w-full max-w-md mx-auto px-4 py-8">
-      
-      <SignUp 
-        appearance={{
-          baseTheme: isDarkTheme ? dark : undefined,
-          variables: {
-            colorPrimary: '#d97706',
-            colorBackground: isDarkTheme ? '#1e293b' : '#ffffff',
-          }
-        }}
-        path="/sign-up"
-        routing="path"
-        signInUrl="/sign-in"
-        fallbackRedirectUrl="/"
-      />
+    <div className="flex items-center justify-center min-h-[80vh]">
+      <div className="w-full max-w-md mx-auto p-4">
+        <SignUp 
+          appearance={{
+            baseTheme: isDarkTheme ? dark : undefined,
+            variables: {
+              colorPrimary: '#d97706',
+              colorBackground: isDarkTheme ? '#1e293b' : '#ffffff',
+            }
+          }}
+          path="/sign-up"
+          routing="path"
+          signInUrl="/sign-in"
+          fallbackRedirectUrl="/"
+        />
+      </div>
     </div>
   );
 } 

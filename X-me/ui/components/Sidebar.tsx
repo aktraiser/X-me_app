@@ -70,7 +70,7 @@ const SidebarLogo = () => {
   return (
     <div className="flex items-center justify-center w-full px-2.5">
       <img
-        src="/images/logo.png"
+        src="/images/logo.svg"
         alt="Logo X&ME"
         className="w-10 h-10"
       />
@@ -144,7 +144,7 @@ const SidebarMenuItem = ({
         "relative flex items-center w-full rounded-lg transition-all duration-200 cursor-pointer",
         active 
           ? isExpanded 
-            ? "bg-[#c49c48]/20 text-white px-3 h-10" 
+            ? "bg-[#c49c48]/20 text-black dark:text-white px-3 h-10" 
             : "text-black dark:text-white py-2 flex justify-center" 
           : isExpanded
             ? "text-black/70 dark:text-white/70 hover:bg-black/10 dark:hover:bg-white/10 px-3 h-10"
@@ -300,18 +300,27 @@ const SidebarProfileLink = () => {
               isActive && 'text-[#c49c48]'
             )} />
           </div>
-          <span className="ml-3">Mon Profil</span>
+          <span className="ml-3 whitespace-normal leading-tight">Mon Profil</span>
         </>
       ) : (
-        <div className="flex flex-col items-center">
-          <User className={cn(
-            'w-4 h-4', 
-            isActive && 'text-[#c49c48]'
-          )} />
-          {isActive && (
-            <div className="w-1.5 h-1.5 rounded-full bg-[#c49c48] mt-1"></div>
-          )}
-        </div>
+        <TooltipProvider delayDuration={0}>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="flex flex-col items-center">
+                <User className={cn(
+                  'w-4 h-4', 
+                  isActive && 'text-[#c49c48]'
+                )} />
+                {isActive && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#c49c48] mt-1"></div>
+                )}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" align="center" sideOffset={4}>
+              Mon Profil
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       )}
     </Link>
   );
@@ -405,27 +414,25 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
         <SidebarDesktop chatHistory={chatHistory} />
         
         {/* Mobile Header */}
-        {segments.length === 0 && (
-          <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
-            <img
-              src="/images/logo.png"
-              alt="Logo X&ME"
-              className="w-8 h-8"
-            />
-            <Link href="/settings">
-              <div className={cn(
-                "w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",
-                segments.includes('settings') && 'bg-[#c49c48]/20'
-              )}>
-                <User className={cn('w-4 h-4', segments.includes('settings') && 'text-[#c49c48]')} />
-              </div>
-            </Link>
-          </nav>
-        )}
+        <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
+          <img
+            src="/images/logo.svg"
+            alt="Logo X&ME"
+            className="w-8 h-8"
+          />
+          <Link href="/settings">
+            <div className={cn(
+              "w-8 h-8 rounded-full flex items-center justify-center bg-light-primary dark:bg-dark-primary",
+              segments.includes('settings') && 'bg-[#c49c48]/20'
+            )}>
+              <User className={cn('w-4 h-4', segments.includes('settings') && 'text-[#c49c48]')} />
+            </div>
+          </Link>
+        </nav>
         
         {/* Mobile Bottom Navigation */}
         <nav className={cn(
-          "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 bg-dark-secondary shadow-t-sm z-[100] lg:hidden transition-transform duration-300 ease-in-out",
+          "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 bg-light-secondary dark:bg-dark-secondary shadow-t-sm z-[100] lg:hidden transition-transform duration-300 ease-in-out",
           isNavVisible ? 'translate-y-0' : 'translate-y-full'
         )}>
           {navLinks.map((link, i) => (
@@ -439,15 +446,12 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
               )}
               <link.icon className={cn(
                 "w-4 h-4",
-                link.active ? "text-[#c49c48]" : "text-white/70"
+                link.active ? "text-[#c49c48]" : "text-black/70 dark:text-white/70"
               )} />
               <span className={cn(
                 "text-xs",
-                link.active ? "text-[#c49c48]" : "text-white/70"
+                link.active ? "text-black dark:text-[#c49c48]" : "text-black/70 dark:text-white/70"
               )}>{link.label}</span>
-              {link.active && (
-                <div className="w-1.5 h-1.5 rounded-full bg-[#c49c48] mt-1"></div>
-              )}
             </Link>
           ))}
         </nav>

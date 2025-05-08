@@ -56,6 +56,20 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
     });
   });
 
+  // Filtrer les experts en fonction des critères sélectionnés
+  const filteredExperts = experts?.filter(expert => {
+    const matchesVille = !selectedVille || (expert.ville && expert.ville === selectedVille);
+    
+    const matchesActivite = !selectedActivite || 
+      (expert.activité && expert.activité === selectedActivite) || 
+      (expert.expertises && expert.expertises.split(';').some((exp: string) => exp.trim() === selectedActivite));
+    
+    return matchesVille && matchesActivite;
+  });
+
+  // Nombre total d'experts après filtrage
+  const resultsCount = filteredExperts?.length || 0;
+
   const filters = [
     {
       id: 'ville',
@@ -110,7 +124,10 @@ const SidebarFilters: React.FC<SidebarFiltersProps> = ({
             className="relative flex w-full flex-col overflow-y-auto bg-white dark:bg-gray-900 py-4 pb-6 shadow-xl transition duration-300 ease-in-out data-[closed]:translate-x-full"
           >
             <div className="flex items-center justify-between px-4">
-              <h2 className="text-lg font-medium text-gray-900 dark:text-white">Filtres</h2>
+              <div>
+                <h2 className="text-lg font-medium text-gray-900 dark:text-white">Filtres</h2>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{resultsCount} résultat{resultsCount !== 1 ? 's' : ''}</p>
+              </div>
               <div className="flex items-center">
                 <button
                   type="button"

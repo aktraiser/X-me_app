@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { X, Briefcase, Info } from 'lucide-react';
+import { X, Info } from 'lucide-react';
 import { useNavVisibility } from '@/hooks/useNavVisibility';
 import { supabase } from '@/lib/supabase';
 import { toast } from 'sonner';
@@ -178,23 +178,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                   <div className="sm:flex sm:items-start">
                     <div className="mt-3 text-center sm:mt-0 sm:text-left w-full">
                       <form onSubmit={handleSubmit} className="w-full">
-                        <div className="flex items-center gap-x-5">
-                          <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-white dark:border-gray-800 shadow-sm flex-shrink-0">
-                            <div className="w-full h-full bg-gradient-to-br from-indigo-400 to-indigo-600 flex items-center justify-center">
-                              <Briefcase className="w-8 h-8 text-white" />
-                            </div>
-                          </div>
-                          <div>
-                            <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900 dark:text-white">
-                              Devenez Expert Xandme
-                            </Dialog.Title>
-                            <p className="text-sm text-gray-500 dark:text-gray-400">
-                              Rejoignez notre réseau d&apos;experts et partagez votre expertise avec notre communauté.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="mt-8">
+                        <div className="mt-6">
                           <div className="flex items-start mb-4">
                             <Info className="h-5 w-5 text-blue-500 mr-2 flex-shrink-0 mt-0.5" />
                             <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -213,116 +197,111 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                           
                           <div className="space-y-6">
                             <div className="sm:grid sm:grid-cols-2 sm:gap-4">
-                              <div className="relative">
-                                <label
-                                  htmlFor="prenom"
-                                  className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
-                                >
+                              <div>
+                                <label htmlFor="prenom" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                   Prénom <span className="text-red-500">*</span>
                                 </label>
-                                <input
-                                  id="prenom"
-                                  name="prenom"
-                                  type="text"
-                                  value={formData.prenom}
-                                  onChange={handleChange}
-                                  required
-                                  autoComplete="given-name"
-                                  placeholder="Votre prénom"
-                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                />
-                                {errors.prenom && (
-                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                    {errors.prenom}
-                                  </p>
-                                )}
+                                <div className="mt-2">
+                                  <input
+                                    id="prenom"
+                                    name="prenom"
+                                    type="text"
+                                    value={formData.prenom}
+                                    onChange={handleChange}
+                                    required
+                                    autoComplete="given-name"
+                                    placeholder="Votre prénom"
+                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  />
+                                  {errors.prenom && (
+                                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                      {errors.prenom}
+                                    </p>
+                                  )}
+                                </div>
                               </div>
 
-                              <div className="relative">
-                                <label
-                                  htmlFor="nom"
-                                  className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
-                                >
+                              <div>
+                                <label htmlFor="nom" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                   Nom <span className="text-red-500">*</span>
                                 </label>
+                                <div className="mt-2">
+                                  <input
+                                    id="nom"
+                                    name="nom"
+                                    type="text"
+                                    value={formData.nom}
+                                    onChange={handleChange}
+                                    required
+                                    autoComplete="family-name"
+                                    placeholder="Votre nom"
+                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  />
+                                  {errors.nom && (
+                                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                      {errors.nom}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div>
+                              <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
+                                Email <span className="text-red-500">*</span>
+                              </label>
+                              <div className="mt-2">
                                 <input
-                                  id="nom"
-                                  name="nom"
-                                  type="text"
-                                  value={formData.nom}
+                                  id="email"
+                                  name="email"
+                                  type="email"
+                                  value={formData.email}
                                   onChange={handleChange}
                                   required
-                                  autoComplete="family-name"
-                                  placeholder="Votre nom"
-                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  autoComplete="email"
+                                  placeholder="votre.email@exemple.com"
+                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                                 />
-                                {errors.nom && (
+                                {errors.email && (
                                   <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                    {errors.nom}
+                                    {errors.email}
                                   </p>
                                 )}
                               </div>
                             </div>
 
-                            <div className="relative">
-                              <label
-                                htmlFor="email"
-                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
-                              >
-                                Email <span className="text-red-500">*</span>
-                              </label>
-                              <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                required
-                                autoComplete="email"
-                                placeholder="votre.email@exemple.com"
-                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                              />
-                              {errors.email && (
-                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                  {errors.email}
-                                </p>
-                              )}
-                            </div>
-
-                            <div className="relative">
-                              <label
-                                htmlFor="telephone"
-                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
-                              >
+                            <div>
+                              <label htmlFor="telephone" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Téléphone
                               </label>
-                              <input
-                                id="telephone"
-                                name="telephone"
-                                type="tel"
-                                value={formData.telephone}
-                                onChange={handleChange}
-                                placeholder="06 12 34 56 78"
-                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                              />
+                              <div className="mt-2">
+                                <input
+                                  id="telephone"
+                                  name="telephone"
+                                  type="tel"
+                                  value={formData.telephone}
+                                  onChange={handleChange}
+                                  placeholder="06 12 34 56 78"
+                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                />
+                              </div>
                             </div>
 
-                            <div className="relative">
-                              <label
-                                htmlFor="ville"
-                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
-                              >
+                            <div>
+                              <label htmlFor="ville" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Ville
                               </label>
-                              <input
-                                id="ville"
-                                name="ville"
-                                type="text"
-                                value={formData.ville}
-                                onChange={handleChange}
-                                placeholder="Votre ville"
-                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                              />
+                              <div className="mt-2">
+                                <input
+                                  id="ville"
+                                  name="ville"
+                                  type="text"
+                                  value={formData.ville}
+                                  onChange={handleChange}
+                                  placeholder="Votre ville"
+                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                />
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -335,52 +314,50 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                           </h4>
 
                           <div className="space-y-6">
-                            <div className="relative">
-                              <label
-                                htmlFor="expertises"
-                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
-                              >
+                            <div>
+                              <label htmlFor="expertises" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Domaines d&apos;expertise <span className="text-red-500">*</span>
                               </label>
-                              <input
-                                id="expertises"
-                                name="expertises"
-                                value={formData.expertises}
-                                onChange={handleChange}
-                                required
-                                placeholder="Ex: Comptable, Avocat, Juriste..."
-                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                              />
-                              {errors.expertises ? (
-                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                  {errors.expertises}
-                                </p>
-                              ) : (
-                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                  Séparez vos différentes expertises par des virgules
-                                </p>
-                              )}
+                              <div className="mt-2">
+                                <input
+                                  id="expertises"
+                                  name="expertises"
+                                  value={formData.expertises}
+                                  onChange={handleChange}
+                                  required
+                                  placeholder="Ex: Comptable, Avocat, Juriste..."
+                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                />
+                                {errors.expertises ? (
+                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+                                    {errors.expertises}
+                                  </p>
+                                ) : (
+                                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                                    Séparez vos différentes expertises par des virgules
+                                  </p>
+                                )}
+                              </div>
                             </div>
 
-                            <div className="relative">
-                              <label
-                                htmlFor="message"
-                                className="absolute -top-2 left-2 inline-block rounded-lg bg-white dark:bg-gray-800 px-1 text-xs font-medium text-gray-900 dark:text-white"
-                              >
+                            <div>
+                              <label htmlFor="message" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Message ou informations complémentaires
                               </label>
-                              <textarea
-                                id="message"
-                                name="message"
-                                rows={4}
-                                value={formData.message}
-                                onChange={handleChange}
-                                placeholder="Partagez-nous votre parcours, vos qualifications ou toute autre information pertinente..."
-                                className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                              />
-                              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                Plus votre demande sera détaillée, mieux nous pourrons évaluer votre candidature.
-                              </p>
+                              <div className="mt-2">
+                                <textarea
+                                  id="message"
+                                  name="message"
+                                  rows={4}
+                                  value={formData.message}
+                                  onChange={handleChange}
+                                  placeholder="Partagez-nous votre parcours, vos qualifications ou toute autre information pertinente..."
+                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                />
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                  Plus votre demande sera détaillée, mieux nous pourrons évaluer votre candidature.
+                                </p>
+                              </div>
                             </div>
                           </div>
                         </div>
