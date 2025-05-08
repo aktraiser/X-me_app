@@ -368,7 +368,25 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
   const [user, setUser] = useState<any>(null);
   const supabase = createClient();
   const { isNavVisible } = useNavVisibility();
+  const [isNavbarPresent, setIsNavbarPresent] = useState(false);
   
+  // Vérifier si un élément Navbar est présent dans le DOM
+  useEffect(() => {
+    const checkForNavbar = () => {
+      const navbarElement = document.querySelector('.sticky.top-0.z-50.w-full.border-b.border-dark-200');
+      setIsNavbarPresent(!!navbarElement);
+    };
+    
+    // Vérifier initialement
+    checkForNavbar();
+    
+    // Configurer un MutationObserver pour surveiller les changements du DOM
+    const observer = new MutationObserver(checkForNavbar);
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    return () => observer.disconnect();
+  }, []);
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }: { data: { session: Session | null } }) => {
       if (session?.user) setUser(session.user);
@@ -407,14 +425,17 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
     { icon: Library, href: '/library', active: segments.includes('library'), label: 'Historique' },
   ];
 
+  // Vérifier si nous sommes sur la page d'accueil (sans paramètres)
+  const isHomePage = segments.length === 0;
+
   return (
     <SidebarProvider defaultExpanded={false} onExpandChange={onExpandChange}>
       <div>
         {/* Desktop Sidebar */}
         <SidebarDesktop chatHistory={chatHistory} />
         
-        {/* Mobile Header */}
-        <nav className="fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden">
+        {/* Mobile Header - uniquement sur la page d'accueil et sans navbar présente */}
+        <nav className={`fixed top-0 left-0 right-0 flex justify-between items-center p-4 bg-light-secondary dark:bg-dark-secondary z-[100] lg:hidden ${!isHomePage || isNavbarPresent ? 'hidden' : ''}`}>
           <img
             src="/images/logo.svg"
             alt="Logo X&ME"
@@ -433,8 +454,7 @@ const Sidebar = ({ children, onExpandChange }: { children?: ReactNode; onExpandC
         {/* Mobile Bottom Navigation */}
         <nav className={cn(
           "fixed bottom-0 left-0 right-0 flex justify-around items-center p-4 bg-light-secondary dark:bg-dark-secondary shadow-t-sm z-[100] lg:hidden transition-transform duration-300 ease-in-out",
-          isNavVisible ? 'translate-y-0' : 'translate-y-full',
-          "border-t border-light-700 dark:border-dark-700"
+          isNavVisible ? 'translate-y-0' : 'translate-y-full'
         )}>
           {navLinks.map((link, i) => (
             <Link 

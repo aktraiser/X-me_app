@@ -69,12 +69,11 @@ const LayoutContent = ({ children }: LayoutProps) => {
       
       const currentScrollY = scrollContainer.scrollTop;
       
-      // Ajouter un seuil de défilement plus petit pour une meilleure réactivité
-      if (currentScrollY > lastScrollY && currentScrollY > 10) {
+      if (currentScrollY > lastScrollY && currentScrollY > 20) {
         // Défilement vers le bas - masquer la navigation
         setNavVisible(false);
-      } else if (currentScrollY < lastScrollY || currentScrollY <= 10) {
-        // Défilement vers le haut ou retour en haut - afficher la navigation
+      } else if (currentScrollY < lastScrollY) {
+        // Défilement vers le haut - afficher la navigation
         setNavVisible(true);
       }
       
@@ -224,8 +223,6 @@ const LayoutContent = ({ children }: LayoutProps) => {
               <div className="w-full max-w-none mx-auto">
                 {children}
               </div>
-              {/* Espace supplémentaire en bas pour éviter que le contenu ne soit caché sous MessageInput */}
-              <div className="h-36 md:h-28 lg:h-16"></div>
             </div>
           </div>
         </div>
