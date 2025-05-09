@@ -42,7 +42,7 @@ interface SourceMetadata {
   expertId?: string;
   expertData?: any; // Utiliser any pour éviter les conflits de types
   expertises?: string; // Garder le type string, conforme à SourcePopover
-  activite?: string;
+  activité?: string;
   tarif?: string;
   illustrationImage?: string;
   image_url?: string;
@@ -50,6 +50,10 @@ interface SourceMetadata {
   metier?: string;
   profession?: string;
   specialisation?: string;
+  // Ajout des champs manquants qui sont dans actions.ts
+  logo?: string;
+  site_web?: string;
+  reseau?: string;
 }
 
 // Define the type for source documents
@@ -231,7 +235,7 @@ const MessageBox = ({
       id: expertToOpen.id_expert,
       nom: expertToOpen.nom,
       prenom: expertToOpen.prenom,
-      activite: expertToOpen.activité,
+      activité: expertToOpen.activité,
       expertises: expertToOpen.expertises,
       // Cast vers any pour accéder aux propriétés qui ne sont pas dans l'interface
       metier: (expertToOpen as any).metier,
@@ -317,17 +321,22 @@ const MessageBox = ({
               
               // Assurer la cohérence en copiant l'activité si elle existe
               // Prendre en compte le champ avec accent (activité) d'abord
-              if (matchingExpert.activité && !source.metadata.activite) {
-                source.metadata.activite = matchingExpert.activité;
-              } else if (expertAny.metier && !source.metadata.activite) {
-                source.metadata.activite = expertAny.metier;
-              } else if (expertAny.profession && !source.metadata.activite) {
-                source.metadata.activite = expertAny.profession;
-              } else if (expertAny.specialisation && !source.metadata.activite) {
-                source.metadata.activite = expertAny.specialisation;
-              } else if (expertAny.specialite && !source.metadata.activite) {
-                source.metadata.activite = expertAny.specialite;
+              if (matchingExpert.activité && !source.metadata.activité) {
+                source.metadata.activité = matchingExpert.activité;
+              } else if (expertAny.metier && !source.metadata.activité) {
+                source.metadata.activité = expertAny.metier;
+              } else if (expertAny.profession && !source.metadata.activité) {
+                source.metadata.activité = expertAny.profession;
+              } else if (expertAny.specialisation && !source.metadata.activité) {
+                source.metadata.activité = expertAny.specialisation;
+              } else if (expertAny.specialite && !source.metadata.activité) {
+                source.metadata.activité = expertAny.specialite;
               }
+              
+              // Copier les champs additionnels présents dans actions.ts
+              if (matchingExpert.logo) source.metadata.logo = matchingExpert.logo;
+              if (matchingExpert.site_web) source.metadata.site_web = matchingExpert.site_web;
+              if (matchingExpert.reseau) source.metadata.reseau = matchingExpert.reseau;
               
               debugLog('MessageBox', `ID Expert ajouté aux métadonnées de la source: ${matchingExpert.prenom} ${matchingExpert.nom} ${matchingExpert.id_expert}`);
             } else {

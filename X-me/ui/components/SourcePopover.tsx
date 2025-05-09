@@ -16,6 +16,9 @@ interface SourceMetadata {
   expertises?: string;
   expertData?: any;
   image_url?: string;
+  logo?: string;
+  site_web?: string;
+  reseau?: string;
 }
 
 // Define the type for source documents
@@ -47,7 +50,7 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
   
   // Extraction des infos activité et tarif
   // IMPORTANT: Notez l'utilisation du é accentué comme dans ExpertCard.tsx
-  const activité = expertData?.activité || source?.metadata?.activité || source?.metadata?.activité || "Expert";
+  const activité = expertData?.activité || source?.metadata?.activité || "Expert";
   const tarif = source?.metadata?.tarif || expertData?.tarif || '';
   
   // Nom et photo
