@@ -469,7 +469,7 @@ INSTRUCTIONS IMPORTANTES:
     return experts.map(expert =>
       new Document({
         pageContent: `Expert: ${expert.prenom} ${expert.nom}
-Activité: ${expert.activité || 'Non spécifiée'}
+Spécialité: ${expert.specialite}
 Ville: ${expert.ville}
 Tarif: ${expert.tarif}€
 Expertises: ${expert.expertises}
@@ -479,7 +479,7 @@ ${expert.biographie}`,
           type: 'expert',
           expert: true,
           expertData: expert,
-          title: `${expert.prenom} ${expert.nom} - ${expert.activité || 'Expert'}`,
+          title: `${expert.prenom} ${expert.nom} - ${expert.specialite}`,
           url: `/expert/${expert.id_expert}`,
           image_url: expert.image_url,
           activité: expert.activité || '',
@@ -1241,7 +1241,7 @@ Si vous avez besoin de conseils pour votre entreprise ou votre activité profess
       );
       return expertResults.experts.map(expert => ({
         pageContent: `Expert: ${expert.prenom} ${expert.nom}
-Activité: ${expert.activité || 'Non spécifiée'}
+Spécialité: ${expert.specialite}
 Ville: ${expert.ville}
 Tarif: ${expert.tarif}€
 Expertises: ${expert.expertises}
@@ -1251,7 +1251,7 @@ ${expert.biographie}`,
           type: 'expert',
           expert: true,
           expertData: expert,
-          title: `${expert.prenom} ${expert.nom} - ${expert.activité || 'Expert'}`,
+          title: `${expert.prenom} ${expert.nom} - ${expert.specialite}`,
           url: expert.url,
           image_url: expert.image_url,
           score: 0.6,

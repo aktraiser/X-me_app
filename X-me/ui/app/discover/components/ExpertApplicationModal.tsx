@@ -198,109 +198,119 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                           <div className="space-y-6">
                             <div className="sm:grid sm:grid-cols-2 sm:gap-4">
                               <div>
-                                <label htmlFor="prenom" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
-                                  Prénom <span className="text-red-500">*</span>
-                                </label>
-                                <div className="mt-2">
-                                  <input
-                                    id="prenom"
-                                    name="prenom"
-                                    type="text"
-                                    value={formData.prenom}
-                                    onChange={handleChange}
-                                    required
-                                    autoComplete="given-name"
-                                    placeholder="Votre prénom"
-                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                  />
-                                  {errors.prenom && (
-                                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                      {errors.prenom}
-                                    </p>
-                                  )}
+                                <div className="flex flex-row items-center">
+                                  <label htmlFor="prenom" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                    Prénom <span className="text-red-500">*</span>
+                                  </label>
+                                  <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                    <input
+                                      id="prenom"
+                                      name="prenom"
+                                      type="text"
+                                      value={formData.prenom}
+                                      onChange={handleChange}
+                                      required
+                                      autoComplete="given-name"
+                                      placeholder="Votre prénom"
+                                      className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                    />
+                                  </div>
                                 </div>
+                                {errors.prenom && (
+                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                    {errors.prenom}
+                                  </p>
+                                )}
                               </div>
 
                               <div>
-                                <label htmlFor="nom" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
-                                  Nom <span className="text-red-500">*</span>
-                                </label>
-                                <div className="mt-2">
-                                  <input
-                                    id="nom"
-                                    name="nom"
-                                    type="text"
-                                    value={formData.nom}
-                                    onChange={handleChange}
-                                    required
-                                    autoComplete="family-name"
-                                    placeholder="Votre nom"
-                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                  />
-                                  {errors.nom && (
-                                    <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                      {errors.nom}
-                                    </p>
-                                  )}
+                                <div className="flex flex-row items-center mt-4 sm:mt-0">
+                                  <label htmlFor="nom" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                    Nom <span className="text-red-500">*</span>
+                                  </label>
+                                  <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                    <input
+                                      id="nom"
+                                      name="nom"
+                                      type="text"
+                                      value={formData.nom}
+                                      onChange={handleChange}
+                                      required
+                                      autoComplete="family-name"
+                                      placeholder="Votre nom"
+                                      className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                    />
+                                  </div>
                                 </div>
-                              </div>
-                            </div>
-
-                            <div>
-                              <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
-                                Email <span className="text-red-500">*</span>
-                              </label>
-                              <div className="mt-2">
-                                <input
-                                  id="email"
-                                  name="email"
-                                  type="email"
-                                  value={formData.email}
-                                  onChange={handleChange}
-                                  required
-                                  autoComplete="email"
-                                  placeholder="votre.email@exemple.com"
-                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                />
-                                {errors.email && (
-                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                    {errors.email}
+                                {errors.nom && (
+                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                    {errors.nom}
                                   </p>
                                 )}
                               </div>
                             </div>
 
                             <div>
-                              <label htmlFor="telephone" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
-                                Téléphone
-                              </label>
-                              <div className="mt-2">
-                                <input
-                                  id="telephone"
-                                  name="telephone"
-                                  type="tel"
-                                  value={formData.telephone}
-                                  onChange={handleChange}
-                                  placeholder="06 12 34 56 78"
-                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                />
+                              <div className="flex flex-row items-center">
+                                <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                  Email <span className="text-red-500">*</span>
+                                </label>
+                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                  <input
+                                    id="email"
+                                    name="email"
+                                    type="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    required
+                                    autoComplete="email"
+                                    placeholder="votre.email@exemple.com"
+                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  />
+                                </div>
+                              </div>
+                              {errors.email && (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                  {errors.email}
+                                </p>
+                              )}
+                            </div>
+
+                            <div>
+                              <div className="flex flex-row items-center">
+                                <label htmlFor="telephone" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                  Téléphone
+                                </label>
+                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                  <input
+                                    id="telephone"
+                                    name="telephone"
+                                    type="tel"
+                                    value={formData.telephone}
+                                    onChange={handleChange}
+                                    placeholder="06 12 34 56 78"
+                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  />
+                                </div>
                               </div>
                             </div>
 
                             <div>
-                              <label htmlFor="ville" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
-                                Ville
-                              </label>
-                              <div className="mt-2">
-                                <input
-                                  id="ville"
-                                  name="ville"
-                                  type="text"
-                                  value={formData.ville}
-                                  onChange={handleChange}
-                                  placeholder="Votre ville"
-                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                />
+                              <div className="flex flex-row items-center">
+                                <label htmlFor="ville" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                  Ville
+                                </label>
+                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                  <input
+                                    id="ville"
+                                    name="ville"
+                                    type="text"
+                                    value={formData.ville}
+                                    onChange={handleChange}
+                                    placeholder="Votre ville"
+                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  />
+                                </div>
                               </div>
                             </div>
                           </div>
@@ -315,49 +325,53 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
 
                           <div className="space-y-6">
                             <div>
-                              <label htmlFor="expertises" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
-                                Domaines d&apos;expertise <span className="text-red-500">*</span>
-                              </label>
-                              <div className="mt-2">
-                                <input
-                                  id="expertises"
-                                  name="expertises"
-                                  value={formData.expertises}
-                                  onChange={handleChange}
-                                  required
-                                  placeholder="Ex: Comptable, Avocat, Juriste..."
-                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                />
-                                {errors.expertises ? (
-                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
-                                    {errors.expertises}
-                                  </p>
-                                ) : (
-                                  <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                                    Séparez vos différentes expertises par des virgules
-                                  </p>
-                                )}
+                              <div className="flex flex-row items-center">
+                                <label htmlFor="expertises" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                  Expertises <span className="text-red-500">*</span>
+                                </label>
+                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                  <input
+                                    id="expertises"
+                                    name="expertises"
+                                    value={formData.expertises}
+                                    onChange={handleChange}
+                                    required
+                                    placeholder="Ex: Comptable, Avocat, Juriste..."
+                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  />
+                                </div>
                               </div>
+                              {errors.expertises ? (
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                  {errors.expertises}
+                                </p>
+                              ) : (
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                  Séparez vos différentes expertises par des virgules
+                                </p>
+                              )}
                             </div>
 
                             <div>
-                              <label htmlFor="message" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
-                                Message ou informations complémentaires
-                              </label>
-                              <div className="mt-2">
-                                <textarea
-                                  id="message"
-                                  name="message"
-                                  rows={4}
-                                  value={formData.message}
-                                  onChange={handleChange}
-                                  placeholder="Partagez-nous votre parcours, vos qualifications ou toute autre information pertinente..."
-                                  className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
-                                />
-                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                                  Plus votre demande sera détaillée, mieux nous pourrons évaluer votre candidature.
-                                </p>
+                              <div className="flex flex-row items-start">
+                                <label htmlFor="message" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20 pt-1.5">
+                                  Message
+                                </label>
+                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                  <textarea
+                                    id="message"
+                                    name="message"
+                                    rows={4}
+                                    value={formData.message}
+                                    onChange={handleChange}
+                                    placeholder="Partagez-nous votre parcours, vos qualifications ou toute autre information pertinente..."
+                                    className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
+                                  />
+                                </div>
                               </div>
+                              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                Plus votre demande sera détaillée, mieux nous pourrons évaluer votre candidature.
+                              </p>
                             </div>
                           </div>
                         </div>

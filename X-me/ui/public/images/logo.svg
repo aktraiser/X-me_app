@@ -1,40 +1,25 @@
 <svg width="2790" height="2280" viewBox="0 0 2790 2280" fill="none" xmlns="http://www.w3.org/2000/svg">
   <style>
+    /* Default colors (interpreted as light mode) */
+    .letterX {
+      fill: #C59D3F; /* Gold, consistent across themes */
+    }
+    .letterM {
+      fill: #303841; /* Dark gray for light mode */
+    }
+    .letterE {
+      fill: #303841; /* Dark gray for light mode */
+    }
+
+    /* Override for OS dark mode */
     @media (prefers-color-scheme: dark) {
-      .letterX {
-        fill: #C59D3F;
-      }
       .letterM {
-        fill: #FEFEFE;
+        fill: #FEFEFE; /* White for dark mode */
       }
       .letterE {
-        fill: #FEFEFE;
+        fill: #FEFEFE; /* White for dark mode */
       }
-    }
-    @media (prefers-color-scheme: light) {
-      .letterX {
-        fill: #C59D3F;
-      }
-      .letterM {
-        fill: #303841;
-      }
-      .letterE {
-        fill: #303841;
-      }
-    }
-    :root[data-theme="dark"] .letterX {
-      fill: #C59D3F;
-    }
-    :root[data-theme="dark"] .letterM, 
-    :root[data-theme="dark"] .letterE {
-      fill: #FEFEFE;
-    }
-    :root[data-theme="light"] .letterX {
-      fill: #C59D3F;
-    }
-    :root[data-theme="light"] .letterM,
-    :root[data-theme="light"] .letterE {
-      fill: #303841;
+      /* .letterX fill remains #C59D3F as it's the same */
     }
   </style>
   <g clip-path="url(#clip0_2634_1005)">
