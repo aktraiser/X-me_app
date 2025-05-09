@@ -24,6 +24,13 @@ const TERMLY_WEBSITE_UUID = '2b659cf0-9192-417e-8ee3-8ba5e67271c7';
 export const metadata: Metadata = {
   title: 'Xandme - Ici c\'est vous le patron ',
   description: 'Xand&me est une plateforme de mise en relation avec des experts.',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: '32x32', type: 'image/ico' },
+      { url: '/favicon.png', sizes: '32x32', type: 'image/png' }
+    ],
+    apple: { url: '/favicon.png', sizes: '32x32', type: 'image/png' }
+  }
 };
 
 // Utilisation des variables d'environnement au lieu d'une clé codée en dur

@@ -198,11 +198,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                           <div className="space-y-6">
                             <div className="sm:grid sm:grid-cols-2 sm:gap-4">
                               <div>
-                                <div className="flex flex-row items-center">
-                                  <label htmlFor="prenom" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                <div className="text-left">
+                                  <label htmlFor="prenom" className="block text-sm/6 font-medium text-gray-900 dark:text-white mb-1">
                                     Prénom <span className="text-red-500">*</span>
                                   </label>
-                                  <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                  <div>
                                     <input
                                       id="prenom"
                                       name="prenom"
@@ -217,18 +217,18 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                   </div>
                                 </div>
                                 {errors.prenom && (
-                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                                     {errors.prenom}
                                   </p>
                                 )}
                               </div>
 
                               <div>
-                                <div className="flex flex-row items-center mt-4 sm:mt-0">
-                                  <label htmlFor="nom" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                                <div className="text-left mt-4 sm:mt-0">
+                                  <label htmlFor="nom" className="block text-sm/6 font-medium text-gray-900 dark:text-white mb-1">
                                     Nom <span className="text-red-500">*</span>
                                   </label>
-                                  <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                  <div>
                                     <input
                                       id="nom"
                                       name="nom"
@@ -243,7 +243,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                   </div>
                                 </div>
                                 {errors.nom && (
-                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                                     {errors.nom}
                                   </p>
                                 )}
@@ -251,11 +251,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                             </div>
 
                             <div>
-                              <div className="flex flex-row items-center">
-                                <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                              <div className="text-left">
+                                <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-white mb-1">
                                   Email <span className="text-red-500">*</span>
                                 </label>
-                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                <div>
                                   <input
                                     id="email"
                                     name="email"
@@ -270,18 +270,18 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 </div>
                               </div>
                               {errors.email && (
-                                <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                                   {errors.email}
                                 </p>
                               )}
                             </div>
 
                             <div>
-                              <div className="flex flex-row items-center">
-                                <label htmlFor="telephone" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                              <div className="text-left">
+                                <label htmlFor="telephone" className="block text-sm/6 font-medium text-gray-900 dark:text-white mb-1">
                                   Téléphone
                                 </label>
-                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                <div>
                                   <input
                                     id="telephone"
                                     name="telephone"
@@ -296,11 +296,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                             </div>
 
                             <div>
-                              <div className="flex flex-row items-center">
-                                <label htmlFor="ville" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
+                              <div className="text-left">
+                                <label htmlFor="ville" className="block text-sm/6 font-medium text-gray-900 dark:text-white mb-1">
                                   Ville
                                 </label>
-                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                <div>
                                   <input
                                     id="ville"
                                     name="ville"
@@ -325,11 +325,11 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
 
                           <div className="space-y-6">
                             <div>
-                              <div className="flex flex-row items-center">
-                                <label htmlFor="expertises" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20">
-                                  Expertises <span className="text-red-500">*</span>
+                              <div className="text-left">
+                                <label htmlFor="expertises" className="block text-sm/6 font-medium text-gray-900 dark:text-white mb-1">
+                                  Domaines d&apos;expertise <span className="text-red-500">*</span>
                                 </label>
-                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                <div>
                                   <input
                                     id="expertises"
                                     name="expertises"
@@ -342,22 +342,22 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                 </div>
                               </div>
                               {errors.expertises ? (
-                                <p className="mt-2 text-sm text-red-600 dark:text-red-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                <p className="mt-2 text-sm text-red-600 dark:text-red-400">
                                   {errors.expertises}
                                 </p>
                               ) : (
-                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 sm:ml-[calc(33.333333%+0.5rem)]">
+                                <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                                   Séparez vos différentes expertises par des virgules
                                 </p>
                               )}
                             </div>
 
                             <div>
-                              <div className="flex flex-row items-start">
-                                <label htmlFor="message" className="block text-sm/6 font-medium text-gray-900 dark:text-white w-1/3 min-w-20 pt-1.5">
-                                  Message
+                              <div className="text-left">
+                                <label htmlFor="message" className="block text-sm/6 font-medium text-gray-900 dark:text-white mb-1">
+                                  Message ou informations complémentaires
                                 </label>
-                                <div className="mt-2 w-2/3 sm:w-full sm:mt-0">
+                                <div>
                                   <textarea
                                     id="message"
                                     name="message"
@@ -368,10 +368,10 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                                     className="block w-full rounded-md bg-white dark:bg-white/5 px-3 py-1.5 text-base text-gray-900 dark:text-white outline outline-1 -outline-offset-1 outline-gray-300 dark:outline-white/10 placeholder:text-gray-400 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 sm:text-sm/6"
                                   />
                                 </div>
+                                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                                  Plus votre demande sera détaillée, mieux nous pourrons évaluer votre candidature.
+                                </p>
                               </div>
-                              <p className="mt-1 text-sm text-gray-500 dark:text-gray-400 sm:ml-[calc(33.333333%+0.5rem)]">
-                                Plus votre demande sera détaillée, mieux nous pourrons évaluer votre candidature.
-                              </p>
                             </div>
                           </div>
                         </div>
