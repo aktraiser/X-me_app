@@ -12,7 +12,10 @@ interface ExpertCardProps {
 
 const ExpertCard: React.FC<ExpertCardProps> = ({ expert, onClick, onContactClick }) => {
   // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
-  const activité = expert.activité || expert.expertises?.split(',')[0].trim() || "Expert";
+  // Dans le cas où activité est défini mais vide, on utilise quand même la première expertise
+  const activité = (expert.activité && expert.activité.trim() !== '') 
+    ? expert.activité 
+    : (expert.expertises?.split(',')[0].trim() || "Expert");
   
   return (
     <div

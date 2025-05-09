@@ -111,6 +111,30 @@ const MessageBox = ({
       
       message.suggestedExperts.forEach(expert => {
         if (expert.id_expert && !uniqueExpertsMap.has(expert.id_expert.toString())) {
+          // S'assurer que activité est définie si elle ne l'est pas
+          if (!expert.activité && expert.expertises) {
+            // Utiliser la première expertise comme activité par défaut si activité est manquante
+            expert.activité = expert.expertises.split(',')[0].trim();
+          }
+          
+          // Vérifier que le logo est correctement formé s'il existe
+          if (expert.logo) {
+            expert.logo = expert.logo.trim();
+          }
+          
+          // Vérifier que le site_web est correctement formaté s'il existe
+          if (expert.site_web) {
+            expert.site_web = expert.site_web.trim();
+            if (!expert.site_web.startsWith('http')) {
+              expert.site_web = `https://${expert.site_web}`;
+            }
+          }
+          
+          // S'assurer que les liens réseau sont corrects
+          if (expert.reseau) {
+            expert.reseau = expert.reseau.trim();
+          }
+          
           uniqueExpertsMap.set(expert.id_expert.toString(), expert);
         }
       });
@@ -319,6 +343,14 @@ const MessageBox = ({
                 source.metadata.expertises = matchingExpert.expertises;
               }
               
+              // S'assurer que le champ activité est défini et valide
+              if (matchingExpert.activité) {
+                source.metadata.activité = matchingExpert.activité;
+              } else if (!source.metadata.activité && matchingExpert.expertises) {
+                // Si pas d'activité définie, utiliser la première expertise
+                source.metadata.activité = matchingExpert.expertises.split(',')[0].trim();
+              }
+              
               // Assurer la cohérence en copiant l'activité si elle existe
               // Prendre en compte le champ avec accent (activité) d'abord
               if (matchingExpert.activité && !source.metadata.activité) {
@@ -334,9 +366,21 @@ const MessageBox = ({
               }
               
               // Copier les champs additionnels présents dans actions.ts
-              if (matchingExpert.logo) source.metadata.logo = matchingExpert.logo;
-              if (matchingExpert.site_web) source.metadata.site_web = matchingExpert.site_web;
-              if (matchingExpert.reseau) source.metadata.reseau = matchingExpert.reseau;
+              if (matchingExpert.logo) {
+                source.metadata.logo = matchingExpert.logo.trim();
+              }
+              
+              if (matchingExpert.site_web) {
+                let siteWeb = matchingExpert.site_web.trim();
+                if (!siteWeb.startsWith('http')) {
+                  siteWeb = `https://${siteWeb}`;
+                }
+                source.metadata.site_web = siteWeb;
+              }
+              
+              if (matchingExpert.reseau) {
+                source.metadata.reseau = matchingExpert.reseau.trim();
+              }
               
               debugLog('MessageBox', `ID Expert ajouté aux métadonnées de la source: ${matchingExpert.prenom} ${matchingExpert.nom} ${matchingExpert.id_expert}`);
             } else {

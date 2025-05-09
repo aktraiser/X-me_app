@@ -19,7 +19,15 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
   if (!expert) return null;
 
   // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
-  const activité = expert.activité || expert.expertises?.split(',')[0].trim() || "Expert";
+  // Dans le cas où activité est défini mais vide, on utilise quand même la première expertise
+  const activité = (expert.activité && expert.activité.trim() !== '') 
+    ? expert.activité 
+    : (expert.expertises?.split(',')[0].trim() || "Expert");
+  
+  // S'assurer que les champs sont définis et correctement formatés
+  const logo = expert.logo && expert.logo.trim() !== '' ? expert.logo : null;
+  const siteWeb = expert.site_web && expert.site_web.trim() !== '' ? expert.site_web : null;
+  const reseau = expert.reseau && expert.reseau.trim() !== '' ? expert.reseau : null;
   
   return (
     <Transition.Root show={open} as={Fragment}>
@@ -116,16 +124,21 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                               </p>
                             </div>
                             {/* Logo de l'entreprise */}
-                            {expert.logo && expert.logo.trim() !== '' && (
+                            {logo && (
                               <div className="mt-4 sm:mt-0 flex items-center justify-center bg-white dark:bg-white border dark:border-gray-700 rounded-md p-2 h-20 w-20">
                                 <div className="relative h-24 w-24 overflow-hidden">
                                   <Image 
-                                    src={expert.logo} 
+                                    src={logo} 
                                     alt={`Logo de ${expert.prenom} ${expert.nom}`}
                                     fill
                                     style={{ objectFit: 'contain' }}
                                     className=""
                                     unoptimized={true}
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.onerror = null;
+                                      target.src = '/placeholder-image.jpg';
+                                    }}
                                   />
                                 </div>
                               </div>
@@ -195,9 +208,9 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                           <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Liens</h4>
                           <div className="flex flex-wrap gap-4">
                             {/* LinkedIn */}
-                            {expert.reseau && expert.reseau.includes('linkedin') && (
+                            {reseau && reseau.includes('linkedin') && (
                               <Link 
-                                href={expert.reseau} 
+                                href={reseau} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md p-3 transition-colors"
@@ -207,9 +220,9 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                             )}
                             
                             {/* Site web */}
-                            {expert.site_web && (
+                            {siteWeb && (
                               <Link 
-                                href={expert.site_web.startsWith('http') ? expert.site_web : `https://${expert.site_web}`} 
+                                href={siteWeb.startsWith('http') ? siteWeb : `https://${siteWeb}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md p-3 transition-colors"
@@ -219,7 +232,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                             )}
                             
                             {/* Message s'il n'y a aucun lien */}
-                            {!expert.reseau && !expert.site_web && (!expert.logo || expert.logo.trim() === '') && (
+                            {!reseau && !siteWeb && !logo && (
                               <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                                 Aucun lien disponible
                               </p>
