@@ -173,7 +173,11 @@ const convertToExpert = (data: any): Expert => {
     services: data.services || {},
     created_at: data.created_at || new Date().toISOString(),
     image_url: data.image_url || '',
-    url: `${baseUrl}/expert/${data.prenom.toLowerCase()}-${data.nom.toLowerCase()}-${data.id_expert}`.replace(/\s+/g, '-')
+    url: `${baseUrl}/expert/${data.prenom.toLowerCase()}-${data.nom.toLowerCase()}-${data.id_expert}`.replace(/\s+/g, '-'),
+    activité: data.activité || '',
+    logo: data.logo || '/placeholder-logo.png',
+    site_web: data.site_web || '',
+    reseau: data.reseau || ''
   };
 };
 
@@ -462,6 +466,25 @@ const handleExpertSearch = async (input: ExpertSearchRequest, llm: BaseChatModel
       query: input.query,
       chat_history: input.chat_history || []
     }) as ExpertSearchResponse;
+
+    // Si un mapping ou une transformation des experts est présente, ajoutez :
+    result.experts = result.experts.map(expert => ({
+      ...expert,
+      // S'assurer que les propriétés existent, même vides
+      activité: expert.activité || '',
+      logo: expert.logo || '/placeholder-logo.png',
+      site_web: expert.site_web || '',
+      reseau: expert.reseau || ''
+    }));
+
+    // Ou, si une boucle foreach/for est utilisée pour traiter les experts, ajoutez:
+    for (const expert of result.experts) {
+      // S'assurer que les propriétés existent
+      if (!expert.activité) expert.activité = '';
+      if (!expert.logo) expert.logo = '/placeholder-logo.png';
+      if (!expert.site_web) expert.site_web = '';
+      if (!expert.reseau) expert.reseau = '';
+    }
 
     return result;
 

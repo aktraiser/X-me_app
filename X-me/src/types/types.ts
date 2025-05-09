@@ -16,6 +16,10 @@ export interface Expert {
   created_at: string;
   image_url: string;
   url:string;
+  activité?: string;
+  logo?: string;
+  site_web?: string;
+  reseau?: string;
 }
 
 export interface ExpertSearchRequest {

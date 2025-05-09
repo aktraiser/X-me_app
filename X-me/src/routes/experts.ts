@@ -180,7 +180,11 @@ router.post('/suggestionexperts', async (req, res) => {
       tarif: expert.tarif || 0,
       services: expert.services || {},
       created_at: expert.created_at || new Date().toISOString(),
-      image_url: expert.image_url || ''
+      image_url: expert.image_url || '',
+      activité: expert.activité || '',
+      logo: expert.logo || '/placeholder-logo.png',
+      site_web: expert.site_web || '',
+      reseau: expert.reseau || ''
     }));
 
     res.status(200).json({

@@ -431,9 +431,13 @@ ${expert.biographie}`,
           type: 'expert',
           expert: true,
           expertData: expert,
-          title: `${expert.specialite} - ${expert.ville}`,
+          title: `${expert.prenom} ${expert.nom} - ${expert.specialite}`,
           url: `/expert/${expert.id_expert}`,
-          image_url: expert.image_url
+          image_url: expert.image_url,
+          activité: expert.activité || '',
+          logo: expert.logo || '/placeholder-logo.png',
+          site_web: expert.site_web || '',
+          reseau: expert.reseau || ''
         }
       })
     );
@@ -1096,7 +1100,11 @@ ${expert.biographie}`,
           title: `${expert.prenom} ${expert.nom} - ${expert.specialite}`,
           url: expert.url,
           image_url: expert.image_url,
-          score: 0.6
+          score: 0.6,
+          activité: expert.activité || '',
+          logo: expert.logo || '/placeholder-logo.png',
+          site_web: expert.site_web || '',
+          reseau: expert.reseau || ''
         }
       }));
     } catch (error) {

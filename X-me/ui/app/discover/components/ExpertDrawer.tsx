@@ -18,9 +18,16 @@ interface ExpertDrawerProps {
 const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-3xl", onContactClick }: ExpertDrawerProps) => {
   if (!expert) return null;
 
-  // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
-  const activité = expert.activité || expert.expertises?.split(',')[0].trim() || "Expert";
+  // Utiliser directement l'activité, sans fallback vers les expertises
+  // Cela assurera que l'activité réelle est affichée, même si c'est une chaîne vide
+  const activité = typeof expert.activité === 'string' ? expert.activité : 
+                   expert.expertises?.split(',')[0].trim() || "Expert";
   
+  // S'assurer que les champs sont définis et correctement formatés
+  const logo = expert.logo || '/placeholder-logo.png'; // Chemin par défaut corrigé
+  const siteWeb = expert.site_web && expert.site_web.trim() !== '' ? expert.site_web : null;
+  const reseau = expert.reseau && expert.reseau.trim() !== '' ? expert.reseau : null;
+
   return (
     <Transition.Root show={open} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={setOpen}>
@@ -92,7 +99,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                                 onError={(e) => {
                                   const target = e.target as HTMLImageElement;
                                   target.onerror = null;
-                                  target.src = '/placeholder-image.jpg';
+                                  target.src = '/placeholder-avatar.png';
                                 }}
                                 unoptimized={true}
                               />
@@ -119,7 +126,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                             <div className="mt-4 sm:mt-0 flex items-center justify-center bg-white dark:bg-white border dark:border-gray-700 rounded-md p-2 h-20 w-20">
                               <div className="relative h-24 w-24 overflow-hidden">
                                 <Image 
-                                  src={expert.logo || '/placeholder-image.jpg'} 
+                                  src={expert.logo || '/placeholder-logo.png'} 
                                   alt={`Logo de ${expert.prenom} ${expert.nom}`}
                                   fill
                                   style={{ objectFit: 'contain' }}
@@ -128,7 +135,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                                   onError={(e) => {
                                     const target = e.target as HTMLImageElement;
                                     target.onerror = null;
-                                    target.src = '/placeholder-image.jpg';
+                                    target.src = '/placeholder-logo.png';
                                   }}
                                 />
                               </div>
@@ -182,9 +189,30 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                           <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">À propos</h4>
                           {expert.biographie ? (
                             <div className="space-y-4">
-                              <p className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                                {expert.biographie}
-                              </p>
+                              <div className="text-sm text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                                {expert.biographie.split('\n').map((paragraph, index) => {
+                                  // Traitement pour mettre en gras les textes entre **
+                                  const parts = paragraph.split(/(\*\*.*?\*\*)/g);
+                                  
+                                  return (
+                                    <p key={index} className="mb-4">
+                                      {parts.map((part, partIndex) => {
+                                        // Si le texte est entre **, on le met en gras
+                                        if (part.startsWith('**') && part.endsWith('**')) {
+                                          const boldText = part.slice(2, -2);
+                                          return (
+                                            <span key={partIndex} className="font-bold">
+                                              {boldText}
+                                            </span>
+                                          );
+                                        }
+                                        // Sinon on affiche le texte normal
+                                        return <span key={partIndex}>{part}</span>;
+                                      })}
+                                    </p>
+                                  );
+                                })}
+                              </div>
                             </div>
                           ) : (
                             <p className="text-sm text-gray-500 dark:text-gray-400 italic">
@@ -198,9 +226,9 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                           <h4 className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-3">Liens</h4>
                           <div className="flex flex-wrap gap-4">
                             {/* LinkedIn */}
-                            {expert.reseau && expert.reseau.includes('linkedin') && (
+                            {reseau && reseau.includes('linkedin') && (
                               <Link 
-                                href={expert.reseau} 
+                                href={reseau} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md p-3 transition-colors"
@@ -210,9 +238,9 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                             )}
                             
                             {/* Site web */}
-                            {expert.site_web && (
+                            {siteWeb && (
                               <Link 
-                                href={expert.site_web.startsWith('http') ? expert.site_web : `https://${expert.site_web}`} 
+                                href={siteWeb.startsWith('http') ? siteWeb : `https://${siteWeb}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md p-3 transition-colors"
@@ -222,7 +250,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                             )}
                             
                             {/* Message s'il n'y a aucun lien */}
-                            {!expert.reseau && !expert.site_web && (!expert.logo || expert.logo.trim() === '') && (
+                            {!reseau && !siteWeb && !logo && (
                               <p className="text-sm text-gray-500 dark:text-gray-400 italic">
                                 Aucun lien disponible
                               </p>
