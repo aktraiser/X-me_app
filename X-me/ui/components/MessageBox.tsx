@@ -111,30 +111,6 @@ const MessageBox = ({
       
       message.suggestedExperts.forEach(expert => {
         if (expert.id_expert && !uniqueExpertsMap.has(expert.id_expert.toString())) {
-          // S'assurer que activité est définie si elle ne l'est pas
-          if (!expert.activité && expert.expertises) {
-            // Utiliser la première expertise comme activité par défaut si activité est manquante
-            expert.activité = expert.expertises.split(',')[0].trim();
-          }
-          
-          // Vérifier que le logo est correctement formé s'il existe
-          if (expert.logo) {
-            expert.logo = expert.logo.trim();
-          }
-          
-          // Vérifier que le site_web est correctement formaté s'il existe
-          if (expert.site_web) {
-            expert.site_web = expert.site_web.trim();
-            if (!expert.site_web.startsWith('http')) {
-              expert.site_web = `https://${expert.site_web}`;
-            }
-          }
-          
-          // S'assurer que les liens réseau sont corrects
-          if (expert.reseau) {
-            expert.reseau = expert.reseau.trim();
-          }
-          
           uniqueExpertsMap.set(expert.id_expert.toString(), expert);
         }
       });
@@ -254,6 +230,22 @@ const MessageBox = ({
       return;
     }
     
+    // Copier les propriétés de source.metadata vers expertToOpen si elles existent
+    if (source.metadata.logo) {
+      expertToOpen.logo = source.metadata.logo;
+      debugLog('MessageBox', 'Logo copié depuis metadata:', source.metadata.logo);
+    }
+    
+    if (source.metadata.site_web) {
+      expertToOpen.site_web = source.metadata.site_web;
+      debugLog('MessageBox', 'Site web copié depuis metadata:', source.metadata.site_web);
+    }
+    
+    if (source.metadata.reseau) {
+      expertToOpen.reseau = source.metadata.reseau;
+      debugLog('MessageBox', 'Réseau copié depuis metadata:', source.metadata.reseau);
+    }
+    
     // Afficher les données pour le débogage
     debugLog('MessageBox', 'Données de l\'expert sélectionné:', {
       id: expertToOpen.id_expert,
@@ -261,10 +253,10 @@ const MessageBox = ({
       prenom: expertToOpen.prenom,
       activité: expertToOpen.activité,
       expertises: expertToOpen.expertises,
-      // Cast vers any pour accéder aux propriétés qui ne sont pas dans l'interface
-      metier: (expertToOpen as any).metier,
-      profession: (expertToOpen as any).profession,
-      specialisation: (expertToOpen as any).specialisation
+      // Ajouter les champs qui étaient manquants
+      logo: expertToOpen.logo,
+      site_web: expertToOpen.site_web,
+      reseau: expertToOpen.reseau
     });
     
     debugLog('MessageBox', 'Ouverture du drawer pour l\'expert sélectionné');
@@ -331,56 +323,19 @@ const MessageBox = ({
               // Ajouter également les données complètes de l'expert pour une meilleure cohérence d'affichage
               source.metadata.expertData = matchingExpert;
               
-              // Copier les informations de métier/profession si elles sont disponibles dans les données
-              // Utiliser any pour accéder de manière dynamique aux propriétés qui pourraient ne pas être définies dans le type
-              const expertAny = matchingExpert as any;
-              if (expertAny.metier) source.metadata.metier = expertAny.metier;
-              if (expertAny.profession) source.metadata.profession = expertAny.profession;
-              if (expertAny.specialisation) source.metadata.specialisation = expertAny.specialisation;
-              
               // Assurer la cohérence en copiant les expertises si elles existent
               if (matchingExpert.expertises && !source.metadata.expertises) {
                 source.metadata.expertises = matchingExpert.expertises;
               }
               
-              // S'assurer que le champ activité est défini et valide
-              if (matchingExpert.activité) {
-                source.metadata.activité = matchingExpert.activité;
-              } else if (!source.metadata.activité && matchingExpert.expertises) {
-                // Si pas d'activité définie, utiliser la première expertise
-                source.metadata.activité = matchingExpert.expertises.split(',')[0].trim();
-              }
-              
-              // Assurer la cohérence en copiant l'activité si elle existe
-              // Prendre en compte le champ avec accent (activité) d'abord
-              if (matchingExpert.activité && !source.metadata.activité) {
-                source.metadata.activité = matchingExpert.activité;
-              } else if (expertAny.metier && !source.metadata.activité) {
-                source.metadata.activité = expertAny.metier;
-              } else if (expertAny.profession && !source.metadata.activité) {
-                source.metadata.activité = expertAny.profession;
-              } else if (expertAny.specialisation && !source.metadata.activité) {
-                source.metadata.activité = expertAny.specialisation;
-              } else if (expertAny.specialite && !source.metadata.activité) {
-                source.metadata.activité = expertAny.specialite;
-              }
+              // Copier directement l'activité - elle est toujours présente
+              source.metadata.activité = matchingExpert.activité;
+              debugLog('MessageBox', `Activité copiée: "${matchingExpert.activité}"`);
               
               // Copier les champs additionnels présents dans actions.ts
-              if (matchingExpert.logo) {
-                source.metadata.logo = matchingExpert.logo.trim();
-              }
-              
-              if (matchingExpert.site_web) {
-                let siteWeb = matchingExpert.site_web.trim();
-                if (!siteWeb.startsWith('http')) {
-                  siteWeb = `https://${siteWeb}`;
-                }
-                source.metadata.site_web = siteWeb;
-              }
-              
-              if (matchingExpert.reseau) {
-                source.metadata.reseau = matchingExpert.reseau.trim();
-              }
+              if (matchingExpert.logo) source.metadata.logo = matchingExpert.logo;
+              if (matchingExpert.site_web) source.metadata.site_web = matchingExpert.site_web;
+              if (matchingExpert.reseau) source.metadata.reseau = matchingExpert.reseau;
               
               debugLog('MessageBox', `ID Expert ajouté aux métadonnées de la source: ${matchingExpert.prenom} ${matchingExpert.nom} ${matchingExpert.id_expert}`);
             } else {
