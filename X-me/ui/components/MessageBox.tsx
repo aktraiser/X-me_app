@@ -230,20 +230,14 @@ const MessageBox = ({
       return;
     }
     
-    // Copier les propriétés de source.metadata vers expertToOpen si elles existent
-    if (source.metadata.logo) {
-      expertToOpen.logo = source.metadata.logo;
-      debugLog('MessageBox', 'Logo copié depuis metadata:', source.metadata.logo);
-    }
+    // Toujours copier ces propriétés depuis metadata vers expertToOpen, qu'elles soient définies ou non
+    expertToOpen.logo = source.metadata.logo;
+    expertToOpen.site_web = source.metadata.site_web;
+    expertToOpen.reseau = source.metadata.reseau;
     
-    if (source.metadata.site_web) {
-      expertToOpen.site_web = source.metadata.site_web;
-      debugLog('MessageBox', 'Site web copié depuis metadata:', source.metadata.site_web);
-    }
-    
-    if (source.metadata.reseau) {
-      expertToOpen.reseau = source.metadata.reseau;
-      debugLog('MessageBox', 'Réseau copié depuis metadata:', source.metadata.reseau);
+    // Si l'activité est définie dans metadata mais pas dans l'expert, la copier
+    if (source.metadata.activité && !expertToOpen.activité) {
+      expertToOpen.activité = source.metadata.activité;
     }
     
     // Afficher les données pour le débogage
@@ -324,20 +318,25 @@ const MessageBox = ({
               source.metadata.expertData = matchingExpert;
               
               // Assurer la cohérence en copiant les expertises si elles existent
-              if (matchingExpert.expertises && !source.metadata.expertises) {
+              if (matchingExpert.expertises) {
                 source.metadata.expertises = matchingExpert.expertises;
               }
               
-              // Copier directement l'activité - elle est toujours présente
+              // Toujours copier l'activité, qu'elle soit définie ou non
               source.metadata.activité = matchingExpert.activité;
-              debugLog('MessageBox', `Activité copiée: "${matchingExpert.activité}"`);
               
-              // Copier les champs additionnels présents dans actions.ts
-              if (matchingExpert.logo) source.metadata.logo = matchingExpert.logo;
-              if (matchingExpert.site_web) source.metadata.site_web = matchingExpert.site_web;
-              if (matchingExpert.reseau) source.metadata.reseau = matchingExpert.reseau;
+              // Toujours copier ces propriétés, qu'elles soient définies ou non
+              source.metadata.logo = matchingExpert.logo;
+              source.metadata.site_web = matchingExpert.site_web;
+              source.metadata.reseau = matchingExpert.reseau;
               
               debugLog('MessageBox', `ID Expert ajouté aux métadonnées de la source: ${matchingExpert.prenom} ${matchingExpert.nom} ${matchingExpert.id_expert}`);
+              debugLog('MessageBox', 'Propriétés copiées dans metadata:', {
+                activité: source.metadata.activité,
+                logo: source.metadata.logo,
+                site_web: source.metadata.site_web,
+                reseau: source.metadata.reseau
+              });
             } else {
               debugLog('MessageBox', 'Aucun expert correspondant trouvé pour la source:', sourceTitle);
             }

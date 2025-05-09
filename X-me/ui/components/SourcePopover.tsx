@@ -39,6 +39,17 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
   const pageNumber = source?.metadata?.page || 1;
   const isExpert = source?.metadata?.type === 'expert';
   
+  // DEBUG: Loguer les données pour le débogage
+  if (isExpert) {
+    console.log("SourcePopover - Données expert:", {
+      metadata_activité: source?.metadata?.activité,
+      metadata_logo: source?.metadata?.logo,
+      metadata_site_web: source?.metadata?.site_web,
+      metadata_reseau: source?.metadata?.reseau,
+      expertData_activité: source?.metadata?.expertData?.activité,
+    });
+  }
+  
   // Extraction des données basiques
   const expertName = isExpert && sourceTitle ? sourceTitle.split('-')[0].trim() : sourceTitle;
   
@@ -49,8 +60,8 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
   const expertises = source?.metadata?.expertises || expertData?.expertises || '';
   
   // Extraction des infos activité et tarif
-  // Priorité à source.metadata.activité qui est maintenant directement copiée depuis l'expert dans MessageBox.tsx
-  const activité = source?.metadata?.activité || expertData?.activité || "Expert";
+  // IMPORTANT: Notez l'utilisation du é accentué comme dans ExpertCard.tsx
+  const activité = expertData?.activité || source?.metadata?.activité || "Expert";
   const tarif = source?.metadata?.tarif || expertData?.tarif || '';
   
   // Nom et photo

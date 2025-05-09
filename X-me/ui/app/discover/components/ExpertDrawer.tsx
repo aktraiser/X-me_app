@@ -18,6 +18,20 @@ interface ExpertDrawerProps {
 const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-3xl", onContactClick }: ExpertDrawerProps) => {
   if (!expert) return null;
 
+  // Loguer les valeurs exactes pour diagnostiquer
+  console.log("ExpertDrawer - Données de l'expert:", {
+    nom: expert.nom,
+    prenom: expert.prenom,
+    activité: expert.activité,
+    logo: expert.logo,
+    logo_type: typeof expert.logo,
+    logo_empty: expert.logo === "",
+    site_web: expert.site_web,
+    site_web_type: typeof expert.site_web,
+    reseau: expert.reseau,
+    reseau_type: typeof expert.reseau,
+  });
+
   // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
   const activité = expert.activité || expert.expertises?.split(',')[0].trim() || "Expert";
   
