@@ -68,9 +68,10 @@ const Navbar = ({
         <div className="flex items-center space-x-4">
           <a
             href="/"
-            className="active:scale-95 transition duration-100 cursor-pointer lg:hidden text-black/70 dark:text-white/70"
+            className="active:scale-95 transition duration-100 cursor-pointer lg:hidden text-black/70 dark:text-white/70 flex items-center space-x-2"
           >
             <Edit size={17} />
+            <p className="text-xs text-black/70 dark:text-white/70">{title}</p>
           </a>
           <div className="hidden lg:flex items-center space-x-2">
             <Clock size={17} className="text-black/70 dark:text-white/70" />

@@ -67,8 +67,13 @@ const SidebarProvider = ({ children, defaultExpanded = false, onExpandChange }: 
 
 // Composant pour le logo
 const SidebarLogo = () => {
+  const { isExpanded } = useSidebar();
+
   return (
-    <div className="flex items-center justify-center w-full px-2.5">
+    <div className={cn(
+      "flex items-center w-full px-2.5",
+      isExpanded ? "justify-start" : "justify-center"
+    )}>
       <img
         src="/images/logo.svg"
         alt="Logo X&ME"

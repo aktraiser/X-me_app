@@ -316,8 +316,8 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
                                 >
                                   <div className="flex items-center justify-between">
                                     <div className="flex items-center">
-                                      <div className="flex flex-col sm:flex-row text-sm items-start sm:items-center">
-                                        <span className="font-medium text-gray-900 dark:text-white sm:w-40">{option.title}</span>
+                                      <div className="flex flex-col sm:flex-col text-sm items-start sm:items-start">
+                                        <span className="font-medium text-gray-900 dark:text-white">{option.title}</span>
                                         <span className="text-gray-500 dark:text-gray-400">
                                           {option.description}
                                         </span>
@@ -358,10 +358,10 @@ const ContactModal = ({ expert, open, setOpen }: ContactModalProps) => {
                                   {({ checked }) => (
                                     <div className="flex items-center justify-between">
                                       <div className="flex items-center">
-                                        <div className="flex flex-col sm:flex-row text-sm items-start sm:items-center">
+                                        <div className="flex flex-col sm:flex-col text-sm items-start sm:items-start">
                                           <RadioGroup.Label
                                             as="p"
-                                            className={`font-medium ${checked ? 'text-blue-900 dark:text-blue-200' : 'text-gray-900 dark:text-white'} sm:w-60`}
+                                            className={`font-medium ${checked ? 'text-blue-900 dark:text-blue-200' : 'text-gray-900 dark:text-white'}`}
                                           >
                                             {option.title}
                                           </RadioGroup.Label>

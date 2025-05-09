@@ -47,7 +47,7 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
   
   // Extraction des infos activité et tarif
   // IMPORTANT: Notez l'utilisation du é accentué comme dans ExpertCard.tsx
-  const activité = expertData?.activité || source?.metadata?.activité || (expertises ? expertises.split(',')[0].trim() : '') || "Expert";
+  const activité = expertData?.activité || source?.metadata?.activité || source?.metadata?.activité || "Expert";
   const tarif = source?.metadata?.tarif || expertData?.tarif || '';
   
   // Nom et photo

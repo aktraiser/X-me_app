@@ -198,7 +198,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                           <div className="space-y-6">
                             <div className="sm:grid sm:grid-cols-2 sm:gap-4">
                               <div>
-                                <label htmlFor="prenom" className="block text-sm/6 font-medium text-gray-900 dark:text-white text-right sm:text-left">
+                                <label htmlFor="prenom" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                   Prénom <span className="text-red-500">*</span>
                                 </label>
                                 <div className="mt-2">
@@ -222,7 +222,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                               </div>
 
                               <div>
-                                <label htmlFor="nom" className="block text-sm/6 font-medium text-gray-900 dark:text-white text-right sm:text-left">
+                                <label htmlFor="nom" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                   Nom <span className="text-red-500">*</span>
                                 </label>
                                 <div className="mt-2">
@@ -247,7 +247,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                             </div>
 
                             <div>
-                              <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-white text-right sm:text-left">
+                              <label htmlFor="email" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Email <span className="text-red-500">*</span>
                               </label>
                               <div className="mt-2">
@@ -271,7 +271,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                             </div>
 
                             <div>
-                              <label htmlFor="telephone" className="block text-sm/6 font-medium text-gray-900 dark:text-white text-right sm:text-left">
+                              <label htmlFor="telephone" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Téléphone
                               </label>
                               <div className="mt-2">
@@ -288,7 +288,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                             </div>
 
                             <div>
-                              <label htmlFor="ville" className="block text-sm/6 font-medium text-gray-900 dark:text-white text-right sm:text-left">
+                              <label htmlFor="ville" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Ville
                               </label>
                               <div className="mt-2">
@@ -315,7 +315,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
 
                           <div className="space-y-6">
                             <div>
-                              <label htmlFor="expertises" className="block text-sm/6 font-medium text-gray-900 dark:text-white text-right sm:text-left">
+                              <label htmlFor="expertises" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Domaines d&apos;expertise <span className="text-red-500">*</span>
                               </label>
                               <div className="mt-2">
@@ -341,7 +341,7 @@ export default function ExpertApplicationModal({ isOpen, onClose }: ExpertApplic
                             </div>
 
                             <div>
-                              <label htmlFor="message" className="block text-sm/6 font-medium text-gray-900 dark:text-white text-right sm:text-left">
+                              <label htmlFor="message" className="block text-sm/6 font-medium text-gray-900 dark:text-white">
                                 Message ou informations complémentaires
                               </label>
                               <div className="mt-2">
