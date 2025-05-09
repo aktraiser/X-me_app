@@ -39,17 +39,6 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
   const pageNumber = source?.metadata?.page || 1;
   const isExpert = source?.metadata?.type === 'expert';
   
-  // DEBUG: Loguer les données pour le débogage
-  if (isExpert) {
-    console.log("SourcePopover - Données expert:", {
-      metadata_activité: source?.metadata?.activité,
-      metadata_logo: source?.metadata?.logo,
-      metadata_site_web: source?.metadata?.site_web,
-      metadata_reseau: source?.metadata?.reseau,
-      expertData_activité: source?.metadata?.expertData?.activité,
-    });
-  }
-  
   // Extraction des données basiques
   const expertName = isExpert && sourceTitle ? sourceTitle.split('-')[0].trim() : sourceTitle;
   

@@ -18,20 +18,6 @@ interface ExpertDrawerProps {
 const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-3xl", onContactClick }: ExpertDrawerProps) => {
   if (!expert) return null;
 
-  // Loguer les valeurs exactes pour diagnostiquer
-  console.log("ExpertDrawer - Données de l'expert:", {
-    nom: expert.nom,
-    prenom: expert.prenom,
-    activité: expert.activité,
-    logo: expert.logo,
-    logo_type: typeof expert.logo,
-    logo_empty: expert.logo === "",
-    site_web: expert.site_web,
-    site_web_type: typeof expert.site_web,
-    reseau: expert.reseau,
-    reseau_type: typeof expert.reseau,
-  });
-
   // Utiliser directement le champ activité s'il existe, sinon prendre la première expertise
   const activité = expert.activité || expert.expertises?.split(',')[0].trim() || "Expert";
   
@@ -130,20 +116,23 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                               </p>
                             </div>
                             {/* Logo de l'entreprise */}
-                            {expert.logo && expert.logo.trim() !== '' && (
-                              <div className="mt-4 sm:mt-0 flex items-center justify-center bg-white dark:bg-white border dark:border-gray-700 rounded-md p-2 h-20 w-20">
-                                <div className="relative h-24 w-24 overflow-hidden">
-                                  <Image 
-                                    src={expert.logo} 
-                                    alt={`Logo de ${expert.prenom} ${expert.nom}`}
-                                    fill
-                                    style={{ objectFit: 'contain' }}
-                                    className=""
-                                    unoptimized={true}
-                                  />
-                                </div>
+                            <div className="mt-4 sm:mt-0 flex items-center justify-center bg-white dark:bg-white border dark:border-gray-700 rounded-md p-2 h-20 w-20">
+                              <div className="relative h-24 w-24 overflow-hidden">
+                                <Image 
+                                  src={expert.logo || '/placeholder-image.jpg'} 
+                                  alt={`Logo de ${expert.prenom} ${expert.nom}`}
+                                  fill
+                                  style={{ objectFit: 'contain' }}
+                                  className=""
+                                  unoptimized={true}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.onerror = null;
+                                    target.src = '/placeholder-image.jpg';
+                                  }}
+                                />
                               </div>
-                            )}
+                            </div>
                           </div>
                           
                           {/* Badges */}
