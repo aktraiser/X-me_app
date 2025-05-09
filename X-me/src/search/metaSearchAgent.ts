@@ -130,13 +130,46 @@ export class MetaSearchAgent implements MetaSearchAgentType {
         const linksOutputParser = new LineListOutputParser({ key: 'links' });
         const questionOutputParser = new LineOutputParser({ key: 'question' });
 
-        const links = await linksOutputParser.parse(input);
-        let question = this.config.summarizer
-          ? await questionOutputParser.parse(input)
-          : input;
+        // Extraire la question reformulée
+        let question: string;
+        try {
+          question = await questionOutputParser.parse(input);
+          console.log('🔍 Question reformulée:', question);
+        } catch (error) {
+          console.error('❌ Erreur lors du parsing de la question:', error);
+          question = input;
+        }
 
+        // Intercepter les questions hors domaine
+        if (question === 'hors_domaine') {
+          console.log('⚠️ Question hors domaine détectée dans la chaîne de recherche');
+          return { 
+            query: 'hors_domaine', 
+            docs: [
+              new Document({
+                pageContent: 'Question hors domaine détectée.',
+                metadata: {
+                  title: 'Hors domaine',
+                  type: 'system',
+                  hors_domaine: true
+                }
+              })
+            ]
+          };
+        }
+        
+        // Gérer les simples salutations
         if (question === 'not_needed') {
           return { query: '', docs: [] };
+        }
+
+        // Essayer d'extraire les liens si disponibles
+        let links: string[] = [];
+        try {
+          links = await linksOutputParser.parse(input);
+          console.log('🔗 Liens extraits:', links.length > 0 ? links : 'Aucun');
+        } catch (error) {
+          console.error('❌ Erreur lors du parsing des liens:', error);
         }
 
         let documents: Document[] = [];
@@ -331,6 +364,21 @@ INSTRUCTIONS IMPORTANTES:
         query: (input: BasicChainInput) => input.query,
         chat_history: (input: BasicChainInput) => input.chat_history,
         docs: RunnableLambda.from(async (input: BasicChainInput) => {
+          // Vérifier si la requête est hors domaine
+          if (input.query === 'hors_domaine') {
+            console.log('[MetaSearch] 🚫 Requête hors domaine détectée dans la chaîne de réponse');
+            return [
+              new Document({
+                pageContent: 'hors_domaine',
+                metadata: {
+                  title: 'Hors domaine',
+                  type: 'system',
+                  hors_domaine: true
+                }
+              })
+            ];
+          }
+          
           // console.log('[MetaSearch] Début récupération des sources...'); // Peut être activé pour debug fin
           let docs: Document[] = [];
 
@@ -421,7 +469,7 @@ INSTRUCTIONS IMPORTANTES:
     return experts.map(expert =>
       new Document({
         pageContent: `Expert: ${expert.prenom} ${expert.nom}
-Spécialité: ${expert.specialite}
+Activité: ${expert.activité || 'Non spécifiée'}
 Ville: ${expert.ville}
 Tarif: ${expert.tarif}€
 Expertises: ${expert.expertises}
@@ -431,7 +479,7 @@ ${expert.biographie}`,
           type: 'expert',
           expert: true,
           expertData: expert,
-          title: `${expert.prenom} ${expert.nom} - ${expert.specialite}`,
+          title: `${expert.prenom} ${expert.nom} - ${expert.activité || 'Expert'}`,
           url: `/expert/${expert.id_expert}`,
           image_url: expert.image_url,
           activité: expert.activité || '',
@@ -477,10 +525,24 @@ ${expert.biographie}`,
    */
   private processDocs(docs: Document[]): string {
     console.log(`🔍 Traitement de ${docs.length} documents...`);
+    
+    // Vérifier si des documents hors domaine sont présents
+    const horsDomaineDoc = docs.find(doc => 
+      doc.metadata?.hors_domaine === true || 
+      doc.pageContent === 'hors_domaine' ||
+      (doc.metadata?.type === 'system' && doc.metadata?.title === 'Hors domaine')
+    );
+    
+    if (horsDomaineDoc) {
+      console.log('⚠️ Document hors domaine détecté, retour de la réponse standard');
+      return 'hors_domaine';
+    }
+    
     if (docs.length === 0) {
       console.log('⚠️ Aucun document à traiter');
       return "Aucun document pertinent trouvé.";
     }
+    
     const sortedDocs = docs.sort((a, b) => {
       if (a.metadata?.type === 'sector' && b.metadata?.type !== 'sector') return -1;
       if (a.metadata?.type !== 'sector' && b.metadata?.type === 'sector') return 1;
@@ -724,20 +786,56 @@ ${expert.biographie}`,
     let foundExperts: any[] = []; 
     let documentSubject = '';
     let documentMetadata: any[] = [];
+    let isHorsDomaine = false;
     
     // Vérifier si la requête est d'ordre professionnel ou entrepreneurial
     const isBusinessRelatedQuery = await this.isBusinessOrProfessionalQuery(originalQuery, llm);
     
     for await (const event of stream) {
       if (event.event === 'on_chain_stream' && event.name === 'FinalResponseGenerator') {
-        fullAssistantResponse += event.data.chunk;
+        const chunk = event.data.chunk;
+        
+        // Vérifier si le chunk contient "hors_domaine"
+        if (chunk.includes('hors_domaine') || fullAssistantResponse.includes('hors_domaine')) {
+          isHorsDomaine = true;
+          // Ne pas accumuler ce chunk, nous allons renvoyer une réponse standard
+          continue;
+        }
+        
+        fullAssistantResponse += chunk;
         emitter.emit(
           'data',
-          JSON.stringify({ type: 'response', data: event.data.chunk })
+          JSON.stringify({ type: 'response', data: chunk })
         );
       } else if (event.event === 'on_chain_end') {
         if (event.name === 'FinalSourceRetriever') {
           const sources = event.data.output;
+          
+          // Vérifier si l'une des sources contient "hors_domaine"
+          const horsDomaineSource = sources?.find(source => 
+            source.metadata?.hors_domaine === true || 
+            source.pageContent?.includes('hors_domaine') ||
+            (source.metadata?.type === 'system' && source.metadata?.title === 'Hors domaine')
+          );
+          
+          if (horsDomaineSource) {
+            isHorsDomaine = true;
+            
+            // Envoyer la réponse standard pour les questions hors domaine
+            const standardResponse = this.getOutOfScopeResponse();
+            emitter.emit(
+              'data',
+              JSON.stringify({ type: 'response', data: standardResponse })
+            );
+            
+            // Mettre à jour la mémoire avec la réponse standard
+            this.updateMemory(new AIMessage(standardResponse));
+            
+            // Terminer le traitement
+            emitter.emit('end');
+            return;
+          }
+          
           const normalizedSources = sources?.map(this.normalizeSource) || [];
           
           // Filtrer les experts parmi les sources
@@ -1023,7 +1121,24 @@ Répondez uniquement avec le sujet, sans autres explications.
     try {
       console.log('🔍 Vérification si la requête est d\'ordre professionnel:', query);
       
-      // Prompt pour analyser si la requête est liée au monde professionnel ou des affaires
+      // Liste de mots-clés liés aux voyages et sujets personnels (hors contexte professionnel)
+      const nonBusinessKeywords = [
+        'tour du monde', 'voyage', 'vacances', 'hotel', 'reservation', 'restaurant', 
+        'recette', 'cuisine', 'santé personnelle', 'regime', 'sport', 'jeux', 'films', 
+        'séries', 'musique', 'dating', 'rencontre', 'coiffeur', 'météo', 'température',
+        'blague', 'loisir', 'tourisme', 'plage', 'ski', 'mariage', 'anniversaire'
+      ];
+      
+      // Vérification rapide basée sur les mots-clés hors contexte
+      const queryLower = query.toLowerCase();
+      for (const keyword of nonBusinessKeywords) {
+        if (queryLower.includes(keyword)) {
+          console.log(`🚫 Mot-clé hors contexte détecté: "${keyword}"`);
+          return false;
+        }
+      }
+      
+      // Prompt amélioré pour analyser si la requête est liée au monde professionnel ou des affaires
       const analysisPrompt = `
 Analysez cette question et déterminez si elle est liée à un contexte professionnel, entrepreneurial ou d'aide à l'entreprise.
 
@@ -1039,6 +1154,21 @@ Question: "${query}"
 - Plans d'affaires, levées de fonds
 - Organisation du travail, productivité professionnelle
 - Formation professionnelle, développement de compétences en entreprise
+- Comptabilité, facturation, paie
+
+Exemples de questions HORS domaine (répondre NON) :
+- "Comment faire le tour du monde ?"
+- "Quelle est la meilleure recette de gâteau au chocolat ?"
+- "Où partir en vacances en France ?"
+- "Quels sont les meilleurs films de 2023 ?"
+- "Comment améliorer ma santé personnelle ?"
+
+Exemples de questions DANS le domaine (répondre OUI) :
+- "Comment créer une SASU ?"
+- "Quelles sont les aides pour mon entreprise ?"
+- "Comment gérer la comptabilité de mon auto-entreprise ?"
+- "Quel est le meilleur statut juridique pour mon activité ?"
+- "Comment optimiser ma fiscalité professionnelle ?"
 
 Répondez strictement par "OUI" ou "NON".
 `;
@@ -1060,9 +1190,33 @@ Répondez strictement par "OUI" ou "NON".
       return isBusinessRelated;
     } catch (error) {
       console.error('❌ Erreur lors de l\'analyse de la requête:', error);
-      // En cas d'erreur, par défaut, on considère que c'est professionnel pour ne pas bloquer les suggestions
-      return true;
+      // En cas d'erreur, par défaut, nous considérons que ce n'est PAS professionnel
+      // pour éviter de répondre à des requêtes potentiellement hors sujet
+      return false;
     }
+  }
+
+  /**
+   * Génère une réponse standard pour les questions hors domaine
+   */
+  private getOutOfScopeResponse(): string {
+    return `### Demande Hors Domaine
+
+Je suis X-me, une intelligence artificielle spécialisée exclusivement dans l'accompagnement des entreprises, entrepreneurs et professionnels.
+
+Je suis conçue pour répondre **uniquement aux questions liées aux domaines suivants** :
+- Création et développement d'entreprise
+- Gestion, stratégie et organisation
+- Aspects juridiques, fiscaux et administratifs
+- Finance, comptabilité et fiscalité
+- Marketing, vente et développement commercial
+- Formation professionnelle et ressources humaines
+
+Votre question semble porter sur un sujet personnel ou de loisir qui ne relève pas de mon domaine d'expertise. Je vous invite à reformuler votre question en lien avec les thématiques professionnelles pour lesquelles je peux vous apporter une aide pertinente.
+
+### Besoin d'Assistance Professionnelle ?
+
+Si vous avez besoin de conseils pour votre entreprise ou votre activité professionnelle, n'hésitez pas à me solliciter sur ces sujets. Les Experts Xandme sont également disponibles pour vous accompagner dans vos projets entrepreneuriaux.`;
   }
 
   /**
@@ -1087,7 +1241,7 @@ Répondez strictement par "OUI" ou "NON".
       );
       return expertResults.experts.map(expert => ({
         pageContent: `Expert: ${expert.prenom} ${expert.nom}
-Spécialité: ${expert.specialite}
+Activité: ${expert.activité || 'Non spécifiée'}
 Ville: ${expert.ville}
 Tarif: ${expert.tarif}€
 Expertises: ${expert.expertises}
@@ -1097,7 +1251,7 @@ ${expert.biographie}`,
           type: 'expert',
           expert: true,
           expertData: expert,
-          title: `${expert.prenom} ${expert.nom} - ${expert.specialite}`,
+          title: `${expert.prenom} ${expert.nom} - ${expert.activité || 'Expert'}`,
           url: expert.url,
           image_url: expert.image_url,
           score: 0.6,
@@ -1447,6 +1601,31 @@ ${expert.biographie}`,
     console.log(`[MetaSearch] Nouvelle requête reçue. Mode: ${optimizationMode}, Fichiers: ${fileIds.length}`);
 
     try {
+      // Vérifier d'abord si la requête est dans le domaine professionnel
+      const isBusinessQuery = await this.isBusinessOrProfessionalQuery(message, llm);
+      
+      // Si la requête n'est pas liée au domaine professionnel, renvoyer une réponse standard
+      if (!isBusinessQuery) {
+        console.log('[MetaSearch] ⚠️ Requête hors domaine détectée, envoi de la réponse standard');
+        const standardResponse = this.getOutOfScopeResponse();
+        
+        // Émettre la réponse standard
+        emitter.emit(
+          'data',
+          JSON.stringify({ type: 'response', data: standardResponse })
+        );
+        
+        // Mettre à jour la mémoire et terminer
+        this.updateMemory(new HumanMessage(message));
+        this.updateMemory(new AIMessage(standardResponse));
+        emitter.emit('end');
+        
+        // Nettoyer la référence et retourner
+        this._currentEmitter = null;
+        return emitter;
+      }
+      
+      // Poursuite normale pour les requêtes dans le domaine
       this.updateMemory(new HumanMessage(message));
       const mergedHistory: BaseMessage[] = [
         ...this.conversationHistory,
