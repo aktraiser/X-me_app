@@ -81,10 +81,39 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
     return formatted.length > 150 ? formatted.substring(0, 150) + '...' : formatted;
   };
   
-  // Récupérer la description ou le contenu formaté
+  // Récupérer la description ou le contenu formaté, limitée à 3 phrases
   const getDescription = (): string => {
-    // Utiliser la description si elle existe, sinon utiliser le contenu formaté
-    return source.metadata.description || formatContent(source.pageContent);
+    // Choisir entre description ou contenu formaté
+    const text = source.metadata.description || formatContent(source.pageContent);
+    if (!text) return '';
+    
+    // Essayer d'extraire les premiers paragraphes
+    const paragraphs = text.split(/\n\s*\n|\r\n\s*\r\n/);
+    let firstParagraphContent = '';
+    
+    // Essayer de trouver le premier paragraphe non vide qui contient du texte significatif
+    for (const paragraph of paragraphs) {
+      const trimmed = paragraph.trim();
+      // Vérifier si c'est un paragraphe significatif (au moins 30 caractères)
+      if (trimmed.length >= 30) {
+        firstParagraphContent = trimmed;
+        break;
+      }
+    }
+    
+    // Si aucun paragraphe significatif n'a été trouvé, utiliser le texte entier
+    const contentToProcess = firstParagraphContent || text;
+    
+    // Diviser en phrases
+    const sentences = contentToProcess.split(/(?<=[.!?])\s+|(?<=[.!?])$/);
+    
+    // Prendre uniquement les 3 premières phrases
+    const limitedSentences = sentences.slice(0, 3).join(' ');
+    
+    // Ajouter des points de suspension si le texte a été coupé
+    return sentences.length > 3 || paragraphs.length > 1 
+      ? `${limitedSentences}...` 
+      : limitedSentences;
   };
   
   const excerpt = getDescription();
@@ -172,7 +201,7 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
               {sourceTitle}
             </h3>
             {excerpt && (
-              <p className="text-xs text-gray-600 dark:text-gray-400 line-clamp-3">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 {excerpt}
               </p>
             )}

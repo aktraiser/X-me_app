@@ -231,7 +231,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                                 href={reseau} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md p-3 transition-colors"
+                                className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-amber-600 dark:text-amber-500 rounded-md p-3 transition-colors"
                               >
                                 <Linkedin className="h-6 w-6" />
                               </Link>
@@ -243,7 +243,7 @@ const ExpertDrawer = ({ expert, open, setOpen, className = "max-w-full sm:max-w-
                                 href={siteWeb.startsWith('http') ? siteWeb : `https://${siteWeb}`} 
                                 target="_blank" 
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-md p-3 transition-colors"
+                                className="inline-flex items-center justify-center bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-amber-600 dark:text-amber-500 rounded-md p-3 transition-colors"
                               >
                                 <Globe className="h-6 w-6" />
                               </Link>

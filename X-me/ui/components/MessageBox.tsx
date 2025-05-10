@@ -54,6 +54,7 @@ interface SourceMetadata {
   logo?: string;
   site_web?: string;
   reseau?: string;
+  description?: string; // Ajout du champ description venant de Firecrawl
 }
 
 // Define the type for source documents
@@ -504,11 +505,52 @@ const MessageBox = ({
                           const sourceIndex = parseInt(index, 10);
                           const originalNumber = parseInt(number, 10);
                           
+                          // Fonction pour limiter à 3 phrases
+                          const limitToThreeSentences = (source: SourceDocument) => {
+                            // Utiliser description de Firecrawl ou pageContent
+                            const text = source.metadata.description || source.pageContent;
+                            if (!text) return '';
+                            
+                            // Essayer d'extraire les premiers paragraphes
+                            const paragraphs = text.split(/\n\s*\n|\r\n\s*\r\n/);
+                            let firstParagraphContent = '';
+                            
+                            // Essayer de trouver le premier paragraphe non vide qui contient du texte significatif
+                            for (const paragraph of paragraphs) {
+                              const trimmed = paragraph.trim();
+                              // Vérifier si c'est un paragraphe significatif (au moins 30 caractères)
+                              if (trimmed.length >= 30) {
+                                firstParagraphContent = trimmed;
+                                break;
+                              }
+                            }
+                            
+                            // Si aucun paragraphe significatif n'a été trouvé, utiliser le texte entier
+                            const contentToProcess = firstParagraphContent || text;
+                            
+                            // Diviser en phrases
+                            const sentences = contentToProcess.split(/(?<=[.!?])\s+|(?<=[.!?])$/);
+                            
+                            // Prendre uniquement les 3 premières phrases
+                            const limitedSentences = sentences.slice(0, 3).join(' ');
+                            
+                            // Ajouter des points de suspension si le texte a été coupé
+                            return sentences.length > 3 || paragraphs.length > 1 
+                              ? `${limitedSentences}...` 
+                              : limitedSentences;
+                          };
+                          
                           // Vérifier que la source existe
                           if (message.sources && sourceIndex >= 0 && sourceIndex < message.sources.length) {
+                            // Appliquer la fonction limitToThreeSentences aux sources
+                            const source = message.sources[sourceIndex] as SourceDocument;
+                            if (source.pageContent) {
+                              source.pageContent = limitToThreeSentences(source);
+                            }
+                            
                             return (
                               <SourcePopover
-                                source={message.sources[sourceIndex] as SourceDocument}
+                                source={source}
                                 number={originalNumber}
                                 onExpertClick={handleExpertSourceClick}
                               />

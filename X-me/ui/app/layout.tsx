@@ -44,7 +44,7 @@ const customLocalization = {
     start: {
       ...(frFR.signIn?.start || {}),
       title: "Connexion à Xandme",
-      subtitle: "Tous les champs sont obligatoires",
+      subtitle: "",
     },
     emailCode: {
       ...(frFR.signIn?.emailCode || {}),
@@ -131,6 +131,8 @@ export default function RootLayout({
               identityPreview: 'bg-gray-100 dark:bg-gray-800',
               alert: 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 p-3 rounded-md text-sm mb-4',
               logoImage: 'w-32 h-32',
+              headerTitle: 'text-black dark:text-white',
+              headerSubtitle: 'text-gray-600 dark:text-gray-300',
             }
           }}
         >
