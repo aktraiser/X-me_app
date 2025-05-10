@@ -508,36 +508,60 @@ const MessageBox = ({
                           // Fonction pour limiter à 3 phrases
                           const limitToThreeSentences = (source: SourceDocument) => {
                             // Utiliser description de Firecrawl ou pageContent
-                            const text = source.metadata.description || source.pageContent;
+                            let text = source.metadata.description || source.pageContent;
                             if (!text) return '';
                             
-                            // Essayer d'extraire les premiers paragraphes
-                            const paragraphs = text.split(/\n\s*\n|\r\n\s*\r\n/);
-                            let firstParagraphContent = '';
+                            // Nettoyer le texte de tout contenu technique
+                            text = text
+                              // Supprimer les URL (http:// ou https://)
+                              .replace(/https?:\/\/\S+/g, '')
+                              // Supprimer les éléments techniques comme [Rechercher], format=, display:none, etc.
+                              .replace(/\[.*?\]/g, '')
+                              .replace(/\(\(.*?\)\)/g, '')
+                              .replace(/format=\S+/g, '')
+                              .replace(/display:\s*none;?/g, '')
+                              // Supprimer les chaînes hexadécimales
+                              .replace(/[a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12}/g, '')
+                              // Supprimer les accolades et leur contenu
+                              .replace(/\{[^}]*\}/g, '')
+                              // Supprimer tous les crochets et parenthèses isolés
+                              .replace(/[\[\]\(\)]/g, ' ')
+                              // Remplacer les caractères d'échappement et techniques
+                              .replace(/\\n|\\r|\\t/g, ' ')
+                              // Supprimer les séquences de caractères techniques comme cdncom, cdn, png, jpg
+                              .replace(/\b\S*(?:cdn|png|jpg|format|search|content)\S*\b/g, '')
+                              // Nettoyer la ponctuation excessive
+                              .replace(/[.!?]{2,}/g, '.');
+
+                            // Fusionner les espaces multiples
+                            text = text.replace(/\s+/g, ' ').trim();
                             
-                            // Essayer de trouver le premier paragraphe non vide qui contient du texte significatif
-                            for (const paragraph of paragraphs) {
-                              const trimmed = paragraph.trim();
-                              // Vérifier si c'est un paragraphe significatif (au moins 30 caractères)
-                              if (trimmed.length >= 30) {
-                                firstParagraphContent = trimmed;
-                                break;
-                              }
+                            // Diviser le texte en phrases
+                            const sentences = text.split(/(?<=[.!?])\s+|(?<=[.!?])$/);
+                            
+                            // Filtrer les phrases trop courtes ou sans valeur
+                            const significantSentences = sentences.filter(sentence => {
+                              // Ignorer les phrases trop courtes
+                              if (sentence.length < 20) return false;
+                              
+                              // Ignorer les phrases avec trop de chiffres ou caractères spéciaux
+                              const specialCharRatio = (sentence.match(/[^a-zA-ZÀ-ÖØ-öø-ÿ0-9\s.,!?]/g) || []).length / sentence.length;
+                              if (specialCharRatio > 0.2) return false;
+                              
+                              return true;
+                            });
+                            
+                            // Prendre maximum 2 phrases significatives pour faire plus concis
+                            let result = significantSentences.slice(0, 2).join(' ');
+                            
+                            // Limiter la longueur finale à 120 caractères maximum
+                            if (result.length > 120) {
+                              result = result.substring(0, 117) + '...';
+                            } else if (significantSentences.length > 2 || sentences.length > significantSentences.length) {
+                              result += '...';
                             }
                             
-                            // Si aucun paragraphe significatif n'a été trouvé, utiliser le texte entier
-                            const contentToProcess = firstParagraphContent || text;
-                            
-                            // Diviser en phrases
-                            const sentences = contentToProcess.split(/(?<=[.!?])\s+|(?<=[.!?])$/);
-                            
-                            // Prendre uniquement les 3 premières phrases
-                            const limitedSentences = sentences.slice(0, 3).join(' ');
-                            
-                            // Ajouter des points de suspension si le texte a été coupé
-                            return sentences.length > 3 || paragraphs.length > 1 
-                              ? `${limitedSentences}...` 
-                              : limitedSentences;
+                            return result;
                           };
                           
                           // Vérifier que la source existe
