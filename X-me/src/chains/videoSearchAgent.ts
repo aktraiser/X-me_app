@@ -69,6 +69,8 @@ async function searchVideosWithFirecrawl(query: string) {
       }
     };
     
+    console.log("📡 Envoi de la requête à Firecrawl:", JSON.stringify(requestBody));
+    
     // Appel à l'API Firecrawl Search
     const response = await axios.post(
       'https://api.firecrawl.dev/v1/search',
@@ -83,7 +85,7 @@ async function searchVideosWithFirecrawl(query: string) {
 
     if (!response.data.success) {
       console.error('❌ Erreur lors de la recherche Firecrawl:', response.data);
-      throw new Error('Échec de la recherche Firecrawl');
+      throw new Error(`Échec de la recherche Firecrawl: ${JSON.stringify(response.data)}`);
     }
     
     console.log(`✅ Recherche Firecrawl terminée, ${response.data.data?.length || 0} résultats`);
@@ -103,6 +105,12 @@ async function searchVideosWithFirecrawl(query: string) {
     return [];
   } catch (error) {
     console.error("❌ Erreur lors de la recherche avec Firecrawl:", error);
+    console.error("❌ Détails de l'erreur:", {
+      message: error.message,
+      response: error.response?.data,
+      status: error.response?.status,
+      headers: error.response?.headers
+    });
     return [];
   }
 }

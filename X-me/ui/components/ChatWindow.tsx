@@ -1150,11 +1150,11 @@ const ChatWindow = ({ id, defaultFocusMode }: { id?: string; defaultFocusMode?: 
     return (
       <div className="flex flex-col items-center justify-center min-h-screen px-4">
         <p className="dark:text-white/70 text-black/70 text-sm text-center mb-4">
-          Impossible de se connecter au serveur. Veuillez rafraîchir la page ou réessayer ultérieurement.
+          Pour économiser de l'énergie, votre connexion à nos serveurs a été interrompue suite à une période d'inactivité. 
         </p>
         <button 
           onClick={() => window.location.reload()} 
-          className="mt-2 px-5 py-2.5 bg-light-primary dark:bg-dark-primary text-white rounded-lg hover:opacity-90 transition-opacity focus:ring-2 focus:ring-offset-2 focus:ring-light-primary dark:focus:ring-dark-primary shadow-sm text-sm sm:text-base w-auto max-w-[250px]"
+          className="mt-2 px-5 py-2.5 bg-light-primary dark:bg-dark-primary text-white rounded-lg hover:opacity-90 transition-opacity focus:ring-2 focus:ring-offset-2 focus:ring-light-primary dark:focus:ring-dark-primary shadow-sm text-sm sm:text-base w-auto max-w-[250px] dark:block hidden"
         >
           Rafraîchir la page
         </button>

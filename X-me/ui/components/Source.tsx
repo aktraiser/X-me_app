@@ -28,6 +28,24 @@ const Source = ({
 
   const filteredSources = sources.filter(source => source.metadata.type !== 'expert');
 
+  const getFaviconUrl = (source: DocumentWithMetadata) => {
+    if (source.metadata.isFile) {
+      return null;
+    }
+    if (source.metadata.favicon) {
+      return source.metadata.favicon;
+    }
+    if (!source.metadata.url) {
+      return '/favicon.png';
+    }
+    try {
+      const url = new URL(source.metadata.url);
+      return `https://s2.googleusercontent.com/s2/favicons?domain_url=${encodeURIComponent(url.origin)}`;
+    } catch {
+      return '/favicon.png';
+    }
+  };
+
   return (
     <div className="bg-light-secondary dark:bg-dark-primary border border-light-200 dark:border-gray-400 rounded-lg shadow-lg p-4 w-full">
       <div className="flex justify-between items-center mb-4">
@@ -46,6 +64,7 @@ const Source = ({
         {filteredSources.map((source, i) => {
           const url = source.metadata.url;
           const isFile = source.metadata.isFile;
+          const faviconUrl = getFaviconUrl(source);
           return (
             <a
               key={i}
@@ -63,14 +82,19 @@ const Source = ({
                     <div className="bg-dark-200 hover:bg-dark-100 transition duration-200 flex items-center justify-center w-6 h-6 rounded-full">
                       <File size={12} className="text-black/70 dark:text-white/70" />
                     </div>
-                  ) : (
+                  ) : faviconUrl ? (
                     <Image
-                      src={source.metadata.favicon || '/favicon.ico'}
+                      src={faviconUrl}
                       alt={`${source.metadata.title || 'Source'} favicon`}
                       width={16}
                       height={16}
                       className="w-4 h-4"
+                      unoptimized
                     />
+                  ) : (
+                    <div className="bg-dark-200 hover:bg-dark-100 transition duration-200 flex items-center justify-center w-6 h-6 rounded-full">
+                      <File size={12} className="text-black/70 dark:text-white/70" />
+                    </div>
                   )}
                   <p className="text-xs text-black/50 dark:text-white/50 truncate max-w-[120px] flex-shrink">
                     {isFile 

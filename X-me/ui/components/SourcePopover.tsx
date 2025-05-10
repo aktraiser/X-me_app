@@ -19,6 +19,7 @@ interface SourceMetadata {
   logo?: string;
   site_web?: string;
   reseau?: string;
+  description?: string;
 }
 
 // Define the type for source documents
@@ -80,7 +81,13 @@ const SourcePopover: React.FC<SourcePopoverProps> = ({ source, number, onExpertC
     return formatted.length > 150 ? formatted.substring(0, 150) + '...' : formatted;
   };
   
-  const excerpt = formatContent(source.pageContent);
+  // Récupérer la description ou le contenu formaté
+  const getDescription = (): string => {
+    // Utiliser la description si elle existe, sinon utiliser le contenu formaté
+    return source.metadata.description || formatContent(source.pageContent);
+  };
+  
+  const excerpt = getDescription();
 
   return (
     <span className="group relative inline-flex align-middle mx-px"> 

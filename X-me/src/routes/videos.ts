@@ -81,6 +81,14 @@ router.post('/', async (req, res) => {
     res.status(200).json({ videos });
   } catch (err) {
     res.status(500).json({ message: 'An error has occurred.' });
+    console.error('Erreur détaillée dans la recherche vidéo:', {
+      message: err.message,
+      stack: err.stack,
+      name: err.name,
+      query: req.body?.query,
+      modelProvider: req.body?.chatModel?.provider,
+      modelName: req.body?.chatModel?.model
+    });
     logger.error(`Error in video search: ${err.message}`);
   }
 });

@@ -46,6 +46,11 @@ const MessageSources = ({
     }
   };
 
+  // Récupère la description du site si disponible, sinon utilise le contenu de la page
+  const getSourceDescription = (source: Document) => {
+    return source.metadata.description || source.pageContent;
+  };
+
   const filteredSources = sources.filter(source => source.metadata.type !== 'expert');
 
   const handleOpenModal = () => {
@@ -143,8 +148,8 @@ const MessageSources = ({
                       <h3 className="text-sm font-medium text-gray-900 dark:text-white truncate">
                         {source.metadata.title}
                       </h3>
-                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
-                        {source.pageContent}
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        {getSourceDescription(source)}
                       </p>
                       <div className="flex items-center mt-2">
                         <p className="text-xs text-gray-500 dark:text-gray-400">
@@ -252,8 +257,8 @@ const MessageSources = ({
                         <h3 className="text-sm font-medium text-white truncate">
                           {source.metadata.title}
                         </h3>
-                        <p className="text-sm text-gray-300 mt-1 line-clamp-2">
-                          {source.pageContent}
+                        <p className="text-sm text-gray-300 mt-1">
+                          {getSourceDescription(source)}
                         </p>
                         <div className="flex items-center mt-2">
                           <p className="text-xs text-gray-400">

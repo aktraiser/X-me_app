@@ -26,7 +26,6 @@ export const metadata: Metadata = {
   description: 'Xand&me est une plateforme de mise en relation avec des experts.',
   icons: {
     icon: [
-      { url: '/favicon.ico', sizes: '32x32', type: 'image/ico' },
       { url: '/favicon.png', sizes: '32x32', type: 'image/png' }
     ],
     apple: { url: '/favicon.png', sizes: '32x32', type: 'image/png' }

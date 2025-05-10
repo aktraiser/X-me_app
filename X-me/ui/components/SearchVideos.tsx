@@ -142,6 +142,12 @@ const Searchvideos = ({
               );
               
               if (!res.ok) {
+                const errorText = await res.text();
+                console.error('Détail de l\'erreur API:', {
+                  status: res.status,
+                  statusText: res.statusText,
+                  text: errorText
+                });
                 throw new Error(`Erreur API: ${res.status}`);
               }
               
