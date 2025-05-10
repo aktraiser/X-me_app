@@ -1,10 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  // Désactiver la génération statique pour éviter les erreurs liées à Clerk
+  // Configuration optimisée pour le SEO
   experimental: {
-    // Forcer le mode SSR pour toutes les pages
     appDir: true,
+    // Activation des routes d'API pour Server Components
+    serverComponentsExternalPackages: ['react-dom'],
+    // Amélioration des performances de compilation
+    optimizeCss: true,
   },
   // Ignorer ces erreurs lors du build
   typescript: {
@@ -14,6 +17,34 @@ const nextConfig = {
   eslint: {
     // Ignorer les erreurs ESLint pendant le build
     ignoreDuringBuilds: true,
+  },
+  // Compression des images
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60,
+    domains: ['xandme.fr'],
+  },
+  // Configuration des headers HTTP pour améliorer le SEO et la sécurité
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
+          },
+          {
+            key: 'X-XSS-Protection',
+            value: '1; mode=block',
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN',
+          },
+        ],
+      },
+    ];
   },
   // Désactiver les builds statiques pour les routes qui utilisent Clerk
   exportPathMap: undefined

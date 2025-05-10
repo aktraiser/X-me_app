@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /sign-in/
+Disallow: /sign-up/
+Disallow: /forgot-password/
+Disallow: /settings/
+
+Sitemap: https://xandme.fr/sitemap.xml 

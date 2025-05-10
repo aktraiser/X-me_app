@@ -10,6 +10,7 @@ import { ClerkProvider } from '@clerk/nextjs';
 import { frFR } from '@clerk/localizations';
 import KeepAliveProvider from '../components/KeepAliveProvider';
 import TermlyCMP from '@/components/TermlyCMP';
+import JsonLdScript from '@/components/JsonLdScript';
 
 const montserrat = Montserrat({
   weight: ['300', '400', '500', '700'],
@@ -22,14 +23,61 @@ const montserrat = Montserrat({
 const TERMLY_WEBSITE_UUID = '2b659cf0-9192-417e-8ee3-8ba5e67271c7';
 
 export const metadata: Metadata = {
-  title: 'Xandme - Ici c\'est vous le patron ',
-  description: 'Xand&me est une plateforme de mise en relation avec des experts.',
+  title: 'Xandme - Ici c\'est vous le patron',
+  description: 'Xand&me est une plateforme de mise en relation avec des experts. Trouvez des réponses à vos questions et profitez de conseils personnalisés de professionnels.',
+  keywords: 'xandme, experts, mise en relation, conseils personnalisés, aide professionnelle, consultation, IA, intelligence artificielle',
+  authors: [{ name: 'Xandme', url: 'https://xandme.fr' }],
+  creator: 'Xandme',
+  publisher: 'Xandme',
+  metadataBase: new URL('https://xandme.fr'),
+  alternates: {
+    canonical: '/',
+    languages: {
+      'fr': '/',
+    },
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-video-preview': -1,
+      'max-snippet': -1,
+    },
+  },
   icons: {
     icon: [
       { url: '/favicon.png', sizes: '32x32', type: 'image/png' }
     ],
     apple: { url: '/favicon.png', sizes: '32x32', type: 'image/png' }
-  }
+  },
+  openGraph: {
+    title: 'Xandme - Ici c\'est vous le patron',
+    description: 'Xandme est une plateforme de mise en relation avec des experts. Trouvez des réponses à vos questions et profitez de conseils personnalisés.',
+    url: 'https://xandme.fr',
+    siteName: 'Xandme',
+    locale: 'fr_FR',
+    type: 'website',
+    images: [
+      {
+        url: '/images/xandme-og-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'Xandme - Plateforme d\'experts',
+      }
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Xandme - Ici c\'est vous le patron',
+    description: 'Plateforme de mise en relation avec des experts - Trouvez des réponses à vos questions',
+    images: ['/images/xandme-twitter-image.png'],
+  },
+  verification: {
+    google: 'googleverification',
+  },
 };
 
 // Utilisation des variables d'environnement au lieu d'une clé codée en dur
@@ -109,6 +157,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="fr" suppressHydrationWarning>
+      <head>
+        <JsonLdScript type="Organization" />
+        <JsonLdScript type="WebSite" />
+      </head>
       <body className={montserrat.className + " min-h-screen"}>
         {/* Intégration du composant Termly CMP avec auto-blocage désactivé */}
         <TermlyCMP 
