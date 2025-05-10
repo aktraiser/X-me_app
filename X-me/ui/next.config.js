@@ -3,7 +3,6 @@ const nextConfig = {
   output: 'standalone',
   // Configuration optimisée pour le SEO
   experimental: {
-    appDir: true,
     // Activation des routes d'API pour Server Components
     serverComponentsExternalPackages: ['react-dom'],
     // Amélioration des performances de compilation

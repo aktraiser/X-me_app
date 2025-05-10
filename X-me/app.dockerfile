@@ -34,15 +34,15 @@ COPY ui/package.json ui/yarn.lock ./
 RUN yarn install --network-timeout 600000
 
 # Installer les dépendances supplémentaires nécessaires
-RUN yarn add @radix-ui/react-switch @clerk/nextjs @clerk/themes next-themes react-hot-toast lucide-react --legacy-peer-deps
+RUN yarn add @radix-ui/react-switch @clerk/nextjs @clerk/themes next-themes react-hot-toast lucide-react critters --legacy-peer-deps
 
 # Copier le reste des fichiers
 COPY ui/ ./
 
 # Mise à jour de browserslist
-RUN npx update-browserslist-db@latest
+RUN npx update-browserslist-db@latest --legacy-peer-deps
 
-# Build avec la gestion des erreurs - continuez même si le build échoue
-RUN yarn build || true
+# Build avec la gestion des erreurs
+RUN yarn build
 
 CMD ["yarn", "start"]
